@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import {
+  memo,
   useCallback,
   useEffect,
   useRef,
@@ -12,7 +13,9 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import {
   motion,
+  useMotionValue,
   useReducedMotion,
+  useTransform,
 } from "framer-motion";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -226,6 +229,45 @@ function getHash(
     : item.srHash;
 }
 
+function getSceneTarget(
+  scene: SceneKey,
+  hash?: string,
+): HTMLElement | null {
+  const sceneElement =
+    document.querySelector<HTMLElement>(
+      `[data-umbra-scene="${scene}"]`,
+    );
+
+  if (sceneElement) {
+    return sceneElement;
+  }
+
+  if (hash) {
+    return document.getElementById(
+      hash.replace(/^#/, ""),
+    );
+  }
+
+  return null;
+}
+
+function getSceneForNavItem(
+  item: NavItemKey,
+): SceneKey | null {
+  switch (item) {
+    case "home":
+      return "hero";
+    case "projects":
+      return "project";
+    case "characters":
+      return "characters";
+    case "studio":
+      return "studio";
+    default:
+      return null;
+  }
+}
+
 function clamp(
   value: number,
   min = 0,
@@ -247,10 +289,17 @@ function homeTarget(
     isHomePath(
       pathname,
       locale,
-    ) &&
-    hash
+    )
   ) {
-    return hash;
+    if (item.key === "home") {
+      return locale === "en"
+        ? "/en"
+        : "/";
+    }
+
+    if (hash) {
+      return hash;
+    }
   }
 
   return getRoute(
@@ -485,7 +534,7 @@ function YoutubeMark() {
    CLOCK
    ========================================================================== */
 
-function UmbraClock({
+const UmbraClock = memo(function UmbraClock({
   locale,
 }: {
   locale: Locale;
@@ -726,7 +775,7 @@ function UmbraClock({
       />
     </div>
   );
-}
+});
 
 /* ==========================================================================
    SOCIAL LINK
@@ -979,43 +1028,39 @@ function MobileNavItem({
 function ScrollProgressFrame({
   progress,
 }: {
-  progress: number;
+  progress: ReturnType<typeof useMotionValue<number>>;
 }) {
-  const top =
-    Math.min(
-      progress / 0.25,
-      1,
-    );
+  const top = useTransform(
+    progress,
+    (value) => clamp(value / 0.25),
+  );
 
-  const right =
-    Math.min(
-      Math.max(
-        (progress - 0.25) /
+  const right = useTransform(
+    progress,
+    (value) =>
+      clamp(
+        (value - 0.25) /
           0.25,
-        0,
       ),
-      1,
-    );
+  );
 
-  const bottom =
-    Math.min(
-      Math.max(
-        (progress - 0.5) /
+  const bottom = useTransform(
+    progress,
+    (value) =>
+      clamp(
+        (value - 0.5) /
           0.25,
-        0,
       ),
-      1,
-    );
+  );
 
-  const left =
-    Math.min(
-      Math.max(
-        (progress - 0.75) /
+  const left = useTransform(
+    progress,
+    (value) =>
+      clamp(
+        (value - 0.75) /
           0.25,
-        0,
       ),
-      1,
-    );
+  );
 
   return (
     <div
@@ -1025,108 +1070,64 @@ function ScrollProgressFrame({
       <span
         className="absolute left-0 right-0 top-0 h-px"
         style={{
-          background:
-            `${GOLD}20`,
+          background: `${GOLD}20`,
         }}
       />
 
       <span
         className="absolute bottom-0 left-0 right-0 h-px"
         style={{
-          background:
-            `${GOLD}18`,
+          background: `${GOLD}18`,
         }}
       />
 
       <span
         className="absolute bottom-0 left-0 top-0 w-px"
         style={{
-          background:
-            `${GOLD}18`,
+          background: `${GOLD}18`,
         }}
       />
 
       <span
         className="absolute bottom-0 right-0 top-0 w-px"
         style={{
-          background:
-            `${GOLD}20`,
+          background: `${GOLD}20`,
         }}
       />
 
-      <span
+      <motion.span
         className="absolute left-0 top-0 h-px origin-left"
         style={{
           width: "100%",
-          transform:
-            `scaleX(${top})`,
-          background:
-            `linear-gradient(
-              90deg,
-              ${GOLD_LIGHT},
-              ${GOLD}
-            )`,
-          boxShadow:
-            top > 0.01
-              ? `0 0 4px ${GOLD}35`
-              : "none",
+          scaleX: top,
+          background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD})`,
         }}
       />
 
-      <span
+      <motion.span
         className="absolute right-0 top-0 w-px origin-top"
         style={{
           height: "100%",
-          transform:
-            `scaleY(${right})`,
-          background:
-            `linear-gradient(
-              180deg,
-              ${GOLD_LIGHT},
-              ${GOLD}
-            )`,
-          boxShadow:
-            right > 0.01
-              ? `0 0 4px ${GOLD}35`
-              : "none",
+          scaleY: right,
+          background: `linear-gradient(180deg, ${GOLD_LIGHT}, ${GOLD})`,
         }}
       />
 
-      <span
+      <motion.span
         className="absolute bottom-0 right-0 h-px origin-right"
         style={{
           width: "100%",
-          transform:
-            `scaleX(${bottom})`,
-          background:
-            `linear-gradient(
-              270deg,
-              ${GOLD_LIGHT},
-              ${GOLD}
-            )`,
-          boxShadow:
-            bottom > 0.01
-              ? `0 0 4px ${GOLD}35`
-              : "none",
+          scaleX: bottom,
+          background: `linear-gradient(270deg, ${GOLD_LIGHT}, ${GOLD})`,
         }}
       />
 
-      <span
+      <motion.span
         className="absolute bottom-0 left-0 w-px origin-bottom"
         style={{
           height: "100%",
-          transform:
-            `scaleY(${left})`,
-          background:
-            `linear-gradient(
-              0deg,
-              ${GOLD_LIGHT},
-              ${GOLD}
-            )`,
-          boxShadow:
-            left > 0.01
-              ? `0 0 4px ${GOLD}35`
-              : "none",
+          scaleY: left,
+          background: `linear-gradient(0deg, ${GOLD_LIGHT}, ${GOLD})`,
         }}
       />
     </div>
@@ -1162,8 +1163,8 @@ export default function Header() {
   const [scene, setScene] =
     useState<SceneKey>("hero");
 
-  const [progress, setProgress] =
-    useState(0);
+  const progress =
+    useMotionValue(0);
 
   const scrollAnimationRef =
     useRef<number | null>(null);
@@ -1315,14 +1316,13 @@ export default function Header() {
       const next =
         clamp(nextProgress);
 
-      setProgress(
-        (current) =>
-          Math.abs(
-            current - next,
-          ) < 0.001
-            ? current
-            : next,
-      );
+      if (
+        Math.abs(
+          progress.get() - next,
+        ) >= 0.001
+      ) {
+        progress.set(next);
+      }
 
       const scrollY =
         typeof detail?.scrollY ===
@@ -1360,7 +1360,7 @@ export default function Header() {
             maxScroll
           : 0;
 
-      setProgress(
+      progress.set(
         clamp(
           initialProgress,
         ),
@@ -1395,7 +1395,7 @@ export default function Header() {
         initialise,
       );
     };
-  }, []);
+  }, [progress]);
 
   /* ------------------------------------------------------------------------
      GLOBAL SCENE SYNC
@@ -1646,11 +1646,9 @@ export default function Header() {
         nextScene: SceneKey,
       ) => {
         const element =
-          document.getElementById(
-            hash.replace(
-              /^#/,
-              "",
-            ),
+          getSceneTarget(
+            nextScene,
+            hash,
           );
 
         if (!element) {
@@ -1765,13 +1763,14 @@ export default function Header() {
         ) {
           event.preventDefault();
 
-          const nextScene: SceneKey =
-            item.key === "projects"
-              ? "project"
-              : item.key ===
-                  "characters"
-                ? "characters"
-                : "studio";
+          const nextScene =
+            getSceneForNavItem(
+              item.key,
+            );
+
+          if (!nextScene) {
+            return;
+          }
 
           scrollToSection(
             hash,
@@ -1787,9 +1786,6 @@ export default function Header() {
 
         router.push(
           route,
-          {
-            scroll: false,
-          },
         );
       },
       [
@@ -2098,6 +2094,7 @@ export default function Header() {
               aria-hidden={
                 !mobileOpen
               }
+              inert={!mobileOpen}
               className={[
                 "grid overflow-hidden border-t border-white/[0.06] lg:hidden",
                 "transition-[grid-template-rows,opacity] duration-300",

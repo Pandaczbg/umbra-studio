@@ -16,8 +16,8 @@ import {
 } from "framer-motion";
 import {
   useCallback,
-  useRef,
   useState,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 
 import type { Locale } from "@/data/translations";
@@ -26,6 +26,8 @@ const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const GOLD_DARK = "#8f7142";
 
+const FALLBACK_IMAGE = "/umbra-background.png";
+
 const EASE = [
   0.22,
   1,
@@ -33,202 +35,167 @@ const EASE = [
   1,
 ] as const;
 
-const POSTER_SRC = "/mrzim-poster.jpg";
+type CurrentProjectSceneProps = {
+  locale?: Locale;
+};
+
+function Meta({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="font-mono text-[7px] uppercase tracking-[0.24em] text-white/[0.20]">
+        {label}
+      </div>
+
+      <div
+        className="mt-2 truncate text-[10px] font-medium uppercase tracking-[0.16em]"
+        style={{
+          color: accent
+            ? `${GOLD_LIGHT}8c`
+            : "rgba(241,237,228,.48)",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
 
 export default function CurrentProjectScene({
   locale = "sr",
-}: {
-  locale?: Locale;
-}) {
-  const reducedMotion =
-    useReducedMotion() ?? false;
+}: CurrentProjectSceneProps) {
+  const reducedMotion = useReducedMotion() ?? false;
+  const isEnglish = locale === "en";
 
-  const isEnglish =
-    locale === "en";
+  const projectHref = isEnglish
+    ? "/en/projects/mrzim-svog-brata"
+    : "/serije/mrzim-svog-brata";
 
-  const projectHref =
-    isEnglish
-      ? "/en/projects/mrzim-svog-brata"
-      : "/serije/mrzim-svog-brata";
+  const charactersHref = isEnglish
+    ? "/en/characters"
+    : "/likovi";
 
-  const charactersHref =
-    isEnglish
-      ? "/en/characters"
-      : "/likovi";
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
 
-  const posterRef =
-    useRef<HTMLAnchorElement | null>(
-      null,
-    );
+  const smoothX = useSpring(pointerX, {
+    stiffness: 110,
+    damping: 20,
+    mass: 0.5,
+  });
 
-  const pointerX =
-    useMotionValue(0);
-
-  const pointerY =
-    useMotionValue(0);
-
-  const smoothX = useSpring(
-    pointerX,
-    {
-      stiffness: 95,
-      damping: 18,
-      mass: 0.55,
-    },
-  );
-
-  const smoothY = useSpring(
-    pointerY,
-    {
-      stiffness: 95,
-      damping: 18,
-      mass: 0.55,
-    },
-  );
+  const smoothY = useSpring(pointerY, {
+    stiffness: 110,
+    damping: 20,
+    mass: 0.5,
+  });
 
   const posterX = useTransform(
     smoothX,
     [-1, 1],
-    reducedMotion
-      ? [0, 0]
-      : [-7, 7],
+    reducedMotion ? [0, 0] : [-8, 8],
   );
 
   const posterY = useTransform(
     smoothY,
     [-1, 1],
-    reducedMotion
-      ? [0, 0]
-      : [-7, 7],
+    reducedMotion ? [0, 0] : [-8, 8],
   );
 
   const lightX = useTransform(
     smoothX,
     [-1, 1],
-    ["38%", "62%"],
+    ["36%", "64%"],
   );
 
   const lightY = useTransform(
     smoothY,
     [-1, 1],
-    ["38%", "62%"],
+    ["35%", "65%"],
   );
 
-  const [isHovered, setIsHovered] =
-    useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [posterSrc, setPosterSrc] =
+    useState(FALLBACK_IMAGE);
 
-  const [isFocused, setIsFocused] =
-    useState(false);
+  const interactive = hovered || focused;
 
-  const handlePointerMove =
-    useCallback(
-      (
-        event: React.PointerEvent<HTMLAnchorElement>,
-      ) => {
-        if (
-          reducedMotion ||
-          event.pointerType ===
-            "touch"
-        ) {
-          return;
-        }
+  const handlePointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLAnchorElement>) => {
+      if (
+        reducedMotion ||
+        event.pointerType === "touch"
+      ) {
+        return;
+      }
 
-        const rect =
-          event.currentTarget.getBoundingClientRect();
+      const rect =
+        event.currentTarget.getBoundingClientRect();
 
-        const x =
-          (event.clientX -
-            rect.left) /
-            rect.width;
+      pointerX.set(
+        ((event.clientX - rect.left) / rect.width) *
+          2 -
+          1,
+      );
 
-        const y =
-          (event.clientY -
-            rect.top) /
-            rect.height;
+      pointerY.set(
+        ((event.clientY - rect.top) / rect.height) *
+          2 -
+          1,
+      );
+    },
+    [pointerX, pointerY, reducedMotion],
+  );
 
-        pointerX.set(
-          x * 2 - 1,
-        );
-
-        pointerY.set(
-          y * 2 - 1,
-        );
-      },
-      [
-        pointerX,
-        pointerY,
-        reducedMotion,
-      ],
-    );
-
-  const resetPointer =
-    useCallback(() => {
-      pointerX.set(0);
-      pointerY.set(0);
-    }, [
-      pointerX,
-      pointerY,
-    ]);
+  const resetPointer = useCallback(() => {
+    pointerX.set(0);
+    pointerY.set(0);
+  }, [pointerX, pointerY]);
 
   return (
     <section
       id="current-project"
       data-umbra-scene="project"
       aria-labelledby="current-project-title"
-      className="relative overflow-hidden border-b border-white/[0.06] bg-[#050505]"
+      className="relative overflow-hidden border-b border-white/[0.055] bg-[#030303]"
     >
-      {/* =====================================================================
-          ATMOSPHERE
-          ===================================================================== */}
+      {/* Ambient field */}
 
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <div
-          className="absolute inset-x-[6%] top-0 h-px"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent, rgba(255,255,255,.028), transparent)",
-          }}
-        />
-
-        <motion.div
-          animate={{
-            opacity:
-              isHovered || isFocused
-                ? 0.72
-                : 0.48,
-            scale:
-              isHovered || isFocused
-                ? 1.035
-                : 1,
-          }}
-          transition={{
-            duration: 0.9,
-            ease: EASE,
-          }}
-          className="absolute -right-[12%] top-[5%] h-[760px] w-[760px] rounded-full"
+          className="absolute -right-[16%] top-[8%] h-[720px] w-[720px] rounded-full"
           style={{
             background: `
               radial-gradient(
                 circle,
                 ${GOLD}07 0%,
-                ${GOLD}022 32%,
+                ${GOLD}022 34%,
                 transparent 72%
               )
             `,
-            filter:
-              "blur(65px)",
+            filter: "blur(70px)",
+            opacity: interactive ? 0.95 : 0.68,
+            transition: "opacity 700ms var(--ease-umbra-out)",
           }}
         />
 
         <div
-          className="absolute bottom-[-20%] left-[16%] h-[560px] w-[800px] rounded-full"
+          className="absolute bottom-[-22%] left-[8%] h-[520px] w-[760px]"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(255,255,255,.013), transparent 74%)",
-            filter:
-              "blur(75px)",
+              "radial-gradient(ellipse, rgba(255,255,255,.012), transparent 72%)",
+            filter: "blur(82px)",
           }}
         />
 
@@ -236,26 +203,35 @@ export default function CurrentProjectScene({
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,.08), transparent 20%, transparent 74%, rgba(0,0,0,.38))",
+              "linear-gradient(180deg, rgba(0,0,0,.10), transparent 24%, transparent 72%, rgba(0,0,0,.40))",
           }}
         />
       </div>
 
-      {/* =====================================================================
-          MAIN CONTAINER
-          ===================================================================== */}
-
-      <div className="relative z-10 mx-auto max-w-[1540px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-24 xl:px-16">
-        {/* ===================================================================
-            SECTION HEADER
-            =================================================================== */}
+      <div
+        className="
+          relative
+          z-10
+          mx-auto
+          max-w-[1680px]
+          px-6
+          pb-20
+          pt-24
+          sm:px-9
+          sm:pb-24
+          sm:pt-28
+          lg:px-12
+          lg:pb-28
+          lg:pt-32
+          xl:px-16
+        "
+      >
+        {/* Scene header */}
 
         <motion.div
           initial={{
             opacity: 0,
-            y: reducedMotion
-              ? 0
-              : 8,
+            y: reducedMotion ? 0 : 8,
           }}
           whileInView={{
             opacity: 1,
@@ -263,65 +239,121 @@ export default function CurrentProjectScene({
           }}
           viewport={{
             once: true,
-            amount: 0.12,
+            amount: 0.16,
           }}
           transition={{
-            duration:
-              reducedMotion
-                ? 0
-                : 0.55,
+            duration: reducedMotion ? 0 : 0.6,
             ease: EASE,
           }}
           className="flex items-center justify-between border-b border-white/[0.055] pb-5"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <span
-              aria-hidden="true"
-              className="h-px w-10"
+              className="font-mono text-[7px] tracking-[0.32em]"
               style={{
-                background:
-                  `linear-gradient(90deg, transparent, ${GOLD})`,
-              }}
-            />
-
-            <span
-              className="font-mono text-[7px] tracking-[0.42em]"
-              style={{
-                color:
-                  `${GOLD_LIGHT}82`,
+                color: `${GOLD_LIGHT}82`,
               }}
             >
               02
             </span>
 
-            <span className="text-[8px] font-semibold uppercase tracking-[0.38em] text-white/[0.56]">
+            <span
+              className="h-px w-12"
+              style={{
+                background: `linear-gradient(90deg, ${GOLD}70, transparent)`,
+              }}
+            />
+
+            <span className="text-[9px] font-semibold uppercase tracking-[0.28em] text-white/[0.62]">
               {isEnglish
                 ? "CURRENT PROJECT"
                 : "AKTUELNI PROJEKAT"}
             </span>
           </div>
 
-          <span className="hidden font-mono text-[6px] tracking-[0.3em] text-white/[0.16] sm:block">
+          <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.15] sm:block">
             02 / 05
           </span>
         </motion.div>
 
-        {/* ===================================================================
-            MAIN COMPOSITION
-            =================================================================== */}
+        {/* Main composition */}
 
-        <div className="mt-12 grid items-center gap-14 lg:grid-cols-[0.82fr_1fr] lg:gap-[4.5rem] xl:mt-16 xl:grid-cols-[0.86fr_1fr] xl:gap-[7rem]">
-          {/* =================================================================
-              LEFT — STORY INFORMATION
-              ================================================================= */}
+        <div className="grid items-center gap-14 pt-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16 lg:pt-16 xl:grid-cols-[0.88fr_1.12fr] xl:gap-24">
+          {/* Editorial copy */}
 
-          <div>
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: reducedMotion ? 0 : -18,
+            }}
+            whileInView={{
+              opacity: 1,
+              x: 0,
+            }}
+            viewport={{
+              once: true,
+              amount: 0.14,
+            }}
+            transition={{
+              duration: reducedMotion ? 0 : 0.78,
+              ease: EASE,
+            }}
+            className="max-w-[680px]"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className="h-[6px] w-[6px] rounded-full"
+                style={{
+                  background: GOLD,
+                  boxShadow: `0 0 12px ${GOLD}42`,
+                }}
+              />
+
+              <span className="text-[8px] font-semibold uppercase tracking-[0.32em] text-white/[0.36]">
+                UMBRA ORIGINAL
+              </span>
+
+              <span className="font-mono text-[7px] tracking-[0.24em] text-white/[0.18]">
+                001
+              </span>
+            </div>
+
+            <div className="mt-8 overflow-hidden">
+              <motion.h2
+                id="current-project-title"
+                initial={{
+                  opacity: 0,
+                  y: reducedMotion ? 0 : 42,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                viewport={{
+                  once: true,
+                  amount: 0.14,
+                }}
+                transition={{
+                  delay: reducedMotion ? 0 : 0.08,
+                  duration: reducedMotion ? 0 : 0.92,
+                  ease: EASE,
+                }}
+                className="text-[clamp(4rem,7.2vw,8.8rem)] font-[430] uppercase leading-[0.79] tracking-[-0.085em] text-white"
+              >
+                <span className="block">
+                  MRZIM
+                </span>
+
+                <span className="block text-white/[0.52]">
+                  SVOG BRATA
+                </span>
+              </motion.h2>
+            </div>
+
             <motion.div
               initial={{
                 opacity: 0,
-                x: reducedMotion
-                  ? 0
-                  : -14,
+                x: reducedMotion ? 0 : -10,
               }}
               whileInView={{
                 opacity: 1,
@@ -329,369 +361,170 @@ export default function CurrentProjectScene({
               }}
               viewport={{
                 once: true,
-                amount: 0.14,
+                amount: 0.12,
               }}
               transition={{
-                duration:
-                  reducedMotion
-                    ? 0
-                    : 0.72,
+                delay: reducedMotion ? 0 : 0.30,
+                duration: reducedMotion ? 0 : 0.55,
                 ease: EASE,
               }}
+              className="mt-7 flex items-center gap-4"
             >
-              {/* Identity line */}
-
-              <div className="flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="relative flex h-[7px] w-[7px] items-center justify-center rounded-full"
-                >
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background:
-                        GOLD,
-                      boxShadow:
-                        `0 0 10px ${GOLD}38`,
-                    }}
-                  />
-
-                  {!reducedMotion && (
-                    <motion.span
-                      aria-hidden="true"
-                      className="absolute -inset-1 rounded-full border"
-                      animate={{
-                        opacity: [
-                          0.12,
-                          0.42,
-                          0.12,
-                        ],
-                        scale: [
-                          0.8,
-                          1.15,
-                          0.8,
-                        ],
-                      }}
-                      transition={{
-                        duration: 2.6,
-                        repeat:
-                          Infinity,
-                        ease:
-                          "easeInOut",
-                      }}
-                      style={{
-                        borderColor:
-                          `${GOLD}42`,
-                      }}
-                    />
-                  )}
-                </span>
-
-                <span className="text-[7px] uppercase tracking-[0.34em] text-white/[0.31]">
-                  {isEnglish
-                    ? "UMBRA ORIGINAL"
-                    : "UMBRA ORIGINAL"}
-                </span>
-
-                <span className="h-px w-7 bg-white/[0.08]" />
-
-                <span
-                  className="font-mono text-[7px] tracking-[0.26em]"
-                  style={{
-                    color:
-                      `${GOLD_LIGHT}70`,
-                  }}
-                >
-                  001
-                </span>
-              </div>
-
-              {/* Title */}
-
-              <div className="relative mt-8">
-                <motion.h2
-                  id="current-project-title"
-                  initial={{
-                    opacity: 0,
-                    y: reducedMotion
-                      ? 0
-                      : 28,
-                  }}
-                  whileInView={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  viewport={{
-                    once: true,
-                    amount: 0.14,
-                  }}
-                  transition={{
-                    delay:
-                      reducedMotion
-                        ? 0
-                        : 0.08,
-                    duration:
-                      reducedMotion
-                        ? 0
-                        : 0.84,
-                    ease: EASE,
-                  }}
-                  className="max-w-[760px] text-[clamp(3.65rem,7vw,8.5rem)] font-[420] uppercase leading-[0.77] tracking-[-0.085em] text-white"
-                >
-                  <span className="block">
-                    MRZIM
-                  </span>
-
-                  <span className="block text-white/[0.57]">
-                    SVOG BRATA
-                  </span>
-                </motion.h2>
-
-                {/* Architectural text marker */}
-
-                <motion.span
-                  aria-hidden="true"
-                  initial={{
-                    scaleY: 0,
-                  }}
-                  whileInView={{
-                    scaleY: 1,
-                  }}
-                  viewport={{
-                    once: true,
-                    amount: 0.15,
-                  }}
-                  transition={{
-                    delay:
-                      reducedMotion
-                        ? 0
-                        : 0.2,
-                    duration:
-                      reducedMotion
-                        ? 0
-                        : 0.65,
-                    ease: EASE,
-                  }}
-                  className="absolute -left-4 top-1 hidden h-[88%] w-px origin-top lg:block"
-                  style={{
-                    background:
-                      `linear-gradient(180deg, ${GOLD_LIGHT}72, ${GOLD}1e, transparent)`,
-                  }}
-                />
-              </div>
-
-              {/* Accent beam */}
-
-              <motion.div
-                initial={{
-                  scaleX: 0,
-                  opacity: 0,
-                }}
-                whileInView={{
-                  scaleX: 1,
-                  opacity: 1,
-                }}
-                viewport={{
-                  once: true,
-                  amount: 0.14,
-                }}
-                transition={{
-                  delay:
-                    reducedMotion
-                      ? 0
-                      : 0.15,
-                  duration:
-                    reducedMotion
-                      ? 0
-                      : 0.78,
-                  ease: EASE,
-                }}
-                className="mt-8 h-px w-full max-w-[530px] origin-left"
+              <span
+                className="font-serif text-[clamp(1.05rem,1.45vw,1.30rem)] italic"
                 style={{
-                  background:
-                    `linear-gradient(90deg, ${GOLD_LIGHT}6e, ${GOLD}35 42%, rgba(255,255,255,.045) 62%, transparent)`,
+                  color: `${GOLD_LIGHT}9d`,
                 }}
-              />
-
-              {/* Metadata */}
-
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: reducedMotion
-                    ? 0
-                    : 9,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                viewport={{
-                  once: true,
-                  amount: 0.13,
-                }}
-                transition={{
-                  delay:
-                    reducedMotion
-                      ? 0
-                      : 0.23,
-                  duration:
-                    reducedMotion
-                      ? 0
-                      : 0.55,
-                  ease: EASE,
-                }}
-                className="mt-8 grid max-w-[580px] grid-cols-3 border-t border-white/[0.055] pt-6"
-              >
-                <Meta
-                  label={
-                    isEnglish
-                      ? "Status"
-                      : "Status"
-                  }
-                  value={
-                    isEnglish
-                      ? "In production"
-                      : "U produkciji"
-                  }
-                />
-
-                <Meta
-                  label={
-                    isEnglish
-                      ? "Format"
-                      : "Format"
-                  }
-                  value={
-                    isEnglish
-                      ? "Web series"
-                      : "Web serija"
-                  }
-                  accent
-                />
-
-                <Meta
-                  label={
-                    isEnglish
-                      ? "Episodes"
-                      : "Epizode"
-                  }
-                  value="04"
-                />
-              </motion.div>
-
-              {/* Story statement */}
-
-              <motion.p
-                initial={{
-                  opacity: 0,
-                  y: reducedMotion
-                    ? 0
-                    : 9,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                viewport={{
-                  once: true,
-                  amount: 0.12,
-                }}
-                transition={{
-                  delay:
-                    reducedMotion
-                      ? 0
-                      : 0.3,
-                  duration:
-                    reducedMotion
-                      ? 0
-                      : 0.58,
-                  ease: EASE,
-                }}
-                className="mt-8 max-w-[500px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7"
               >
                 {isEnglish
-                  ? "The first Umbra production — a cinematic series built around family, character and the weight of what remains unsaid."
-                  : "Prva Umbra produkcija — filmska serija o porodici, karakterima i težini onoga što ostaje neizgovoreno."}
-              </motion.p>
+                  ? "Series in production"
+                  : "Serija u produkciji"}
+              </span>
 
-              {/* Project link */}
-
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: reducedMotion
-                    ? 0
-                    : 10,
+              <span
+                className="h-px w-14"
+                style={{
+                  background: `linear-gradient(90deg, ${GOLD}64, transparent)`,
                 }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                viewport={{
-                  once: true,
-                  amount: 0.1,
-                }}
-                transition={{
-                  delay:
-                    reducedMotion
-                      ? 0
-                      : 0.38,
-                  duration:
-                    reducedMotion
-                      ? 0
-                      : 0.55,
-                  ease: EASE,
-                }}
-                className="mt-8"
-              >
-                <Link
-                  href={projectHref}
-                  className="group/cta inline-flex items-center gap-4"
-                >
-                  <span
-                    className="relative flex h-12 items-center gap-4 border px-5"
-                    style={{
-                      borderColor:
-                        `${GOLD}55`,
-                    }}
-                  >
-                    <span className="text-[8px] font-semibold uppercase tracking-[0.3em] text-white/[0.65] transition-colors duration-300 group-hover/cta:text-white/[0.9]">
-                      {isEnglish
-                        ? "Enter project"
-                        : "Uđi u projekat"}
-                    </span>
-
-                    <ArrowUpRight
-                      size={13}
-                      strokeWidth={1.1}
-                      className="text-white/[0.36] transition-all duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5 group-hover/cta:text-[#ead39a]/80"
-                    />
-
-                    <span
-                      aria-hidden="true"
-                      className="absolute bottom-0 left-0 h-px w-8 transition-[width] duration-500 group-hover/cta:w-full"
-                      style={{
-                        background:
-                          `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
-                      }}
-                    />
-                  </span>
-                </Link>
-              </motion.div>
+              />
             </motion.div>
-          </div>
 
-          {/* =================================================================
-              RIGHT — CINEMATIC POSTER
-              ================================================================= */}
+            <motion.p
+              initial={{
+                opacity: 0,
+                y: reducedMotion ? 0 : 10,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.10,
+              }}
+              transition={{
+                delay: reducedMotion ? 0 : 0.42,
+                duration: reducedMotion ? 0 : 0.58,
+                ease: EASE,
+              }}
+              className="mt-7 max-w-[510px] text-[12px] leading-7 text-white/[0.40]"
+            >
+              {isEnglish
+                ? "The first Umbra production — a cinematic series built around family, character and the weight of what remains unsaid."
+                : "Prva Umbra produkcija — filmska serija o porodici, karakterima i težini onoga što ostaje neizgovoreno."}
+            </motion.p>
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: reducedMotion ? 0 : 8,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.08,
+              }}
+              transition={{
+                delay: reducedMotion ? 0 : 0.52,
+                duration: reducedMotion ? 0 : 0.55,
+                ease: EASE,
+              }}
+              className="mt-9 grid max-w-[580px] grid-cols-3 border-t border-white/[0.055] pt-5"
+            >
+              <Meta
+                label={isEnglish ? "Status" : "Status"}
+                value={
+                  isEnglish
+                    ? "In production"
+                    : "U produkciji"
+                }
+              />
+
+              <Meta
+                label="Format"
+                value={
+                  isEnglish
+                    ? "Web series"
+                    : "Web serija"
+                }
+                accent
+              />
+
+              <Meta
+                label={
+                  isEnglish
+                    ? "Episodes"
+                    : "Epizode"
+                }
+                value="04"
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: reducedMotion ? 0 : 8,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.08,
+              }}
+              transition={{
+                delay: reducedMotion ? 0 : 0.62,
+                duration: reducedMotion ? 0 : 0.56,
+                ease: EASE,
+              }}
+              className="mt-9 flex items-center gap-5"
+            >
+              <Link
+                href={projectHref}
+                className="group/project relative inline-flex min-h-[44px] items-center gap-4 pr-1 text-[8px] font-semibold uppercase tracking-[0.30em] sm:text-[9px]"
+                style={{
+                  color: GOLD_LIGHT,
+                }}
+              >
+                <span className="relative z-10">
+                  {isEnglish
+                    ? "Enter project"
+                    : "Uđi u projekat"}
+                </span>
+
+                <ArrowUpRight
+                  size={13}
+                  strokeWidth={1}
+                  className="relative z-10 transition-transform duration-500 group-hover/project:translate-x-1 group-hover/project:-translate-y-0.5"
+                />
+
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-0 left-0 h-px w-8 transition-[width] duration-700 group-hover/project:w-full"
+                  style={{
+                    background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+                  }}
+                />
+              </Link>
+
+              <span className="font-mono text-[5px] uppercase tracking-[0.32em] text-white/[0.14]">
+                {isEnglish
+                  ? "PROJECT 001"
+                  : "PROJEKAT 001"}
+              </span>
+            </motion.div>
+          </motion.div>
+
+          {/* Cinematic key art */}
 
           <motion.div
             initial={{
               opacity: 0,
-              y: reducedMotion
-                ? 0
-                : 28,
+              y: reducedMotion ? 0 : 30,
             }}
             whileInView={{
               opacity: 1,
@@ -699,78 +532,66 @@ export default function CurrentProjectScene({
             }}
             viewport={{
               once: true,
-              amount: 0.07,
+              amount: 0.08,
             }}
             transition={{
-              delay:
-                reducedMotion
-                  ? 0
-                  : 0.12,
-              duration:
-                reducedMotion
-                  ? 0
-                  : 0.9,
+              delay: reducedMotion ? 0 : 0.10,
+              duration: reducedMotion ? 0 : 0.95,
               ease: EASE,
             }}
+            className="relative"
           >
             <Link
-              ref={posterRef}
               href={projectHref}
-              onPointerMove={
-                handlePointerMove
-              }
-              onPointerEnter={() =>
-                setIsHovered(true)
-              }
+              onPointerMove={handlePointerMove}
+              onPointerEnter={() => setHovered(true)}
               onPointerLeave={() => {
-                setIsHovered(false);
+                setHovered(false);
                 resetPointer();
               }}
-              onFocus={() =>
-                setIsFocused(true)
-              }
-              onBlur={() =>
-                setIsFocused(false)
-              }
-              className="group/poster relative mx-auto block w-full max-w-[610px] outline-none"
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              className="group/project-art relative mx-auto block w-full max-w-[680px] outline-none"
               aria-label={
                 isEnglish
                   ? "Open MRZIM SVOG BRATA project"
                   : "Otvori projekat MRZIM SVOG BRATA"
               }
             >
-              {/* Outer offset frame */}
+              {/* offset registration mark */}
 
-              <div
+              <span
                 aria-hidden="true"
-                className="absolute -inset-3 border border-white/[0.025] transition-all duration-700 group-hover/poster:-inset-4 group-hover/poster:border-white/[0.045]"
+                className="pointer-events-none absolute -right-3 top-10 hidden h-[72%] w-px bg-white/[0.045] lg:block"
               />
 
-              {/* Poster */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -bottom-3 left-10 hidden h-px w-[72%] bg-white/[0.045] lg:block"
+              />
 
               <motion.div
                 style={{
                   x: posterX,
                   y: posterY,
                 }}
-                className="relative aspect-[0.72/1] overflow-hidden border border-white/[0.08] bg-[#080808] shadow-[0_25px_80px_rgba(0,0,0,.3)]"
+                className="relative aspect-[0.78/1] overflow-hidden border border-white/[0.08] bg-[#080808] shadow-[0_28px_90px_rgba(0,0,0,.34)]"
               >
-                {/* Image */}
-
                 <Image
-                  src={POSTER_SRC}
+                  src={posterSrc}
                   alt={
                     isEnglish
-                      ? "MRZIM SVOG BRATA poster"
-                      : "Poster serije MRZIM SVOG BRATA"
+                      ? "MRZIM SVOG BRATA"
+                      : "MRZIM SVOG BRATA"
                   }
                   fill
-                  sizes="(min-width: 1280px) 42vw, (min-width: 1024px) 48vw, 92vw"
                   priority
-                  className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/poster:scale-[1.025]"
+                  sizes="(min-width: 1280px) 47vw, (min-width: 1024px) 52vw, 94vw"
+                  className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/project-art:scale-[1.025]"
+                  onError={() =>
+                    setPosterSrc(FALLBACK_IMAGE)
+                  }
                 />
-
-                {/* Grade */}
 
                 <div
                   aria-hidden="true"
@@ -779,191 +600,129 @@ export default function CurrentProjectScene({
                     background: `
                       linear-gradient(
                         180deg,
-                        rgba(0,0,0,.28),
-                        transparent 26%,
-                        transparent 54%,
-                        rgba(0,0,0,.16) 70%,
-                        rgba(0,0,0,.76) 100%
+                        rgba(0,0,0,.08) 0%,
+                        transparent 34%,
+                        rgba(0,0,0,.08) 58%,
+                        rgba(0,0,0,.72) 100%
                       )
                     `,
                   }}
                 />
 
-                {/* Interactive optical light */}
-
                 <motion.div
                   aria-hidden="true"
-                  className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/poster:opacity-100"
+                  className="absolute inset-0"
+                  animate={{
+                    opacity: interactive ? 1 : 0,
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    ease: EASE,
+                  }}
                   style={{
-                    background: `radial-gradient(circle at ${lightX} ${lightY}, ${GOLD_LIGHT}0d 0%, ${GOLD}05 18%, transparent 44%)`,
+                    background: `radial-gradient(circle at ${lightX} ${lightY}, ${GOLD_LIGHT}12, ${GOLD}05 20%, transparent 48%)`,
                   }}
                 />
-
-                {/* Grain-like depth */}
-
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 opacity-[0.08] mix-blend-screen"
-                  style={{
-                    background:
-                      "radial-gradient(circle at 20% 20%, rgba(255,255,255,.22) 0 1px, transparent 1px)",
-                    backgroundSize:
-                      "4px 4px",
-                  }}
-                />
-
-                {/* Inner frame */}
 
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-4 border border-white/[0.055] sm:inset-5 lg:inset-6"
                 />
 
-                {/* Editorial crop frame */}
-
-                <motion.div
+                <motion.span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-[12%] border"
+                  className="pointer-events-none absolute left-5 top-5 h-8 w-8 border-l border-t lg:left-6 lg:top-6"
                   animate={{
-                    opacity:
-                      isHovered ||
-                      isFocused
-                        ? 0.11
-                        : 0.035,
+                    opacity: interactive
+                      ? 0.8
+                      : 0.42,
                   }}
                   transition={{
-                    duration: 0.5,
+                    duration: 0.45,
                   }}
                   style={{
-                    borderColor:
-                      GOLD_LIGHT,
+                    borderColor: `${GOLD_LIGHT}38`,
                   }}
                 />
 
-                {/* Corner accents */}
-
-                <span
+                <motion.span
                   aria-hidden="true"
-                  className="absolute left-5 top-5 h-7 w-7 border-l border-t lg:left-6 lg:top-6"
+                  className="pointer-events-none absolute bottom-5 right-5 h-8 w-8 border-b border-r lg:bottom-6 lg:right-6"
+                  animate={{
+                    opacity: interactive
+                      ? 0.85
+                      : 0.35,
+                  }}
+                  transition={{
+                    duration: 0.45,
+                  }}
                   style={{
-                    borderColor:
-                      `${GOLD_LIGHT}38`,
+                    borderColor: `${GOLD}32`,
                   }}
                 />
 
-                <span
-                  aria-hidden="true"
-                  className="absolute bottom-5 right-5 h-7 w-7 border-b border-r lg:bottom-6 lg:right-6"
-                  style={{
-                    borderColor:
-                      `${GOLD}32`,
-                  }}
-                />
-
-                {/* Top metadata */}
+                {/* top project marker */}
 
                 <div className="absolute left-5 right-5 top-5 flex items-center justify-between lg:left-6 lg:right-6 lg:top-6">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <span
-                      className="h-1.5 w-1.5 rounded-full"
+                      className="h-[5px] w-[5px] rounded-full"
                       style={{
                         background:
                           GOLD_LIGHT,
-                        boxShadow:
-                          `0 0 8px ${GOLD_LIGHT}45`,
+                        boxShadow: `0 0 8px ${GOLD_LIGHT}48`,
                       }}
                     />
 
-                    <span className="font-mono text-[5px] uppercase tracking-[0.32em] text-white/[0.38]">
+                    <span className="text-[7px] font-semibold uppercase tracking-[0.30em] text-white/[0.42]">
                       UMBRA ORIGINAL
                     </span>
                   </div>
 
-                  <span className="font-mono text-[5px] tracking-[0.28em] text-white/[0.2]">
+                  <span className="font-mono text-[6px] tracking-[0.24em] text-white/[0.22]">
                     001
                   </span>
                 </div>
 
-                {/* Center play indicator */}
+                {/* center play cue */}
 
                 <motion.div
                   aria-hidden="true"
                   className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
                   animate={{
-                    y:
-                      isHovered ||
-                      isFocused
-                        ? -2
-                        : 0,
+                    scale: interactive ? 1.04 : 1,
                   }}
                   transition={{
-                    duration: 0.45,
+                    duration: 0.5,
                     ease: EASE,
                   }}
                 >
-                  <div
-                    className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full border bg-black/[0.18] backdrop-blur-[2px]"
+                  <span
+                    className="flex h-[68px] w-[68px] items-center justify-center rounded-full border bg-black/[0.16] backdrop-blur-[2px]"
                     style={{
-                      borderColor:
-                        `${GOLD_LIGHT}${isHovered || isFocused ? "35" : "22"}`,
+                      borderColor: interactive
+                        ? `${GOLD_LIGHT}42`
+                        : `${GOLD_LIGHT}22`,
                     }}
                   >
-                    {!reducedMotion && (
-                      <motion.span
-                        aria-hidden="true"
-                        className="absolute -inset-2 rounded-full border"
-                        animate={{
-                          opacity:
-                            isHovered ||
-                            isFocused
-                              ? [
-                                  0.08,
-                                  0.32,
-                                  0.08,
-                                ]
-                              : 0,
-                          scale:
-                            isHovered ||
-                            isFocused
-                              ? [
-                                  0.94,
-                                  1.07,
-                                  0.94,
-                                ]
-                              : 1,
-                        }}
-                        transition={{
-                          duration: 2.3,
-                          repeat:
-                            Infinity,
-                          ease:
-                            "easeInOut",
-                        }}
-                        style={{
-                          borderColor:
-                            `${GOLD_LIGHT}32`,
-                        }}
-                      />
-                    )}
-
                     <Play
-                      size={16}
-                      strokeWidth={1.05}
+                      size={15}
+                      strokeWidth={1}
                       fill="currentColor"
-                      className="ml-0.5 text-white/[0.5] transition-colors duration-300 group-hover/poster:text-[#ead39a]/90"
+                      className="ml-0.5 text-white/[0.58] transition-colors duration-300 group-hover/project-art:text-[#ead39a]"
                     />
-                  </div>
+                  </span>
                 </motion.div>
 
-                {/* Bottom poster typography */}
+                {/* bottom title band */}
 
                 <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 lg:p-7">
-                  <div className="max-w-[80%]">
-                    <div className="text-[7px] uppercase tracking-[0.34em] text-white/[0.52]">
+                  <div className="max-w-[75%]">
+                    <div className="text-[9px] font-medium uppercase tracking-[0.24em] text-white/[0.66]">
                       MRZIM SVOG BRATA
                     </div>
 
-                    <div className="mt-2 text-[6px] uppercase tracking-[0.3em] text-white/[0.24]">
+                    <div className="mt-2 text-[7px] uppercase tracking-[0.24em] text-white/[0.30]">
                       {isEnglish
                         ? "THE FIRST UMBRA SERIES"
                         : "PRVA UMBRA SERIJA"}
@@ -972,10 +731,9 @@ export default function CurrentProjectScene({
 
                   <div className="absolute bottom-6 right-6 lg:bottom-7 lg:right-7">
                     <span
-                      className="font-mono text-[6px] tracking-[0.28em]"
+                      className="font-mono text-[6px] tracking-[0.24em]"
                       style={{
-                        color:
-                          `${GOLD_LIGHT}55`,
+                        color: `${GOLD_LIGHT}62`,
                       }}
                     >
                       001 / 2026
@@ -983,117 +741,62 @@ export default function CurrentProjectScene({
                   </div>
                 </div>
 
-                {/* Hover sweep */}
+                {/* hover signal */}
 
                 <motion.span
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-[-25%] top-0 h-full w-[18%] skew-x-[-16deg]"
+                  className="absolute bottom-0 left-0 h-px origin-left"
                   animate={{
-                    x:
-                      isHovered ||
-                      isFocused
-                        ? "760%"
-                        : "-25%",
-                    opacity:
-                      isHovered ||
-                      isFocused
-                        ? [
-                            0,
-                            0.3,
-                            0,
-                          ]
-                        : 0,
+                    width: interactive
+                      ? "100%"
+                      : "26%",
                   }}
                   transition={{
-                    duration:
-                      isHovered ||
-                      isFocused
-                        ? 1.05
-                        : 0.3,
-                    ease:
-                      "easeInOut",
-                  }}
-                  style={{
-                    background:
-                      `linear-gradient(90deg, transparent, ${GOLD_LIGHT}18, transparent)`,
-                    filter:
-                      "blur(2px)",
-                  }}
-                />
-
-                {/* Bottom signal */}
-
-                <motion.span
-                  aria-hidden="true"
-                  className="absolute bottom-0 left-0 h-px"
-                  animate={{
-                    width:
-                      isHovered ||
-                      isFocused
-                        ? "100%"
-                        : "24%",
-                  }}
-                  transition={{
-                    duration: 0.62,
+                    duration: 0.65,
                     ease: EASE,
                   }}
                   style={{
-                    background:
-                      `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent 78%)`,
+                    background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent 78%)`,
                   }}
                 />
               </motion.div>
 
-              {/* Caption */}
+              {/* caption */}
 
-              <div className="mt-5 flex items-center justify-between">
+              <div className="mt-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span
-                    aria-hidden="true"
-                    className="h-px w-9"
+                    className="h-px w-8"
                     style={{
-                      background:
-                        `${GOLD}42`,
+                      background: `${GOLD}38`,
                     }}
                   />
 
-                  <span className="text-[7px] uppercase tracking-[0.3em] text-white/[0.22]">
+                  <span className="text-[7px] uppercase tracking-[0.28em] text-white/[0.22]">
                     {isEnglish
                       ? "CURRENT PRODUCTION"
                       : "AKTUELNA PRODUKCIJA"}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-[7px] uppercase tracking-[0.28em] transition-colors duration-300"
-                    style={{
-                      color:
-                        isHovered ||
-                        isFocused
-                          ? `${GOLD_LIGHT}88`
-                          : `${GOLD_LIGHT}58`,
-                    }}
-                  >
-                    {isEnglish
-                      ? "Open"
-                      : "Otvori"}
-                  </span>
-
-                  <ArrowUpRight
-                    size={11}
-                    strokeWidth={1.1}
-                    className="text-white/[0.26] transition-all duration-300 group-hover/poster:-translate-y-0.5 group-hover/poster:translate-x-0.5 group-hover/poster:text-white/[0.64]"
-                  />
-                </div>
+                <span
+                  className="text-[7px] uppercase tracking-[0.22em]"
+                  style={{
+                    color: interactive
+                      ? `${GOLD_LIGHT}8c`
+                      : `${GOLD_LIGHT}52`,
+                  }}
+                >
+                  {isEnglish
+                    ? "OPEN PROJECT"
+                    : "OTVORI PROJEKAT"}
+                </span>
               </div>
             </Link>
           </motion.div>
         </div>
 
-        {/* ===================================================================
-            NEXT SCENE BRIDGE
-            =================================================================== */}
+        {/* Scene hand-off */}
 
         <motion.div
           initial={{
@@ -1107,29 +810,25 @@ export default function CurrentProjectScene({
             amount: 0.08,
           }}
           transition={{
-            delay:
-              reducedMotion
-                ? 0
-                : 0.18,
-            duration:
-              reducedMotion
-                ? 0
-                : 0.5,
+            delay: reducedMotion ? 0 : 0.16,
+            duration: reducedMotion ? 0 : 0.55,
             ease: EASE,
           }}
-          className="mt-16 flex items-center justify-between border-t border-white/[0.05] pt-5"
+          className="mt-16 flex items-center justify-between border-t border-white/[0.05] pt-5 lg:mt-20"
         >
-          <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.14]">
-            {isEnglish
-              ? "THE STORY CONTINUES"
-              : "PRIČA SE NASTAVLJA"}
-          </span>
+          <div>
+            <span className="font-mono text-[6px] uppercase tracking-[0.30em] text-white/[0.14]">
+              {isEnglish
+                ? "THE STORY CONTINUES"
+                : "PRIČA SE NASTAVLJA"}
+            </span>
+          </div>
 
           <Link
             href={charactersHref}
             className="group/next flex items-center gap-3"
           >
-            <span className="text-[7px] uppercase tracking-[0.27em] text-white/[0.2] transition-colors duration-300 group-hover/next:text-white/[0.46]">
+            <span className="text-[7px] font-semibold uppercase tracking-[0.25em] text-white/[0.24] transition-colors duration-300 group-hover/next:text-white/[0.62]">
               {isEnglish
                 ? "03 / CHARACTERS"
                 : "03 / LIKOVI"}
@@ -1137,45 +836,15 @@ export default function CurrentProjectScene({
 
             <ArrowDownRight
               size={13}
-              strokeWidth={1.1}
-              className="transition-transform duration-300 group-hover/next:translate-x-0.5 group-hover/next:translate-y-0.5"
+              strokeWidth={1}
+              className="transition-transform duration-400 group-hover/next:translate-x-0.5 group-hover/next:translate-y-0.5"
               style={{
-                color:
-                  `${GOLD_LIGHT}70`,
+                color: `${GOLD_LIGHT}70`,
               }}
             />
           </Link>
         </motion.div>
       </div>
     </section>
-  );
-}
-
-function Meta({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <span className="text-[6px] uppercase tracking-[0.3em] text-white/[0.2]">
-        {label}
-      </span>
-
-      <span
-        className="truncate text-[8px] uppercase tracking-[0.2em]"
-        style={{
-          color: accent
-            ? `${GOLD_LIGHT}82`
-            : "rgba(255,255,255,.4)",
-        }}
-      >
-        {value}
-      </span>
-    </div>
   );
 }

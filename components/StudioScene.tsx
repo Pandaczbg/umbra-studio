@@ -4,14 +4,12 @@ import Link from "next/link";
 import {
   ArrowDownRight,
   ArrowUpRight,
-  MoveDownRight,
 } from "lucide-react";
 import {
   motion,
   useReducedMotion,
   useSpring,
   useTransform,
-  type MotionValue,
 } from "framer-motion";
 import {
   useRef,
@@ -24,104 +22,111 @@ const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const GOLD_DARK = "#8f7142";
 
-const EASE = [
-  0.22,
-  1,
-  0.36,
-  1,
-] as const;
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 const copyByLocale = {
   sr: {
-    section: "04 / O Umbri",
-    kicker: "STUDIO MANIFEST",
-    titleA: "Priča",
-    titleB: "ostaje.",
+    section: "04 / O UMBRI",
+    kicker: "STUDIO",
+    titleA: "Priče",
+    titleB: "koje ostaju.",
     lead:
-      "Umbra je filmski studio koji gradi priče od prvog impulsa do poslednjeg kadra.",
+      "Umbra Studio je prostor za filmske priče, adaptacije i svetove koji ne nestaju zajedno sa poslednjim kadrom.",
     body:
-      "Ideja je početak. Lik joj daje lice. Prostor joj daje atmosferu. Vreme joj daje ritam. A kadar joj daje trag koji ostaje i kada se priča završi.",
+      "Ne počinjemo od tehnologije. Počinjemo od priče. Od lika koji ima razlog da postoji, prostora koji ima svoju tišinu i trenutka koji zaslužuje da bude zapamćen.",
     statementA: "NE TRAŽIMO",
-    statementB: "SAMO KADAR.",
+    statementB: "LEP KADAR.",
     statementC: "TRAŽIMO",
-    statementD:
-      "ONO ŠTO OSTAJE U NJEMU.",
+    statementD: "KADAR KOJI OSTAVLJA SENKU.",
+    systemLabel: "KAKO GRADIMO",
+    systemTitle:
+      "Svaka priča ima svoj ritam.",
     principles: [
       {
         index: "01",
         title: "PRIČA",
         description:
-          "Sve počinje narativom. Bez jasnog impulsa nema slike koja ima razlog da postoji.",
+          "Pre slike dolazi razlog. Svaki kadar mora da pripada nečemu većem od samog kadra.",
       },
       {
         index: "02",
         title: "LIK",
         description:
-          "Lik nije dekoracija. On nosi sukob, odluku, emociju i posledicu.",
+          "Priču nose ljudi. Njihove odluke, odnosi i posledice daju svetu težinu.",
       },
       {
         index: "03",
-        title: "ATMOSFERA",
+        title: "SVET",
         description:
-          "Svetlo, prostor, boja, zvuk i vreme grade svet u kojem priča može da diše.",
+          "Mesto, vreme, svetlo, zvuk i detalj stvaraju prostor u koji gledalac može da poveruje.",
       },
       {
         index: "04",
         title: "TRAG",
         description:
-          "Cilj nije samo završiti kadar. Cilj je napraviti sliku koju gledalac pamti.",
+          "Najvažnije počinje kada se kadar završi. Ako nešto ostane u gledaocu, priča je uspela.",
       },
     ],
     closing:
-      "Od ideje do ekrana — jedan sistem, mnogo priča.",
+      "Umbra Studio — priče koje ostavljaju senku.",
     next: "05 / GLEDAJ",
     nextLabel: "Gledaj",
+    definitionLabel: "NAŠA IDEJA",
+    positionLabel: "AUTORSKI STAV",
+    systemMeta:
+      "PRIČA / LIK / SVET / TRAG",
   },
 
   en: {
-    section: "04 / About Umbra",
-    kicker: "STUDIO MANIFEST",
-    titleA: "The story",
-    titleB: "remains.",
+    section: "04 / ABOUT UMBRA",
+    kicker: "STUDIO",
+    titleA: "Stories",
+    titleB: "that remain.",
     lead:
-      "Umbra is a film studio that builds stories from the first impulse to the final frame.",
+      "Umbra Studio is a space for cinematic stories, adaptations and worlds that do not disappear with the final frame.",
     body:
-      "The idea is the beginning. The character gives it a face. Space gives it atmosphere. Time gives it rhythm. And the frame gives it a trace that remains after the story ends.",
+      "We do not begin with technology. We begin with the story. With a character who has a reason to exist, a space with its own silence, and a moment worth remembering.",
     statementA: "WE ARE NOT",
-    statementB: "LOOKING FOR",
-    statementC: "JUST A FRAME.",
-    statementD:
-      "WE ARE LOOKING FOR WHAT REMAINS IN IT.",
+    statementB: "LOOKING FOR A",
+    statementC: "BEAUTIFUL FRAME.",
+    statementD: "WE WANT THE FRAME THAT LEAVES A SHADOW.",
+    systemLabel: "HOW WE BUILD",
+    systemTitle:
+      "Every story has its own rhythm.",
     principles: [
       {
         index: "01",
         title: "STORY",
         description:
-          "Everything begins with narrative. Without a clear impulse, there is no image with a reason to exist.",
+          "The reason comes before the image. Every frame must belong to something larger than itself.",
       },
       {
         index: "02",
         title: "CHARACTER",
         description:
-          "A character is not decoration. They carry conflict, choice, emotion and consequence.",
+          "Stories are carried by people. Their choices, relationships and consequences give a world its weight.",
       },
       {
         index: "03",
-        title: "ATMOSPHERE",
+        title: "WORLD",
         description:
-          "Light, space, color, sound and time build the world in which a story can breathe.",
+          "Place, time, light, sound and detail create a space the viewer can believe in.",
       },
       {
         index: "04",
         title: "TRACE",
         description:
-          "The goal is not simply to finish a frame. It is to create an image the viewer remembers.",
+          "The most important part begins when the frame ends. If something remains with the viewer, the story worked.",
       },
     ],
     closing:
-      "From idea to screen — one system, many stories.",
+      "Umbra Studio — stories that leave a shadow.",
     next: "05 / WATCH",
     nextLabel: "Watch",
+    definitionLabel: "OUR IDEA",
+    positionLabel: "CREATIVE POSITION",
+    systemMeta:
+      "STORY / CHARACTER / WORLD / TRACE",
   },
 } as const;
 
@@ -130,49 +135,39 @@ export default function StudioScene({
 }: {
   locale?: Locale;
 }) {
-  const reducedMotion =
-    useReducedMotion() ?? false;
-
-  const copy =
-    copyByLocale[locale];
+  const reducedMotion = useReducedMotion() ?? false;
+  const copy = copyByLocale[locale];
 
   const nextHref =
     locale === "en"
       ? "/en#watch"
       : "/#watch";
 
-  const stageRef =
-    useRef<HTMLDivElement | null>(
-      null,
-    );
+  const stageRef = useRef<HTMLDivElement | null>(null);
 
-  const pointerX =
-    useSpring(0, {
-      stiffness: 70,
-      damping: 24,
-      mass: 0.6,
-    });
+  const pointerX = useSpring(0, {
+    stiffness: 70,
+    damping: 24,
+    mass: 0.6,
+  });
 
-  const pointerY =
-    useSpring(0, {
-      stiffness: 70,
-      damping: 24,
-      mass: 0.6,
-    });
+  const pointerY = useSpring(0, {
+    stiffness: 70,
+    damping: 24,
+    mass: 0.6,
+  });
 
-  const glowX =
-    useTransform(
-      pointerX,
-      [-1, 1],
-      ["28%", "72%"],
-    );
+  const glowX = useTransform(
+    pointerX,
+    [-1, 1],
+    ["28%", "72%"],
+  );
 
-  const glowY =
-    useTransform(
-      pointerY,
-      [-1, 1],
-      ["30%", "70%"],
-    );
+  const glowY = useTransform(
+    pointerY,
+    [-1, 1],
+    ["30%", "70%"],
+  );
 
   const [activePrinciple, setActivePrinciple] =
     useState<string | null>(null);
@@ -182,8 +177,7 @@ export default function StudioScene({
   ) => {
     if (
       reducedMotion ||
-      event.pointerType ===
-        "touch"
+      event.pointerType === "touch"
     ) {
       return;
     }
@@ -192,16 +186,14 @@ export default function StudioScene({
       event.currentTarget.getBoundingClientRect();
 
     pointerX.set(
-      ((event.clientX -
-        rect.left) /
+      ((event.clientX - rect.left) /
         rect.width) *
         2 -
         1,
     );
 
     pointerY.set(
-      ((event.clientY -
-        rect.top) /
+      ((event.clientY - rect.top) /
         rect.height) *
         2 -
         1,
@@ -218,39 +210,37 @@ export default function StudioScene({
       id="o-studiju"
       data-umbra-scene="studio"
       aria-labelledby="studio-title"
-      className="relative overflow-hidden border-b border-white/[0.06] bg-[#050505]"
+      className="relative overflow-hidden border-b border-white/[0.055] bg-[#050505]"
     >
-      {/* =====================================================================
+      {/* ================================================================
           ATMOSPHERE
-          ===================================================================== */}
+          ================================================================ */}
 
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <div
-          className="absolute left-1/2 top-[20%] h-[780px] w-[780px] -translate-x-1/2 rounded-full"
+          className="absolute left-1/2 top-[18%] h-[820px] w-[820px] -translate-x-1/2 rounded-full"
           style={{
             background: `
               radial-gradient(
                 circle,
                 ${GOLD}05 0%,
-                ${GOLD}015 32%,
+                ${GOLD}014 34%,
                 transparent 72%
               )
             `,
-            filter:
-              "blur(85px)",
+            filter: "blur(95px)",
           }}
         />
 
         <div
-          className="absolute -left-[20%] top-[38%] h-[720px] w-[720px] rounded-full"
+          className="absolute -left-[22%] top-[44%] h-[760px] w-[760px] rounded-full"
           style={{
             background:
               "radial-gradient(circle, rgba(255,255,255,.012), transparent 70%)",
-            filter:
-              "blur(85px)",
+            filter: "blur(95px)",
           }}
         />
 
@@ -263,10 +253,16 @@ export default function StudioScene({
         />
 
         <span
-          className="absolute left-[58%] top-0 h-full w-px opacity-[0.22]"
+          className="absolute left-[62%] top-0 h-full w-px opacity-[0.13]"
           style={{
-            background:
-              `linear-gradient(180deg, transparent, ${GOLD}18 25%, transparent 76%)`,
+            background: `
+              linear-gradient(
+                180deg,
+                transparent,
+                ${GOLD}16 25%,
+                transparent 74%
+              )
+            `,
           }}
         />
 
@@ -274,15 +270,15 @@ export default function StudioScene({
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,.03), transparent 28%, transparent 76%, rgba(0,0,0,.38))",
+              "linear-gradient(180deg, rgba(0,0,0,.025), transparent 26%, transparent 76%, rgba(0,0,0,.4))",
           }}
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1540px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16">
-        {/* ===================================================================
-            HEADER
-            =================================================================== */}
+      <div className="relative z-10 mx-auto max-w-[1540px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-36 xl:px-16">
+        {/* ==============================================================
+            SECTION HEADER
+            ============================================================== */}
 
         <motion.div
           initial={{
@@ -298,8 +294,7 @@ export default function StudioScene({
             amount: 0.12,
           }}
           transition={{
-            duration:
-              reducedMotion ? 0 : 0.52,
+            duration: reducedMotion ? 0 : 0.52,
             ease: EASE,
           }}
           className="flex items-center justify-between border-b border-white/[0.055] pb-5"
@@ -336,11 +331,11 @@ export default function StudioScene({
           </span>
         </motion.div>
 
-        {/* ===================================================================
+        {/* ==============================================================
             INTRO
-            =================================================================== */}
+            ============================================================== */}
 
-        <div className="mt-16 grid gap-14 lg:grid-cols-[1.08fr_0.92fr] lg:gap-24 xl:mt-20">
+        <div className="mt-16 grid gap-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-24 xl:mt-20">
           <div>
             <motion.div
               initial={{
@@ -356,14 +351,13 @@ export default function StudioScene({
                 amount: 0.14,
               }}
               transition={{
-                duration:
-                  reducedMotion ? 0 : 0.8,
+                duration: reducedMotion ? 0 : 0.82,
                 ease: EASE,
               }}
             >
               <h2
                 id="studio-title"
-                className="max-w-[1000px] text-[clamp(4.3rem,8.8vw,10.2rem)] font-[420] uppercase leading-[0.75] tracking-[-0.088em] text-white"
+                className="max-w-[1040px] text-[clamp(4.3rem,8.9vw,10.2rem)] font-[420] uppercase leading-[0.75] tracking-[-0.088em] text-white"
               >
                 <span className="block">
                   {copy.titleA}
@@ -389,13 +383,11 @@ export default function StudioScene({
                 amount: 0.14,
               }}
               transition={{
-                delay:
-                  reducedMotion ? 0 : 0.09,
-                duration:
-                  reducedMotion ? 0 : 0.72,
+                delay: reducedMotion ? 0 : 0.09,
+                duration: reducedMotion ? 0 : 0.72,
                 ease: EASE,
               }}
-              className="mt-9 h-px max-w-[580px] origin-left"
+              className="mt-10 h-px max-w-[620px] origin-left"
               style={{
                 background:
                   `linear-gradient(90deg, ${GOLD}65, rgba(255,255,255,.05) 55%, transparent)`,
@@ -416,33 +408,30 @@ export default function StudioScene({
                 amount: 0.12,
               }}
               transition={{
-                delay:
-                  reducedMotion ? 0 : 0.16,
-                duration:
-                  reducedMotion ? 0 : 0.58,
+                delay: reducedMotion ? 0 : 0.16,
+                duration: reducedMotion ? 0 : 0.58,
                 ease: EASE,
               }}
-              className="mt-8 max-w-[620px] text-[15px] leading-8 text-white/[0.44] sm:text-[16px]"
+              className="mt-8 max-w-[660px] text-[15px] leading-8 text-white/[0.45] sm:text-[16px]"
             >
               {copy.lead}
             </motion.p>
           </div>
 
-          {/* =================================================================
-              DEFINING OBJECT
-              ================================================================= */}
+          {/* ============================================================
+              DEFINITION
+              ============================================================ */}
 
           <StudioDefinition
             text={copy.body}
-            reducedMotion={
-              reducedMotion
-            }
+            label={copy.definitionLabel}
+            reducedMotion={reducedMotion}
           />
         </div>
 
-        {/* ===================================================================
+        {/* ==============================================================
             MANIFEST
-            =================================================================== */}
+            ============================================================== */}
 
         <motion.div
           ref={stageRef}
@@ -459,32 +448,22 @@ export default function StudioScene({
             amount: 0.12,
           }}
           transition={{
-            delay:
-              reducedMotion ? 0 : 0.08,
-            duration:
-              reducedMotion ? 0 : 0.7,
+            delay: reducedMotion ? 0 : 0.08,
+            duration: reducedMotion ? 0 : 0.7,
             ease: EASE,
           }}
-          onPointerMove={
-            handlePointerMove
-          }
-          onPointerLeave={
-            resetPointer
-          }
+          onPointerMove={handlePointerMove}
+          onPointerLeave={resetPointer}
           className="group/manifest relative mt-24 overflow-hidden border-y border-white/[0.055] py-16 sm:mt-28 sm:py-20 lg:mt-32 lg:py-24"
         >
-          {/* Interactive glow */}
-
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-700 group-hover/manifest:opacity-100"
             style={{
               background:
-                `radial-gradient(circle at ${glowX} ${glowY}, ${GOLD}08 0%, transparent 34%)`,
+                `radial-gradient(circle at ${glowX} ${glowY}, ${GOLD}08 0%, transparent 36%)`,
             }}
           />
-
-          {/* Side geometry */}
 
           <span
             aria-hidden="true"
@@ -506,12 +485,12 @@ export default function StudioScene({
 
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -right-[4%] top-1/2 -translate-y-1/2 text-[clamp(7rem,18vw,18rem)] font-[500] uppercase leading-none tracking-[-0.11em] text-white/[0.012]"
+            className="pointer-events-none absolute -right-[4%] top-1/2 -translate-y-1/2 text-[clamp(8rem,19vw,19rem)] font-[500] uppercase leading-none tracking-[-0.11em] text-white/[0.012]"
           >
             UMBRA
           </span>
 
-          <div className="relative max-w-[1160px]">
+          <div className="relative max-w-[1180px]">
             <div className="flex items-center gap-3">
               <span
                 className="font-mono text-[6px] tracking-[0.34em]"
@@ -524,46 +503,36 @@ export default function StudioScene({
               </span>
 
               <span className="font-mono text-[6px] uppercase tracking-[0.34em] text-white/[0.16]">
-                {locale === "en"
-                  ? "CREATIVE POSITION"
-                  : "KREATIVNI STAV"}
+                {copy.positionLabel}
               </span>
             </div>
 
-            <div className="mt-9">
+            <div className="mt-10">
               <ManifestLine
                 text={copy.statementA}
                 muted
-                reducedMotion={
-                  reducedMotion
-                }
+                reducedMotion={reducedMotion}
               />
 
               <ManifestLine
                 text={copy.statementB}
-                reducedMotion={
-                  reducedMotion
-                }
+                reducedMotion={reducedMotion}
               />
 
               <ManifestLine
                 text={copy.statementC}
                 serif
-                reducedMotion={
-                  reducedMotion
-                }
+                reducedMotion={reducedMotion}
               />
 
               <ManifestLine
                 text={copy.statementD}
                 accented
-                reducedMotion={
-                  reducedMotion
-                }
+                reducedMotion={reducedMotion}
               />
             </div>
 
-            <div className="mt-10 flex items-center gap-3">
+            <div className="mt-11 flex items-center gap-3">
               <motion.span
                 aria-hidden="true"
                 className="h-px w-12 origin-left"
@@ -578,14 +547,8 @@ export default function StudioScene({
                   amount: 0.1,
                 }}
                 transition={{
-                  delay:
-                    reducedMotion
-                      ? 0
-                      : 0.35,
-                  duration:
-                    reducedMotion
-                      ? 0
-                      : 0.7,
+                  delay: reducedMotion ? 0 : 0.35,
+                  duration: reducedMotion ? 0 : 0.7,
                   ease: EASE,
                 }}
                 style={{
@@ -601,41 +564,57 @@ export default function StudioScene({
           </div>
         </motion.div>
 
-        {/* ===================================================================
-            FOUR PRINCIPLES
-            =================================================================== */}
+        {/* ==============================================================
+            SYSTEM
+            ============================================================== */}
 
         <div className="mt-20 lg:mt-24">
-          <div className="mb-6 flex items-end justify-between">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: reducedMotion ? 0 : 8,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+              amount: 0.1,
+            }}
+            transition={{
+              duration: reducedMotion ? 0 : 0.5,
+              ease: EASE,
+            }}
+            className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+          >
             <div>
               <div className="font-mono text-[6px] uppercase tracking-[0.32em] text-white/[0.17]">
-                {locale === "en"
-                  ? "THE SYSTEM"
-                  : "SISTEM"}
+                {copy.systemLabel}
               </div>
 
-              <div className="mt-2 text-[8px] uppercase tracking-[0.31em] text-white/[0.3]">
-                {locale === "en"
-                  ? "Four things that hold the story together."
-                  : "Četiri stvari koje drže priču na okupu."}
-              </div>
+              <h3 className="mt-3 max-w-[700px] text-[clamp(1.5rem,2.7vw,2.7rem)] font-[420] uppercase leading-[0.92] tracking-[-0.045em] text-white/[0.82]">
+                {copy.systemTitle}
+              </h3>
             </div>
 
-            <span className="font-mono text-[6px] tracking-[0.28em] text-white/[0.14]">
-              04 / 04
-            </span>
-          </div>
+            <div className="flex items-center gap-4">
+              <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.12] sm:block">
+                {copy.systemMeta}
+              </span>
+
+              <span className="font-mono text-[6px] tracking-[0.28em] text-white/[0.14]">
+                04 / 04
+              </span>
+            </div>
+          </motion.div>
 
           <div className="grid gap-px border border-white/[0.055] bg-white/[0.035] sm:grid-cols-2 lg:grid-cols-4">
             {copy.principles.map(
               (principle, index) => (
                 <PrincipleCard
-                  key={
-                    principle.index
-                  }
-                  principle={
-                    principle
-                  }
+                  key={principle.index}
+                  principle={principle}
                   index={index}
                   active={
                     activePrinciple ===
@@ -643,27 +622,23 @@ export default function StudioScene({
                   }
                   setActive={() =>
                     setActivePrinciple(
-                      (
-                        current,
-                      ) =>
+                      (current) =>
                         current ===
                         principle.index
                           ? null
                           : principle.index,
                     )
                   }
-                  reducedMotion={
-                    reducedMotion
-                  }
+                  reducedMotion={reducedMotion}
                 />
               ),
             )}
           </div>
         </div>
 
-        {/* ===================================================================
+        {/* ==============================================================
             CLOSING
-            =================================================================== */}
+            ============================================================== */}
 
         <motion.div
           initial={{
@@ -677,8 +652,7 @@ export default function StudioScene({
             amount: 0.08,
           }}
           transition={{
-            duration:
-              reducedMotion ? 0 : 0.5,
+            duration: reducedMotion ? 0 : 0.5,
             ease: EASE,
           }}
           className="mt-16 flex flex-col gap-6 border-t border-white/[0.055] pt-6 sm:mt-20 sm:flex-row sm:items-center sm:justify-between"
@@ -692,7 +666,12 @@ export default function StudioScene({
               }}
             />
 
-            <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.16]">
+            <span
+              className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.16]"
+              style={{
+                color: `${GOLD_LIGHT}5d`,
+              }}
+            >
               {copy.closing}
             </span>
           </div>
@@ -731,9 +710,11 @@ export default function StudioScene({
 
 function StudioDefinition({
   text,
+  label,
   reducedMotion,
 }: {
   text: string;
+  label: string;
   reducedMotion: boolean;
 }) {
   return (
@@ -751,10 +732,8 @@ function StudioDefinition({
         amount: 0.13,
       }}
       transition={{
-        delay:
-          reducedMotion ? 0 : 0.12,
-        duration:
-          reducedMotion ? 0 : 0.7,
+        delay: reducedMotion ? 0 : 0.12,
+        duration: reducedMotion ? 0 : 0.7,
         ease: EASE,
       }}
       className="relative self-end border-l border-white/[0.07] pl-6 sm:pl-8"
@@ -769,10 +748,10 @@ function StudioDefinition({
       />
 
       <div className="font-mono text-[6px] uppercase tracking-[0.34em] text-white/[0.17]">
-        DEFINICIJA
+        {label}
       </div>
 
-      <p className="mt-5 max-w-[530px] text-[13px] leading-7 text-white/[0.34] sm:text-[14px] sm:leading-8">
+      <p className="mt-5 max-w-[540px] text-[13px] leading-7 text-white/[0.34] sm:text-[14px] sm:leading-8">
         {text}
       </p>
 
@@ -786,7 +765,7 @@ function StudioDefinition({
         />
 
         <span className="font-mono text-[6px] tracking-[0.3em] text-white/[0.14]">
-          04 / 05
+          UMBRA / 04
         </span>
       </div>
     </motion.div>
@@ -814,7 +793,7 @@ function ManifestLine({
     <motion.div
       initial={{
         opacity: 0,
-        y: reducedMotion ? 0 : 14,
+        y: reducedMotion ? 0 : 16,
       }}
       whileInView={{
         opacity: 1,
@@ -825,12 +804,11 @@ function ManifestLine({
         amount: 0.08,
       }}
       transition={{
-        duration:
-          reducedMotion ? 0 : 0.62,
+        duration: reducedMotion ? 0 : 0.64,
         ease: EASE,
       }}
       className={[
-        "text-[clamp(2.2rem,5vw,5.8rem)] font-[420] uppercase leading-[0.86] tracking-[-0.062em]",
+        "max-w-[1180px] text-[clamp(2.15rem,5vw,5.8rem)] font-[420] uppercase leading-[0.86] tracking-[-0.064em]",
         serif
           ? "font-serif font-normal italic"
           : "",
@@ -838,7 +816,7 @@ function ManifestLine({
           ? "text-white/[0.29]"
           : "",
         accented
-          ? "text-white/[0.74]"
+          ? "max-w-[1100px] text-white/[0.78]"
           : "",
         !muted &&
         !accented &&
@@ -891,18 +869,16 @@ function PrincipleCard({
         amount: 0.08,
       }}
       transition={{
-        delay:
-          reducedMotion
-            ? 0
-            : index * 0.04,
-        duration:
-          reducedMotion ? 0 : 0.48,
+        delay: reducedMotion
+          ? 0
+          : index * 0.04,
+        duration: reducedMotion
+          ? 0
+          : 0.48,
         ease: EASE,
       }}
       className="group/card relative min-h-[255px] overflow-hidden bg-[#060606] p-6 text-left outline-none sm:p-7 lg:p-8"
     >
-      {/* Active field */}
-
       <motion.span
         aria-hidden="true"
         className="absolute inset-0 origin-bottom-left"
@@ -911,8 +887,7 @@ function PrincipleCard({
           scaleY: active ? 1 : 0,
         }}
         transition={{
-          duration:
-            reducedMotion ? 0 : 0.5,
+          duration: reducedMotion ? 0 : 0.5,
           ease: EASE,
         }}
         style={{
@@ -921,7 +896,12 @@ function PrincipleCard({
         }}
       />
 
-      {/* Top */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-3 top-10 font-mono text-[92px] font-medium leading-none tracking-[-0.09em] text-white/[0.012]"
+      >
+        {principle.index}
+      </span>
 
       <div className="relative z-10 flex items-center justify-between">
         <span
@@ -942,8 +922,7 @@ function PrincipleCard({
             y: active ? -1 : 0,
           }}
           transition={{
-            duration:
-              reducedMotion ? 0 : 0.35,
+            duration: reducedMotion ? 0 : 0.35,
             ease: EASE,
           }}
         >
@@ -955,17 +934,6 @@ function PrincipleCard({
         </motion.span>
       </div>
 
-      {/* Number atmosphere */}
-
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-3 top-10 font-mono text-[92px] font-medium leading-none tracking-[-0.09em] text-white/[0.012]"
-      >
-        {principle.index}
-      </span>
-
-      {/* Title */}
-
       <motion.h3
         animate={{
           x: active ? 4 : 0,
@@ -974,8 +942,7 @@ function PrincipleCard({
             : "rgba(255,255,255,.84)",
         }}
         transition={{
-          duration:
-            reducedMotion ? 0 : 0.38,
+          duration: reducedMotion ? 0 : 0.38,
           ease: EASE,
         }}
         className="relative z-10 mt-16 text-[18px] font-[520] uppercase tracking-[-0.025em] sm:text-[20px]"
@@ -983,16 +950,13 @@ function PrincipleCard({
         {principle.title}
       </motion.h3>
 
-      {/* Description */}
-
       <motion.p
         animate={{
-          opacity: active ? 0.56 : 0.28,
+          opacity: active ? 0.58 : 0.29,
           y: active ? 0 : 2,
         }}
         transition={{
-          duration:
-            reducedMotion ? 0 : 0.35,
+          duration: reducedMotion ? 0 : 0.35,
           ease: EASE,
         }}
         className="relative z-10 mt-4 max-w-[240px] text-[9px] leading-5 sm:text-[10px] sm:leading-6"
@@ -1000,17 +964,14 @@ function PrincipleCard({
         {principle.description}
       </motion.p>
 
-      {/* Bottom signal */}
-
       <motion.span
         aria-hidden="true"
         className="absolute bottom-0 left-0 h-px origin-left"
         animate={{
-          scaleX: active ? 1 : 0.16,
+          scaleX: active ? 1 : 0.14,
         }}
         transition={{
-          duration:
-            reducedMotion ? 0 : 0.55,
+          duration: reducedMotion ? 0 : 0.55,
           ease: EASE,
         }}
         style={{
@@ -1020,8 +981,6 @@ function PrincipleCard({
         }}
       />
 
-      {/* Side signal */}
-
       <motion.span
         aria-hidden="true"
         className="absolute bottom-0 left-0 top-0 w-px origin-bottom"
@@ -1029,8 +988,7 @@ function PrincipleCard({
           scaleY: active ? 1 : 0,
         }}
         transition={{
-          duration:
-            reducedMotion ? 0 : 0.55,
+          duration: reducedMotion ? 0 : 0.55,
           ease: EASE,
         }}
         style={{

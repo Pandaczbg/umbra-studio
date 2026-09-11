@@ -1,4 +1,17 @@
-export type ProjectStatus = "in-production" | "development" | "upcoming";
+export type ProjectStatus =
+  | "in-production"
+  | "development"
+  | "upcoming";
+
+export type ProjectBook = {
+  title: string;
+  author: string;
+  coverSr: string;
+  coverEn: string;
+  pdfSr: string;
+  pdfEn: string;
+  publicUrl?: string;
+};
 
 export type Project = {
   id: string;
@@ -10,6 +23,7 @@ export type Project = {
   longDescription: string;
   platform: string;
   featured: boolean;
+  book?: ProjectBook;
 };
 
 export const projects: Project[] = [
@@ -19,21 +33,46 @@ export const projects: Project[] = [
     title: "MRZIM SVOG BRATA",
     type: "Serija",
     status: "in-production",
-    shortDescription: "Prva serija studija Umbra, zasnovana na romanu Branislava Bojčića.",
+
+    shortDescription:
+      "Prva serija Umbra Studija, filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića",
+
     longDescription:
-      "Umbra Studio razvija MRZIM SVOG BRATA kao epizodnu filmsku adaptaciju izvornog dela, s posebnim fokusom na likove, atmosferu i filmsko pripovedanje.",
+      "Prva serija Umbra Studija je filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića, razvijena kao epizodna ekranizacija sa fokusom na likove, atmosferu i filmsko pripovedanje.",
+
     platform: "YouTube",
     featured: true,
+
+    book: {
+      title: "MRZIM SVOG BRATA",
+      author: "Branislav Bojčić",
+
+      // Fajlovi koji su trenutno u public/books/Mrzim-svog-brata/
+      coverSr: "/books/Mrzim-svog-brata/cover-sr.jpg",
+      coverEn: "/books/Mrzim-svog-brata/cover-en.jpg",
+
+      pdfSr:
+        "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",
+      pdfEn: "/books/Mrzim-svog-brata/mrzim-svog-brata-en.pdf",
+
+      publicUrl:
+        "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?userstoinvite=kotiljion@gmail.com&resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
+    },
   },
+
   {
     id: "project-02",
     slug: "biblija",
     title: "BIBLIJA",
     type: "Projekat",
     status: "development",
-    shortDescription: "Drugi projekat studija Umbra, zasnovan na biblijskom svetu i njegovim pričama.",
+
+    shortDescription:
+      "Drugi projekat studija Umbra, zasnovan na biblijskom svetu i njegovim pričama.",
+
     longDescription:
       "Umbra Studio razvija BIBLIJU kao zaseban storytelling univerzum zasnovan na biblijskim pričama.",
+
     platform: "Umbra Studio",
     featured: false,
   },

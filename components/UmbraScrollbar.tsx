@@ -11,8 +11,8 @@ import {
 
    Visual client of UmbraMotionSystem.
 
-   It does NOT listen to native "scroll".
-   It consumes "umbra:motion" as the only scroll source.
+   It does NOT own page scrolling.
+   It consumes "umbra:motion" as the primary motion source.
 
    Owns:
    - geometry
@@ -21,6 +21,9 @@ import {
    - track click
    - keyboard navigation
    - hover / idle state
+
+   The component also keeps its geometry synchronized with the document
+   after layout/content changes so the thumb remains reliable.
    ========================================================================== */
 
 type MotionDirection =
@@ -123,6 +126,11 @@ export default function UmbraScrollbar() {
       null,
     );
 
+  const mutationObserverRef =
+    useRef<MutationObserver | null>(
+      null,
+    );
+
   const reducedMotionRef =
     useRef(false);
 
@@ -197,127 +205,18 @@ export default function UmbraScrollbar() {
 
       thumb.style.height =
         `${thumbHeight}px`;
-    }, []);
 
-  const render =
-    useCallback(() => {
-      rafRef.current =
-        null;
+      const currentProgress =
+        clamp(
+          targetProgressRef.current,
+        );
 
-      const thumb =
-        thumbRef.current;
-
-      const glow =
-        glowRef.current;
-
-      const core =
-        coreRef.current;
-
-      if (
-        !thumb ||
-        !glow ||
-        !core
-      ) {
-        return;
-      }
-
-      const target =
-        targetProgressRef.current;
-
-      const current =
-        renderedProgressRef.current;
-
-      const targetEnergy =
-        targetEnergyRef.current;
-
-      const currentEnergy =
-        renderedEnergyRef.current;
-
-      const reduced =
-        reducedMotionRef.current;
-
-      const progress =
-        reduced ||
-        draggingRef.current
-          ? target
-          : current +
-            (target -
-              current) *
-              0.22;
-
-      const energy =
-        reduced
-          ? targetEnergy
-          : currentEnergy +
-            (
-              targetEnergy -
-              currentEnergy
-            ) *
-              0.18;
-
-      renderedProgressRef.current =
-        progress;
-
-      renderedEnergyRef.current =
-        energy;
-
-      const {
-        travel,
-      } =
-        geometryRef.current;
-
-      const y =
-        progress *
+      const currentY =
+        currentProgress *
         travel;
 
-      const tiltBase =
-        directionRef.current ===
-        "down"
-          ? 0.4
-          : directionRef.current ===
-              "up"
-            ? -0.4
-            : 0;
-
-      const tilt =
-        draggingRef.current
-          ? 0
-          : tiltBase *
-            energy;
-
       thumb.style.transform =
-        `translate3d(0, ${y}px, 0) rotateZ(${tilt}deg)`;
-
-      const opacity =
-        0.12 +
-        energy *
-          0.5;
-
-      glow.style.opacity =
-        String(opacity);
-
-      core.style.transform =
-        `scaleY(${0.6 + energy * 0.4})`;
-
-      core.style.opacity =
-        String(
-          0.4 +
-            energy *
-              0.5,
-        );
-
-      const difference =
-        Math.abs(
-          target -
-            progress,
-        );
-
-      if (
-        difference > 0.001 &&
-        !reduced
-      ) {
-        requestRender();
-      }
+        `translate3d(0, ${currentY}px, 0)`;
     }, []);
 
   const requestRender =
@@ -331,9 +230,147 @@ export default function UmbraScrollbar() {
 
       rafRef.current =
         window.requestAnimationFrame(
-          render,
+          () => {
+            rafRef.current =
+              null;
+
+            const thumb =
+              thumbRef.current;
+
+            const glow =
+              glowRef.current;
+
+            const core =
+              coreRef.current;
+
+            if (
+              !thumb ||
+              !glow ||
+              !core
+            ) {
+              return;
+            }
+
+            const target =
+              clamp(
+                targetProgressRef.current,
+              );
+
+            const current =
+              renderedProgressRef.current;
+
+            const targetEnergy =
+              clamp(
+                targetEnergyRef.current,
+              );
+
+            const currentEnergy =
+              renderedEnergyRef.current;
+
+            const reduced =
+              reducedMotionRef.current;
+
+            const progress =
+              reduced ||
+              draggingRef.current
+                ? target
+                : current +
+                  (
+                    target -
+                    current
+                  ) *
+                    0.22;
+
+            const energy =
+              reduced
+                ? targetEnergy
+                : currentEnergy +
+                  (
+                    targetEnergy -
+                    currentEnergy
+                  ) *
+                    0.18;
+
+            renderedProgressRef.current =
+              progress;
+
+            renderedEnergyRef.current =
+              energy;
+
+            const {
+              travel,
+            } =
+              geometryRef.current;
+
+            const y =
+              clamp(progress) *
+              Math.max(
+                0,
+                travel,
+              );
+
+            const tiltBase =
+              directionRef.current ===
+              "down"
+                ? 0.4
+                : directionRef.current ===
+                    "up"
+                  ? -0.4
+                  : 0;
+
+            const tilt =
+              draggingRef.current
+                ? 0
+                : tiltBase *
+                  energy;
+
+            thumb.style.transform =
+              `translate3d(0, ${y}px, 0) rotateZ(${tilt}deg)`;
+
+            const opacity =
+              0.12 +
+              energy *
+                0.5;
+
+            glow.style.opacity =
+              String(opacity);
+
+            core.style.transform =
+              `scaleY(${0.6 + energy * 0.4})`;
+
+            core.style.opacity =
+              String(
+                0.4 +
+                  energy *
+                    0.5,
+              );
+
+            const progressDifference =
+              Math.abs(
+                target -
+                  progress,
+              );
+
+            const energyDifference =
+              Math.abs(
+                targetEnergy -
+                  energy,
+              );
+
+            if (
+              !reduced &&
+              (
+                progressDifference >
+                  0.001 ||
+                energyDifference >
+                  0.001
+              )
+            ) {
+              requestRender();
+            }
+          },
         );
-    }, [render]);
+    }, []);
 
   const setProgress =
     useCallback(
@@ -344,8 +381,11 @@ export default function UmbraScrollbar() {
           | "smooth" =
           "smooth",
       ) => {
-        targetProgressRef.current =
+        const next =
           clamp(progress);
+
+        targetProgressRef.current =
+          next;
 
         if (
           behavior ===
@@ -353,7 +393,7 @@ export default function UmbraScrollbar() {
           reducedMotionRef.current
         ) {
           renderedProgressRef.current =
-            targetProgressRef.current;
+            next;
         }
 
         requestRender();
@@ -377,7 +417,6 @@ export default function UmbraScrollbar() {
           track.getBoundingClientRect();
 
         const {
-          thumbHeight,
           travel,
         } =
           geometryRef.current;
@@ -416,22 +455,20 @@ export default function UmbraScrollbar() {
               window.innerHeight,
           );
 
+        const next =
+          clamp(progress);
+
         const target =
-          clamp(
-            progress,
-          ) *
+          next *
           maxScroll;
 
         window.scrollTo({
           top: target,
-          behavior:
-            reducedMotionRef.current
-              ? "auto"
-              : "auto",
+          behavior: "auto",
         });
 
         setProgress(
-          progress,
+          next,
           "instant",
         );
       },
@@ -448,6 +485,8 @@ export default function UmbraScrollbar() {
       () => {
         reducedMotionRef.current =
           media.matches;
+
+        requestRender();
       };
 
     updateReduced();
@@ -475,7 +514,9 @@ export default function UmbraScrollbar() {
         const nextEnergy =
           typeof detail?.speed ===
           "number"
-            ? clamp(detail.speed)
+            ? clamp(
+                detail.speed,
+            )
             : 0;
 
         targetProgressRef.current =
@@ -497,6 +538,64 @@ export default function UmbraScrollbar() {
         requestRender();
       };
 
+    const syncFromNativeScroll =
+      () => {
+        const root =
+          document.documentElement;
+
+        const maxScroll =
+          Math.max(
+            0,
+            root.scrollHeight -
+              window.innerHeight,
+          );
+
+        if (
+          maxScroll <= 0
+        ) {
+          targetProgressRef.current =
+            0;
+
+          renderedProgressRef.current =
+            0;
+
+          requestRender();
+
+          return;
+        }
+
+        /*
+         * UmbraMotionSystem remains the primary source.
+         * This fallback keeps the scrollbar visually correct even during
+         * the short moments before/while the motion event is established.
+         */
+        if (
+          !draggingRef.current
+        ) {
+          const nativeProgress =
+            clamp(
+              window.scrollY /
+                maxScroll,
+            );
+
+          const difference =
+            Math.abs(
+              nativeProgress -
+                targetProgressRef.current,
+            );
+
+          if (
+            difference >
+            0.002
+          ) {
+            targetProgressRef.current =
+              nativeProgress;
+
+            requestRender();
+          }
+        }
+      };
+
     window.addEventListener(
       "umbra:motion",
       handleMotion,
@@ -505,6 +604,14 @@ export default function UmbraScrollbar() {
     window.addEventListener(
       "resize",
       handleResize,
+      {
+        passive: true,
+      },
+    );
+
+    window.addEventListener(
+      "scroll",
+      syncFromNativeScroll,
       {
         passive: true,
       },
@@ -521,33 +628,46 @@ export default function UmbraScrollbar() {
       );
     }
 
-    updateGeometry();
+    if (document.body) {
+      resizeObserverRef.current.observe(
+        document.body,
+      );
+    }
 
-    const root =
-      document.documentElement;
-
-    const maxScroll =
-      Math.max(
-        0,
-        root.scrollHeight -
-          window.innerHeight,
+    mutationObserverRef.current =
+      new MutationObserver(
+        () => {
+          updateGeometry();
+          requestRender();
+        },
       );
 
-    const initial =
-      maxScroll > 0
-        ? clamp(
-            window.scrollY /
-              maxScroll,
-          )
-        : 0;
+    if (
+      document.body
+    ) {
+      mutationObserverRef.current.observe(
+        document.body,
+        {
+          childList: true,
+          subtree: true,
+          attributes: true,
+        },
+      );
+    }
 
-    targetProgressRef.current =
-      initial;
+    updateGeometry();
 
-    renderedProgressRef.current =
-      initial;
+    requestAnimationFrame(() => {
+      updateGeometry();
+      syncFromNativeScroll();
+      requestRender();
+    });
 
-    requestRender();
+    requestAnimationFrame(() => {
+      updateGeometry();
+      syncFromNativeScroll();
+      requestRender();
+    });
 
     return () => {
       window.removeEventListener(
@@ -560,12 +680,19 @@ export default function UmbraScrollbar() {
         handleResize,
       );
 
+      window.removeEventListener(
+        "scroll",
+        syncFromNativeScroll,
+      );
+
       media.removeEventListener(
         "change",
         updateReduced,
       );
 
       resizeObserverRef.current?.disconnect();
+
+      mutationObserverRef.current?.disconnect();
 
       if (
         rafRef.current !==
@@ -574,6 +701,9 @@ export default function UmbraScrollbar() {
         window.cancelAnimationFrame(
           rafRef.current,
         );
+
+        rafRef.current =
+          null;
       }
     };
   }, [
@@ -762,14 +892,18 @@ export default function UmbraScrollbar() {
           case "Home":
             event.preventDefault();
 
-            scrollToProgress(0);
+            scrollToProgress(
+              0,
+            );
 
             break;
 
           case "End":
             event.preventDefault();
 
-            scrollToProgress(1);
+            scrollToProgress(
+              1,
+            );
 
             break;
 
