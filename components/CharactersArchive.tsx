@@ -16,7 +16,6 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import {
-  useEffect,
   useMemo,
   useState,
   type ChangeEvent,
@@ -104,6 +103,7 @@ const COPY = {
     closeFilters: "Zatvori filtere",
     activeFilters: "Aktivni filteri",
     viewMode: "Prikaz",
+    count: "Prikazano",
   },
 
   en: {
@@ -130,7 +130,6 @@ const COPY = {
     reset: "Reset",
     results: "Results",
     allCharacters: "All registered characters",
-    selected: "Selected",
     grid: "Grid",
     list: "List",
     noResults:
@@ -145,6 +144,7 @@ const COPY = {
     closeFilters: "Close filters",
     activeFilters: "Active filters",
     viewMode: "View",
+    count: "Showing",
   },
 } as const;
 
@@ -181,6 +181,54 @@ function getCanonicalProjectTitle(
   );
 }
 
+function getProjectFilter(
+  searchParams: URLSearchParams,
+): ProjectFilter {
+  const project =
+    searchParams.get("project") ?? "all";
+
+  if (
+    project === "all" ||
+    PROJECT_OPTIONS.some(
+      (item) => item.slug === project,
+    )
+  ) {
+    return project;
+  }
+
+  return "all";
+}
+
+function getCategoryFilter(
+  searchParams: URLSearchParams,
+): CategoryFilter {
+  const role = searchParams.get("role");
+
+  return role === "MAIN" ||
+    role === "SUPPORTING"
+    ? role
+    : "all";
+}
+
+function getGenderFilter(
+  searchParams: URLSearchParams,
+): GenderFilter {
+  const gender = searchParams.get("gender");
+
+  return gender === "MALE" ||
+    gender === "FEMALE"
+    ? gender
+    : "all";
+}
+
+function getViewMode(
+  searchParams: URLSearchParams,
+): ViewMode {
+  return searchParams.get("view") === "list"
+    ? "list"
+    : "grid";
+}
+
 export default function CharactersArchive({
   locale,
 }: CharactersArchiveProps) {
@@ -191,84 +239,25 @@ export default function CharactersArchive({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [query, setQuery] = useState(
-    searchParams.get("q") ?? "",
-  );
+  const query =
+    searchParams.get("q") ?? "";
 
-  const [projectFilter, setProjectFilter] =
-    useState<ProjectFilter>(
-      searchParams.get("project") ?? "all",
-    );
+  const projectFilter =
+    getProjectFilter(searchParams);
 
-  const [categoryFilter, setCategoryFilter] =
-    useState<CategoryFilter>(
-      searchParams.get("role") === "MAIN" ||
-        searchParams.get("role") === "SUPPORTING"
-        ? (searchParams.get(
-            "role",
-          ) as CategoryFilter)
-        : "all",
-    );
+  const categoryFilter =
+    getCategoryFilter(searchParams);
 
-  const [genderFilter, setGenderFilter] =
-    useState<GenderFilter>(
-      searchParams.get("gender") === "MALE" ||
-        searchParams.get("gender") === "FEMALE"
-        ? (searchParams.get(
-            "gender",
-          ) as GenderFilter)
-        : "all",
-    );
+  const genderFilter =
+    getGenderFilter(searchParams);
 
-  const [viewMode, setViewMode] =
-    useState<ViewMode>(
-      searchParams.get("view") === "list"
-        ? "list"
-        : "grid",
-    );
+  const viewMode =
+    getViewMode(searchParams);
 
-  const [mobileFiltersOpen, setMobileFiltersOpen] =
-    useState(false);
-
-  useEffect(() => {
-    setQuery(searchParams.get("q") ?? "");
-
-    const project =
-      searchParams.get("project") ?? "all";
-
-    setProjectFilter(
-      project === "all" ||
-        PROJECT_OPTIONS.some(
-          (item) => item.slug === project,
-        )
-        ? project
-        : "all",
-    );
-
-    const role = searchParams.get("role");
-
-    setCategoryFilter(
-      role === "MAIN" ||
-        role === "SUPPORTING"
-        ? role
-        : "all",
-    );
-
-    const gender = searchParams.get("gender");
-
-    setGenderFilter(
-      gender === "MALE" ||
-        gender === "FEMALE"
-        ? gender
-        : "all",
-    );
-
-    setViewMode(
-      searchParams.get("view") === "list"
-        ? "list"
-        : "grid",
-    );
-  }, [searchParams]);
+  const [
+    mobileFiltersOpen,
+    setMobileFiltersOpen,
+  ] = useState(false);
 
   const updateUrl = ({
     q = query,
@@ -396,11 +385,6 @@ export default function CharactersArchive({
     activeFilterCount > 0;
 
   const clearAll = () => {
-    setQuery("");
-    setProjectFilter("all");
-    setCategoryFilter("all");
-    setGenderFilter("all");
-
     updateUrl({
       q: "",
       project: "all",
@@ -411,8 +395,6 @@ export default function CharactersArchive({
   };
 
   const clearSearch = () => {
-    setQuery("");
-
     updateUrl({
       q: "",
       project: projectFilter,
@@ -425,12 +407,8 @@ export default function CharactersArchive({
   const handleSearchChange = (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
-    setQuery(event.target.value);
-  };
-
-  const commitSearch = () => {
     updateUrl({
-      q: query,
+      q: event.target.value,
       project: projectFilter,
       role: categoryFilter,
       gender: genderFilter,
@@ -439,8 +417,6 @@ export default function CharactersArchive({
   };
 
   const setProject = (value: string) => {
-    setProjectFilter(value);
-
     updateUrl({
       project: value,
       role: categoryFilter,
@@ -452,8 +428,6 @@ export default function CharactersArchive({
   const setCategory = (
     value: CategoryFilter,
   ) => {
-    setCategoryFilter(value);
-
     updateUrl({
       project: projectFilter,
       role: value,
@@ -465,8 +439,6 @@ export default function CharactersArchive({
   const setGender = (
     value: GenderFilter,
   ) => {
-    setGenderFilter(value);
-
     updateUrl({
       project: projectFilter,
       role: categoryFilter,
@@ -476,8 +448,6 @@ export default function CharactersArchive({
   };
 
   const setView = (mode: ViewMode) => {
-    setViewMode(mode);
-
     updateUrl({
       project: projectFilter,
       role: categoryFilter,
@@ -487,7 +457,10 @@ export default function CharactersArchive({
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030303] text-[#f4f0e8]">
+    <main
+      data-umbra-scene="characters-archive"
+      className="min-h-screen overflow-hidden bg-[#030303] text-[#f4f0e8]"
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_18%_10%,rgba(199,169,107,.055),transparent_32%),linear-gradient(180deg,#030303_0%,#050505_54%,#030303_100%)]"
@@ -595,11 +568,20 @@ export default function CharactersArchive({
           </div>
         </motion.header>
 
-        <section className="mt-12">
+        <section
+          aria-labelledby="character-search-heading"
+          className="mt-12"
+        >
+          <h2
+            id="character-search-heading"
+            className="sr-only"
+          >
+            {copy.searchLabel}
+          </h2>
+
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              commitSearch();
             }}
             className="relative"
           >
@@ -647,7 +629,10 @@ export default function CharactersArchive({
           </form>
         </section>
 
-        <section className="mt-4">
+        <section
+          aria-label={copy.filters}
+          className="mt-4"
+        >
           <div className="hidden border-y border-white/[0.055] lg:block">
             <div className="flex flex-wrap items-center">
               <DesktopFilter
@@ -749,6 +734,7 @@ export default function CharactersArchive({
             <button
               type="button"
               aria-expanded={mobileFiltersOpen}
+              aria-controls="character-mobile-filters"
               onClick={() =>
                 setMobileFiltersOpen(
                   (value) => !value,
@@ -792,7 +778,10 @@ export default function CharactersArchive({
             </button>
 
             {mobileFiltersOpen ? (
-              <div className="border-b border-white/[0.075] py-6">
+              <div
+                id="character-mobile-filters"
+                className="border-b border-white/[0.075] py-6"
+              >
                 <div className="grid gap-6">
                   <MobileFilter
                     label={copy.project}
@@ -889,7 +878,10 @@ export default function CharactersArchive({
         </section>
 
         {hasFilters ? (
-          <section className="border-b border-white/[0.055] py-4">
+          <section
+            aria-label={copy.activeFilters}
+            className="border-b border-white/[0.055] py-4"
+          >
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 font-mono text-[6px] uppercase tracking-[0.24em] text-white/[0.15]">
                 {copy.activeFilters}
@@ -953,7 +945,11 @@ export default function CharactersArchive({
         ) : null}
 
         <section className="mt-10 flex flex-col gap-4 border-b border-white/[0.055] pb-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-4">
+          <div
+            aria-live="polite"
+            aria-atomic="true"
+            className="flex items-end gap-4"
+          >
             <div>
               <p className="font-mono text-[7px] uppercase tracking-[0.26em] text-white/[0.18]">
                 {copy.results}
@@ -977,7 +973,7 @@ export default function CharactersArchive({
               {filteredCharacters.length ===
               characters.length
                 ? copy.allCharacters
-                : copy.registered}
+                : `${copy.count} ${filteredCharacters.length}`}
             </p>
           </div>
 

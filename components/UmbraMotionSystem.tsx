@@ -6,28 +6,46 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA MOTION SYSTEM
+   UMBRA STUDIO
+   MOTION SYSTEM
+   V5 FINAL SYSTEM
 
    SINGLE GLOBAL SCROLL SOURCE
 
-   Responsibilities:
+   Responsibilities
+   --------------------------------------------------------------------------
    - read browser scroll position
    - calculate global scroll progress
    - calculate direction
-   - calculate velocity
+   - calculate instantaneous velocity
+   - calculate smoothed velocity
    - calculate normalized velocity
-   - expose state through CSS custom properties
+   - expose runtime state through CSS custom properties
    - dispatch one global "umbra:motion" event
+   - react to document geometry changes without adding another scroll system
 
-   Consumers:
+   Consumers
+   --------------------------------------------------------------------------
    - Header
    - UmbraSceneDirector
    - UmbraScrollbar
    - UmbraAtmosphere
    - scene components through CSS variables
 
-   IMPORTANT:
-   No other component should create its own native scroll listener.
+   Contract
+   --------------------------------------------------------------------------
+   This component is the single native scroll listener for the application.
+
+   Other components may consume:
+   - "umbra:motion"
+   - CSS custom properties
+
+   Other components must NOT create their own native scroll listener for
+   global scroll state.
+
+   Design rule
+   --------------------------------------------------------------------------
+   Measure once per animation frame. Publish once per animation frame.
    ========================================================================== */
 
 type MotionDirection =
@@ -48,14 +66,15 @@ type MotionDetail = {
   maxScroll: number;
 };
 
-const IDLE_THRESHOLD =
-  0.001;
+type MotionState = {
+  scrollY: number;
+  velocitySmoothed: number;
+  timestamp: number;
+};
 
-const VELOCITY_SMOOTHING =
-  0.18;
-
-const MAX_REFERENCE_VELOCITY =
-  48;
+const IDLE_THRESHOLD = 0.001;
+const VELOCITY_SMOOTHING = 0.18;
+const MAX_REFERENCE_VELOCITY = 48;
 
 function clamp(
   value: number,
@@ -82,15 +101,11 @@ function round(
   );
 }
 
-function readScrollState(
-  previousY: number,
-  previousVelocity: number,
-  previousTime: number,
+function createMotionDetail(
+  previous: MotionState,
 ): {
   detail: MotionDetail;
-  nextY: number;
-  nextVelocity: number;
-  nextTime: number;
+  nextState: MotionState;
 } {
   const root =
     document.documentElement;
@@ -115,53 +130,52 @@ function readScrollState(
     );
 
   const scrollY =
-    clamp(
-      window.scrollY /
-        Math.max(
-          1,
-          maxScroll,
-        ),
-    ) *
-    maxScroll;
+    Math.min(
+      maxScroll,
+      Math.max(
+        0,
+        window.scrollY,
+      ),
+    );
 
   const now =
     performance.now();
 
   const deltaTime =
-    previousTime > 0
+    previous.timestamp > 0
       ? Math.max(
           1,
           now -
-            previousTime,
+            previous.timestamp,
         )
       : 16.67;
 
   const deltaY =
     scrollY -
-    previousY;
+    previous.scrollY;
 
-  const rawVelocity =
-    previousTime > 0
+  const velocity =
+    previous.timestamp > 0
       ? deltaY /
         deltaTime
       : 0;
 
-  const velocity =
+  const safeVelocity =
     Number.isFinite(
-      rawVelocity,
+      velocity,
     )
-      ? rawVelocity
+      ? velocity
       : 0;
 
   const velocitySmoothed =
-    previousTime > 0
-      ? previousVelocity +
+    previous.timestamp > 0
+      ? previous.velocitySmoothed +
         (
-          velocity -
-          previousVelocity
+          safeVelocity -
+          previous.velocitySmoothed
         ) *
           VELOCITY_SMOOTHING
-      : velocity;
+      : 0;
 
   const speed =
     clamp(
@@ -207,7 +221,7 @@ function readScrollState(
     detail: {
       scrollY,
       progress,
-      velocity,
+      velocity: safeVelocity,
       velocitySmoothed,
       speed,
       velocityNormalized,
@@ -216,12 +230,12 @@ function readScrollState(
       documentHeight,
       maxScroll,
     },
-    nextY:
+
+    nextState: {
       scrollY,
-    nextVelocity:
       velocitySmoothed,
-    nextTime:
-      now,
+      timestamp: now,
+    },
   };
 }
 
@@ -231,14 +245,12 @@ export default function UmbraMotionSystem() {
       null,
     );
 
-  const previousYRef =
-    useRef(0);
-
-  const previousVelocityRef =
-    useRef(0);
-
-  const previousTimeRef =
-    useRef(0);
+  const stateRef =
+    useRef<MotionState>({
+      scrollY: 0,
+      velocitySmoothed: 0,
+      timestamp: 0,
+    });
 
   const runningRef =
     useRef(true);
@@ -247,172 +259,161 @@ export default function UmbraMotionSystem() {
     const root =
       document.documentElement;
 
-    const publish =
-      () => {
-        frameRef.current =
-          null;
+    let destroyed = false;
 
-        if (
-          !runningRef.current
-        ) {
-          return;
-        }
+    const publish = () => {
+      frameRef.current =
+        null;
 
-        const {
-          detail,
-          nextY,
-          nextVelocity,
-          nextTime,
-        } =
-          readScrollState(
-            previousYRef.current,
-            previousVelocityRef.current,
-            previousTimeRef.current,
-          );
+      if (
+        destroyed ||
+        !runningRef.current
+      ) {
+        return;
+      }
 
-        previousYRef.current =
-          nextY;
-
-        previousVelocityRef.current =
-          nextVelocity;
-
-        previousTimeRef.current =
-          nextTime;
-
-        root.style.setProperty(
-          "--umbra-scroll-y",
-          `${detail.scrollY}px`,
+      const {
+        detail,
+        nextState,
+      } =
+        createMotionDetail(
+          stateRef.current,
         );
 
-        root.style.setProperty(
-          "--umbra-scroll-progress",
-          detail.progress.toFixed(5),
-        );
+      stateRef.current =
+        nextState;
 
-        root.style.setProperty(
-          "--umbra-scroll-velocity",
-          detail.velocity.toFixed(5),
-        );
+      root.style.setProperty(
+        "--umbra-scroll-y",
+        `${detail.scrollY}px`,
+      );
 
-        root.style.setProperty(
-          "--umbra-scroll-velocity-smoothed",
-          detail.velocitySmoothed.toFixed(5),
-        );
+      root.style.setProperty(
+        "--umbra-scroll-progress",
+        detail.progress.toFixed(5),
+      );
 
-        root.style.setProperty(
-          "--umbra-scroll-speed",
-          detail.speed.toFixed(5),
-        );
+      root.style.setProperty(
+        "--umbra-scroll-velocity",
+        detail.velocity.toFixed(5),
+      );
 
-        root.style.setProperty(
-          "--umbra-scroll-velocity-normalized",
-          detail.velocityNormalized.toFixed(5),
-        );
+      root.style.setProperty(
+        "--umbra-scroll-velocity-smoothed",
+        detail.velocitySmoothed.toFixed(5),
+      );
 
-        root.style.setProperty(
-          "--umbra-scroll-energy",
-          detail.speed.toFixed(5),
-        );
+      root.style.setProperty(
+        "--umbra-scroll-speed",
+        detail.speed.toFixed(5),
+      );
 
-        root.style.setProperty(
-          "--umbra-viewport-height",
-          `${detail.viewportHeight}px`,
-        );
+      root.style.setProperty(
+        "--umbra-scroll-velocity-normalized",
+        detail.velocityNormalized.toFixed(5),
+      );
 
-        root.style.setProperty(
-          "--umbra-document-height",
-          `${detail.documentHeight}px`,
-        );
+      root.style.setProperty(
+        "--umbra-scroll-energy",
+        detail.speed.toFixed(5),
+      );
 
-        root.dataset.umbraScrollDirection =
-          detail.direction;
+      root.style.setProperty(
+        "--umbra-viewport-height",
+        `${detail.viewportHeight}px`,
+      );
 
-        window.dispatchEvent(
-          new CustomEvent<MotionDetail>(
-            "umbra:motion",
-            {
-              detail: {
-                scrollY:
-                  round(
-                    detail.scrollY,
-                    2,
-                  ),
-                progress:
-                  round(
-                    detail.progress,
-                    5,
-                  ),
-                velocity:
-                  round(
-                    detail.velocity,
-                    4,
-                  ),
-                velocitySmoothed:
-                  round(
-                    detail.velocitySmoothed,
-                    4,
-                  ),
-                speed:
-                  round(
-                    detail.speed,
-                    4,
-                  ),
-                velocityNormalized:
-                  round(
-                    detail.velocityNormalized,
-                    4,
-                  ),
-                direction:
-                  detail.direction,
-                viewportHeight:
-                  detail.viewportHeight,
-                documentHeight:
-                  detail.documentHeight,
-                maxScroll:
-                  detail.maxScroll,
-              },
+      root.style.setProperty(
+        "--umbra-document-height",
+        `${detail.documentHeight}px`,
+      );
+
+      root.dataset.umbraScrollDirection =
+        detail.direction;
+
+      window.dispatchEvent(
+        new CustomEvent<MotionDetail>(
+          "umbra:motion",
+          {
+            detail: {
+              scrollY:
+                round(
+                  detail.scrollY,
+                  2,
+                ),
+              progress:
+                round(
+                  detail.progress,
+                  5,
+                ),
+              velocity:
+                round(
+                  detail.velocity,
+                  4,
+                ),
+              velocitySmoothed:
+                round(
+                  detail.velocitySmoothed,
+                  4,
+                ),
+              speed:
+                round(
+                  detail.speed,
+                  4,
+                ),
+              velocityNormalized:
+                round(
+                  detail.velocityNormalized,
+                  4,
+                ),
+              direction:
+                detail.direction,
+              viewportHeight:
+                detail.viewportHeight,
+              documentHeight:
+                detail.documentHeight,
+              maxScroll:
+                detail.maxScroll,
             },
-          ),
+          },
+        ),
+      );
+    };
+
+    const requestPublish = () => {
+      if (
+        destroyed ||
+        !runningRef.current ||
+        frameRef.current !== null
+      ) {
+        return;
+      }
+
+      frameRef.current =
+        window.requestAnimationFrame(
+          publish,
         );
+    };
+
+    const resetBaseline = () => {
+      stateRef.current = {
+        scrollY: Math.max(
+          0,
+          window.scrollY,
+        ),
+        velocitySmoothed: 0,
+        timestamp: 0,
       };
+    };
 
-    const requestPublish =
-      () => {
-        if (
-          frameRef.current !==
-          null
-        ) {
-          return;
-        }
+    const handleScroll = () => {
+      requestPublish();
+    };
 
-        frameRef.current =
-          window.requestAnimationFrame(
-            publish,
-          );
-      };
-
-    const handleScroll =
-      () => {
-        requestPublish();
-      };
-
-    const handleResize =
-      () => {
-        /*
-         * A resize changes both viewport height and maximum scroll.
-         * Reset velocity so a resize is never interpreted as user scroll.
-         */
-        previousYRef.current =
-          window.scrollY;
-
-        previousVelocityRef.current =
-          0;
-
-        previousTimeRef.current =
-          0;
-
-        requestPublish();
-      };
+    const handleResize = () => {
+      resetBaseline();
+      requestPublish();
+    };
 
     const handleVisibility =
       () => {
@@ -441,22 +442,21 @@ export default function UmbraMotionSystem() {
         runningRef.current =
           true;
 
-        /*
-         * The first frame after returning to the page establishes a fresh
-         * baseline. It prevents the time spent in the background from
-         * becoming an artificial velocity spike.
-         */
-        previousYRef.current =
-          window.scrollY;
-
-        previousVelocityRef.current =
-          0;
-
-        previousTimeRef.current =
-          0;
-
+        resetBaseline();
         requestPublish();
       };
+
+    const rootResizeObserver =
+      typeof ResizeObserver !==
+      "undefined"
+        ? new ResizeObserver(() => {
+            requestPublish();
+          })
+        : null;
+
+    rootResizeObserver?.observe(
+      root,
+    );
 
     window.addEventListener(
       "scroll",
@@ -479,23 +479,15 @@ export default function UmbraMotionSystem() {
       handleVisibility,
     );
 
-    /*
-     * Establish the initial baseline before the first published state.
-     */
-    previousYRef.current =
-      window.scrollY;
-
-    previousVelocityRef.current =
-      0;
-
-    previousTimeRef.current =
-      0;
-
+    resetBaseline();
     requestPublish();
 
     return () => {
+      destroyed = true;
       runningRef.current =
         false;
+
+      rootResizeObserver?.disconnect();
 
       window.removeEventListener(
         "scroll",

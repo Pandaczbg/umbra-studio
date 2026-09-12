@@ -7,7 +7,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA SCROLLBAR
+   UMBRA SCROLLBAR — V5
 
    Visual client of UmbraMotionSystem.
 
@@ -22,8 +22,12 @@ import {
    - keyboard navigation
    - hover / idle state
 
-   Geometry is kept synchronized with viewport and document changes without
-   observing the component's own animated style mutations.
+   V5 visual direction:
+   - clearer right-edge presence
+   - slightly wider / brighter thumb
+   - restrained champagne-gold glass treatment
+   - visible but quiet track
+   - no neon, no oversized UI
    ========================================================================== */
 
 type MotionDirection =
@@ -48,6 +52,9 @@ type Geometry = {
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
+
+const SCROLL_REGION_ID =
+  "umbra-document-scroll";
 
 function clamp(
   value: number,
@@ -139,6 +146,11 @@ export default function UmbraScrollbar() {
   const reducedMotionRef =
     useRef(false);
 
+  const requestRenderRef =
+    useRef<() => void>(
+      () => {},
+    );
+
   const updateGeometry =
     useCallback(() => {
       const track =
@@ -188,7 +200,7 @@ export default function UmbraScrollbar() {
         Math.min(
           trackHeight,
           Math.max(
-            46,
+            48,
             trackHeight *
               ratio,
           ),
@@ -211,6 +223,12 @@ export default function UmbraScrollbar() {
       thumb.style.height =
         `${thumbHeight}px`;
 
+      if (
+        draggingRef.current
+      ) {
+        return;
+      }
+
       const currentProgress =
         clamp(
           targetProgressRef.current,
@@ -219,12 +237,6 @@ export default function UmbraScrollbar() {
       const currentY =
         currentProgress *
         travel;
-
-      if (
-        draggingRef.current
-      ) {
-        return;
-      }
 
       thumb.style.transform =
         `translate3d(0, ${currentY}px, 0)`;
@@ -246,20 +258,6 @@ export default function UmbraScrollbar() {
               null;
 
             updateGeometry();
-
-            if (
-              rafRef.current ===
-              null
-            ) {
-              rafRef.current =
-                window.requestAnimationFrame(
-                  () => {
-                    rafRef.current =
-                      null;
-                    /* Render is already driven by the motion state. */
-                  },
-                );
-            }
           },
         );
     }, [updateGeometry]);
@@ -357,10 +355,10 @@ export default function UmbraScrollbar() {
             const tiltBase =
               directionRef.current ===
               "down"
-                ? 0.4
+                ? 0.35
                 : directionRef.current ===
                     "up"
-                  ? -0.4
+                  ? -0.35
                   : 0;
 
             const tilt =
@@ -372,22 +370,24 @@ export default function UmbraScrollbar() {
             thumb.style.transform =
               `translate3d(0, ${y}px, 0) rotateZ(${tilt}deg)`;
 
-            const opacity =
-              0.12 +
+            const glowOpacity =
+              0.24 +
               energy *
-                0.50;
+                0.48;
 
             glow.style.opacity =
-              String(opacity);
+              String(
+                glowOpacity,
+              );
 
             core.style.transform =
-              `scaleY(${0.6 + energy * 0.4})`;
+              `scaleY(${0.72 + energy * 0.28})`;
 
             core.style.opacity =
               String(
-                0.40 +
+                0.58 +
                   energy *
-                    0.50,
+                    0.34,
               );
 
             const progressDifference =
@@ -411,11 +411,21 @@ export default function UmbraScrollbar() {
                   0.001
               )
             ) {
-              requestRender();
+              requestRenderRef.current();
             }
           },
         );
     }, []);
+
+  useEffect(() => {
+    requestRenderRef.current =
+      requestRender;
+
+    return () => {
+      requestRenderRef.current =
+        () => {};
+    };
+  }, [requestRender]);
 
   const setProgress =
     useCallback(
@@ -639,12 +649,6 @@ export default function UmbraScrollbar() {
     mutationObserverRef.current =
       new MutationObserver(
         () => {
-          /*
-           * Observe content/layout changes only.
-           * Do not observe attributes: this component animates its own
-           * inline styles every frame, which would otherwise create an
-           * unnecessary MutationObserver feedback loop.
-           */
           scheduleGeometry();
         },
       );
@@ -739,6 +743,27 @@ export default function UmbraScrollbar() {
     scheduleGeometry,
     updateGeometry,
   ]);
+
+  useEffect(() => {
+    const body =
+      document.body;
+
+    const previousId =
+      body.id;
+
+    body.id =
+      SCROLL_REGION_ID;
+
+    return () => {
+      if (
+        body.id ===
+        SCROLL_REGION_ID
+      ) {
+        body.id =
+          previousId;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const thumb =
@@ -1023,7 +1048,7 @@ export default function UmbraScrollbar() {
   return (
     <div
       ref={railRef}
-      className="umbra-scrollbar pointer-events-none fixed right-1.5 top-[108px] z-[110] hidden h-[calc(100vh-136px)] w-7 lg:block"
+      className="umbra-scrollbar pointer-events-none fixed right-1 top-[108px] z-[110] hidden h-[calc(100vh-136px)] w-8 lg:block"
       aria-hidden="false"
     >
       <div
@@ -1033,33 +1058,39 @@ export default function UmbraScrollbar() {
       >
         <span
           aria-hidden="true"
-          className="absolute right-3 top-1 bottom-1 w-px"
+          className="absolute right-[13px] top-1 bottom-1 w-px"
           style={{
             background:
               `linear-gradient(
                 180deg,
                 transparent,
-                rgba(255,255,255,.055) 18%,
-                rgba(255,255,255,.08) 50%,
-                rgba(255,255,255,.055) 82%,
+                rgba(255,255,255,.11) 16%,
+                rgba(255,255,255,.16) 50%,
+                rgba(255,255,255,.11) 84%,
                 transparent
               )`,
+            boxShadow:
+              "0 0 5px rgba(255,255,255,.04)",
           }}
         />
 
         <span
           aria-hidden="true"
-          className="absolute right-[11px] top-1 bottom-1 w-px opacity-50"
+          className="absolute right-[12px] top-2 bottom-2 w-[2px] rounded-full"
           style={{
             background:
               `linear-gradient(
                 180deg,
                 transparent,
-                ${GOLD}18 26%,
-                ${GOLD_LIGHT}10 50%,
-                ${GOLD}18 74%,
+                ${GOLD}38 20%,
+                ${GOLD_LIGHT}52 50%,
+                ${GOLD}38 80%,
                 transparent
               )`,
+            opacity:
+              0.82,
+            boxShadow:
+              `0 0 6px ${GOLD}20`,
           }}
         />
       </div>
@@ -1067,19 +1098,19 @@ export default function UmbraScrollbar() {
       <span
         ref={glowRef}
         aria-hidden="true"
-        className="pointer-events-none absolute right-[6px] top-0 h-7 w-3 rounded-full"
+        className="pointer-events-none absolute right-[4px] top-0 h-8 w-[17px] rounded-full"
         style={{
           opacity:
-            0.18,
+            0.26,
           background:
             `radial-gradient(
               circle,
-              ${GOLD_LIGHT}26,
-              ${GOLD}10 44%,
-              transparent 72%
+              ${GOLD_LIGHT}42,
+              ${GOLD}18 42%,
+              transparent 74%
             )`,
           filter:
-            "blur(2px)",
+            "blur(2.5px)",
         }}
       />
 
@@ -1089,31 +1120,38 @@ export default function UmbraScrollbar() {
         aria-label="Page scroll position"
         tabIndex={0}
         data-dragging="false"
-        className="pointer-events-auto absolute right-[8px] top-0 w-[7px] cursor-grab appearance-none overflow-visible rounded-full border p-0 outline-none"
+        className="pointer-events-auto absolute right-[8px] top-0 w-[9px] cursor-grab appearance-none overflow-visible rounded-full border p-0 outline-none transition-[background,border-color,box-shadow] duration-200 hover:cursor-grab active:cursor-grabbing focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
         style={{
           height:
-            "46px",
+            "48px",
           borderColor:
-            `${GOLD_LIGHT}88`,
+            `${GOLD_LIGHT}bb`,
           background:
-            "transparent",
+            `linear-gradient(
+              180deg,
+              rgba(234,211,154,.30),
+              rgba(199,169,107,.18) 48%,
+              rgba(199,169,107,.11)
+            )`,
           boxShadow:
-            `0 0 0 1px ${GOLD}10, 0 0 8px ${GOLD}14`,
+            `0 0 0 1px ${GOLD}18, 0 0 9px ${GOLD}20, inset 0 0 5px rgba(255,255,255,.08)`,
           transform:
             "translate3d(0,0,0)",
+          backdropFilter:
+            "blur(3px)",
         }}
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-full"
+          className="pointer-events-none absolute inset-[1px] rounded-full"
           style={{
             background:
               `linear-gradient(
                 180deg,
-                rgba(255,255,255,.16),
-                transparent 34%,
+                rgba(255,255,255,.28),
+                rgba(255,255,255,.04) 34%,
                 rgba(0,0,0,.10) 82%,
-                rgba(255,255,255,.05)
+                rgba(255,255,255,.08)
               )`,
           }}
         />
@@ -1121,21 +1159,23 @@ export default function UmbraScrollbar() {
         <span
           ref={coreRef}
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[55%] w-px -translate-x-1/2 -translate-y-1/2"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[62%] w-[2px] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             opacity:
-              0.4,
+              0.58,
             transformOrigin:
               "center center",
             background:
               `linear-gradient(
                 180deg,
                 transparent,
-                ${GOLD_LIGHT}95 30%,
-                ${GOLD}65 50%,
-                ${GOLD_LIGHT}7a 70%,
+                ${GOLD_LIGHT} 27%,
+                ${GOLD_LIGHT}ee 50%,
+                ${GOLD_LIGHT}c8 72%,
                 transparent
               )`,
+            boxShadow:
+              `0 0 5px ${GOLD_LIGHT}55`,
           }}
         />
       </button>

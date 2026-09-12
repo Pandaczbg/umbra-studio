@@ -20,10 +20,10 @@ import {
   useTransform,
 } from "framer-motion";
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 import {
@@ -38,6 +38,7 @@ type CategoryFilter = "ALL" | "MAIN" | "SUPPORTING";
 type Locale = "sr" | "en";
 
 const LAST_VISITED_KEY = "umbra-last-character";
+const LAST_VISITED_EVENT = "umbra:last-character";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
@@ -47,7 +48,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const COPY = {
   sr: {
     archive: "ARHIVA LIKOVA",
-    title: "Ljudi iza priča.",
+    title: "Ljudi iza priča",
     index: "INDEKS",
     memory: "MEMORIJA",
     allProjects: "SVI PROJEKTI",
@@ -77,7 +78,7 @@ const COPY = {
 
   en: {
     archive: "CHARACTER ARCHIVE",
-    title: "People behind the stories.",
+    title: "People behind the stories",
     index: "INDEX",
     memory: "MEMORY",
     allProjects: "ALL PROJECTS",
@@ -128,6 +129,72 @@ function getProjectHref(
     : `/serije/${projectSlug}`;
 }
 
+function getStoredLastVisited() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(
+      LAST_VISITED_KEY,
+    );
+  } catch {
+    return null;
+  }
+}
+
+function subscribeToLastVisited(
+  callback: () => void,
+) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleStorage = (
+    event: StorageEvent,
+  ) => {
+    if (
+      event.key === LAST_VISITED_KEY
+    ) {
+      callback();
+    }
+  };
+
+  const handleCustomEvent = () => {
+    callback();
+  };
+
+  window.addEventListener(
+    "storage",
+    handleStorage,
+  );
+
+  window.addEventListener(
+    LAST_VISITED_EVENT,
+    handleCustomEvent,
+  );
+
+  return () => {
+    window.removeEventListener(
+      "storage",
+      handleStorage,
+    );
+
+    window.removeEventListener(
+      LAST_VISITED_EVENT,
+      handleCustomEvent,
+    );
+  };
+}
+
+function useLastVisited() {
+  return useSyncExternalStore(
+    subscribeToLastVisited,
+    getStoredLastVisited,
+    () => null,
+  );
+}
+
 export default function CharactersPreview() {
   const pathname = usePathname();
 
@@ -138,7 +205,8 @@ export default function CharactersPreview() {
       : "sr";
 
   const copy = COPY[locale];
-  const reducedMotion = useReducedMotion() ?? false;
+  const reducedMotion =
+    useReducedMotion() ?? false;
 
   const [
     projectFilter,
@@ -156,151 +224,182 @@ export default function CharactersPreview() {
   ] = useState<CategoryFilter>("ALL");
 
   const [
-    activeIndex,
-    setActiveIndex,
-  ] = useState(0);
+    activeCharacterId,
+    setActiveCharacterId,
+  ] = useState<string | null>(
+    characters[0]?.id ?? null,
+  );
 
-  const [
-    lastVisited,
-    setLastVisited,
-  ] = useState<string | null>(null);
+  const lastVisited =
+    useLastVisited();
 
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const sectionRef =
+    useRef<HTMLElement | null>(null);
 
-  const inView = useInView(sectionRef, {
-    once: true,
-    amount: 0.14,
-  });
+  const inView = useInView(
+    sectionRef,
+    {
+      once: true,
+      amount: 0.14,
+    },
+  );
 
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
+  const pointerX =
+    useMotionValue(0);
 
-  const smoothX = useSpring(pointerX, {
-    stiffness: 42,
-    damping: 24,
-    mass: 0.8,
-  });
+  const pointerY =
+    useMotionValue(0);
 
-  const smoothY = useSpring(pointerY, {
-    stiffness: 42,
-    damping: 24,
-    mass: 0.8,
-  });
+  const smoothX = useSpring(
+    pointerX,
+    {
+      stiffness: 42,
+      damping: 24,
+      mass: 0.8,
+    },
+  );
+
+  const smoothY = useSpring(
+    pointerY,
+    {
+      stiffness: 42,
+      damping: 24,
+      mass: 0.8,
+    },
+  );
 
   const portraitX = useTransform(
     smoothX,
     [-1, 1],
-    reducedMotion ? [0, 0] : [-10, 10],
+    reducedMotion
+      ? [0, 0]
+      : [-10, 10],
   );
 
   const portraitY = useTransform(
     smoothY,
     [-1, 1],
-    reducedMotion ? [0, 0] : [-8, 8],
+    reducedMotion
+      ? [0, 0]
+      : [-8, 8],
   );
 
   const orbitX = useTransform(
     smoothX,
     [-1, 1],
-    reducedMotion ? [0, 0] : [-17, 17],
+    reducedMotion
+      ? [0, 0]
+      : [-17, 17],
   );
 
   const orbitY = useTransform(
     smoothY,
     [-1, 1],
-    reducedMotion ? [0, 0] : [-12, 12],
+    reducedMotion
+      ? [0, 0]
+      : [-12, 12],
   );
 
-  const charactersByProject = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          characters.map((character) => [
-            character.projectSlug,
-            character.projectTitle,
-          ]),
+  const charactersByProject =
+    useMemo(
+      () =>
+        Array.from(
+          new Map(
+            characters.map(
+              (character) => [
+                character.projectSlug,
+                character.projectTitle,
+              ],
+            ),
+          ),
         ),
-      ),
-    [],
-  );
+      [],
+    );
 
-  const filteredCharacters = useMemo(
-    () =>
-      characters.filter((character) => {
-        const matchesProject =
-          projectFilter === "ALL" ||
-          character.projectSlug === projectFilter;
+  const filteredCharacters =
+    useMemo(
+      () =>
+        characters.filter(
+          (character) => {
+            const matchesProject =
+              projectFilter === "ALL" ||
+              character.projectSlug ===
+                projectFilter;
 
-        const matchesGender =
-          genderFilter === "ALL" ||
-          character.gender === genderFilter;
+            const matchesGender =
+              genderFilter === "ALL" ||
+              character.gender ===
+                genderFilter;
 
-        const matchesCategory =
-          categoryFilter === "ALL" ||
-          character.category === categoryFilter;
+            const matchesCategory =
+              categoryFilter === "ALL" ||
+              character.category ===
+                categoryFilter;
 
-        return (
-          matchesProject &&
-          matchesGender &&
-          matchesCategory
-        );
-      }),
-    [
-      categoryFilter,
-      genderFilter,
-      projectFilter,
-    ],
-  );
-
-  const safeActiveIndex =
-    filteredCharacters.length === 0
-      ? -1
-      : Math.min(
-          activeIndex,
-          filteredCharacters.length - 1,
-        );
+            return (
+              matchesProject &&
+              matchesGender &&
+              matchesCategory
+            );
+          },
+        ),
+      [
+        categoryFilter,
+        genderFilter,
+        projectFilter,
+      ],
+    );
 
   const activeCharacter =
-    safeActiveIndex >= 0
-      ? filteredCharacters[safeActiveIndex]
-      : null;
-
-  const relatedCharacters = useMemo(() => {
-    if (!activeCharacter) {
-      return [];
-    }
-
-    return filteredCharacters
-      .filter(
-        (character) =>
-          character.projectSlug ===
-            activeCharacter.projectSlug &&
-          character.id !== activeCharacter.id,
-      )
-      .slice(0, 3);
-  }, [activeCharacter, filteredCharacters]);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [
-    projectFilter,
-    genderFilter,
-    categoryFilter,
-  ]);
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(
-        LAST_VISITED_KEY,
-      );
-
-      if (stored) {
-        setLastVisited(stored);
+    useMemo(() => {
+      if (
+        filteredCharacters.length ===
+        0
+      ) {
+        return null;
       }
-    } catch {
-      // Storage may be unavailable.
-    }
-  }, []);
+
+      return (
+        filteredCharacters.find(
+          (character) =>
+            character.id ===
+            activeCharacterId,
+        ) ??
+        filteredCharacters[0]
+      );
+    }, [
+      activeCharacterId,
+      filteredCharacters,
+    ]);
+
+  const activeIndex =
+    activeCharacter
+      ? filteredCharacters.findIndex(
+          (character) =>
+            character.id ===
+            activeCharacter.id,
+        )
+      : -1;
+
+  const relatedCharacters =
+    useMemo(() => {
+      if (!activeCharacter) {
+        return [];
+      }
+
+      return filteredCharacters
+        .filter(
+          (character) =>
+            character.projectSlug ===
+              activeCharacter.projectSlug &&
+            character.id !==
+              activeCharacter.id,
+        )
+        .slice(0, 3);
+    }, [
+      activeCharacter,
+      filteredCharacters,
+    ]);
 
   const rememberCharacter = (
     character: Character,
@@ -311,7 +410,11 @@ export default function CharactersPreview() {
         character.slug,
       );
 
-      setLastVisited(character.slug);
+      window.dispatchEvent(
+        new Event(
+          LAST_VISITED_EVENT,
+        ),
+      );
     } catch {
       // Storage may be unavailable.
     }
@@ -320,45 +423,67 @@ export default function CharactersPreview() {
   const selectCharacter = (
     character: Character,
   ) => {
-    const index = filteredCharacters.findIndex(
-      (item) => item.id === character.id,
+    const exists =
+      filteredCharacters.some(
+        (item) =>
+          item.id === character.id,
+      );
+
+    if (!exists) {
+      return;
+    }
+
+    setActiveCharacterId(
+      character.id,
     );
 
-    if (index >= 0) {
-      setActiveIndex(index);
-      rememberCharacter(character);
-    }
+    rememberCharacter(character);
   };
 
   const nextCharacter = () => {
-    if (filteredCharacters.length <= 1) {
+    if (
+      filteredCharacters.length <=
+      1
+    ) {
       return;
     }
 
     const currentIndex =
-      safeActiveIndex < 0 ? 0 : safeActiveIndex;
+      activeIndex >= 0
+        ? activeIndex
+        : 0;
 
     const nextIndex =
-      currentIndex === filteredCharacters.length - 1
+      currentIndex ===
+      filteredCharacters.length - 1
         ? 0
         : currentIndex + 1;
 
-      const next = filteredCharacters[nextIndex];
+    const next =
+      filteredCharacters[
+        nextIndex
+      ];
 
-    setActiveIndex(nextIndex);
-
-    if (next) {
-      rememberCharacter(next);
+    if (!next) {
+      return;
     }
+
+    setActiveCharacterId(next.id);
+    rememberCharacter(next);
   };
 
   const previousCharacter = () => {
-    if (filteredCharacters.length <= 1) {
+    if (
+      filteredCharacters.length <=
+      1
+    ) {
       return;
     }
 
     const currentIndex =
-      safeActiveIndex < 0 ? 0 : safeActiveIndex;
+      activeIndex >= 0
+        ? activeIndex
+        : 0;
 
     const previousIndex =
       currentIndex === 0
@@ -366,13 +491,18 @@ export default function CharactersPreview() {
         : currentIndex - 1;
 
     const previous =
-      filteredCharacters[previousIndex];
+      filteredCharacters[
+        previousIndex
+      ];
 
-    setActiveIndex(previousIndex);
-
-    if (previous) {
-      rememberCharacter(previous);
+    if (!previous) {
+      return;
     }
+
+    setActiveCharacterId(
+      previous.id,
+    );
+    rememberCharacter(previous);
   };
 
   const handlePointerMove = (
@@ -415,18 +545,21 @@ export default function CharactersPreview() {
     pointerY.set(0);
   };
 
-  const lastVisitedCharacter = lastVisited
-    ? characters.find(
-        (character) =>
-          character.slug === lastVisited,
-      )
-    : null;
+  const lastVisitedCharacter =
+    lastVisited
+      ? characters.find(
+          (character) =>
+            character.slug ===
+            lastVisited,
+        )
+      : null;
 
   const filterButtons = [
     {
       key: "ALL",
       label: copy.all,
-      active: projectFilter === "ALL",
+      active:
+        projectFilter === "ALL",
       onClick: () =>
         setProjectFilter("ALL"),
     },
@@ -434,7 +567,8 @@ export default function CharactersPreview() {
       ([slug, title]) => ({
         key: slug,
         label: title,
-        active: projectFilter === slug,
+        active:
+          projectFilter === slug,
         onClick: () =>
           setProjectFilter(slug),
       }),
@@ -533,10 +667,9 @@ export default function CharactersPreview() {
                   filteredCharacters.length,
                 ).padStart(2, "0")}{" "}
                 /{" "}
-                {String(characters.length).padStart(
-                  2,
-                  "0",
-                )}
+                {String(
+                  characters.length,
+                ).padStart(2, "0")}
               </p>
             </div>
 
@@ -587,33 +720,44 @@ export default function CharactersPreview() {
             role="group"
             aria-label={copy.allProjects}
           >
-            {filterButtons.map((filter) => (
-              <FilterButton
-                key={filter.key}
-                active={filter.active}
-                onClick={filter.onClick}
-              >
-                {filter.label}
-              </FilterButton>
-            ))}
+            {filterButtons.map(
+              (filter) => (
+                <FilterButton
+                  key={filter.key}
+                  active={filter.active}
+                  onClick={filter.onClick}
+                >
+                  {filter.label}
+                </FilterButton>
+              ),
+            )}
           </div>
 
           <div className="flex flex-wrap gap-4">
             <div
               role="group"
-              aria-label={copy.genderFilters}
+              aria-label={
+                copy.genderFilters
+              }
               className="flex flex-wrap gap-2"
             >
               {(
-                ["ALL", "MALE", "FEMALE"] as const
+                [
+                  "ALL",
+                  "MALE",
+                  "FEMALE",
+                ] as const
               ).map((value) => (
                 <FilterButton
                   key={value}
                   active={
-                    genderFilter === value
+                    genderFilter ===
+                    value
                   }
                   onClick={() =>
-                    setGenderFilter(value)
+                    setGenderFilter(
+                      value,
+                    )
                   }
                 >
                   {value === "ALL"
@@ -627,7 +771,9 @@ export default function CharactersPreview() {
 
             <div
               role="group"
-              aria-label={copy.categoryFilters}
+              aria-label={
+                copy.categoryFilters
+              }
               className="flex flex-wrap gap-2"
             >
               {(
@@ -640,10 +786,13 @@ export default function CharactersPreview() {
                 <FilterButton
                   key={value}
                   active={
-                    categoryFilter === value
+                    categoryFilter ===
+                    value
                   }
                   onClick={() =>
-                    setCategoryFilter(value)
+                    setCategoryFilter(
+                      value,
+                    )
                   }
                 >
                   {value === "ALL"
@@ -680,8 +829,12 @@ export default function CharactersPreview() {
               className="relative min-h-[670px] overflow-hidden border border-white/[0.08] bg-[#060606]"
             >
               <div
-                onPointerMove={handlePointerMove}
-                onPointerLeave={resetPointer}
+                onPointerMove={
+                  handlePointerMove
+                }
+                onPointerLeave={
+                  resetPointer
+                }
                 className="absolute inset-0"
               >
                 <Link
@@ -696,7 +849,9 @@ export default function CharactersPreview() {
                     style={{
                       x: portraitX,
                       y: portraitY,
-                      scale: reducedMotion ? 1 : 1.025,
+                      scale: reducedMotion
+                        ? 1
+                        : 1.025,
                     }}
                     className="absolute inset-[-28px]"
                   >
@@ -712,13 +867,18 @@ export default function CharactersPreview() {
                           scale: 1,
                         }}
                         transition={{
-                          duration: reducedMotion ? 0 : 0.8,
+                          duration:
+                            reducedMotion
+                              ? 0
+                              : 0.8,
                           ease: EASE,
                         }}
                         className="absolute inset-0"
                       >
                         <Image
-                          src={activeCharacter.image}
+                          src={
+                            activeCharacter.image
+                          }
                           alt=""
                           fill
                           sizes="(min-width: 1024px) 65vw, 100vw"
@@ -731,14 +891,18 @@ export default function CharactersPreview() {
                         className="absolute inset-0 bg-[radial-gradient(circle_at_68%_42%,rgba(234,211,154,.085),transparent_30%),linear-gradient(135deg,#090909_0%,#040404_52%,#0b0b0a_100%)]"
                       >
                         <div className="absolute inset-0 opacity-[0.24] [background-image:linear-gradient(rgba(255,255,255,.09)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] [background-size:120px_120px]" />
+
                         <div className="absolute left-1/2 top-[42%] h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.055]" />
+
                         <div className="absolute left-1/2 top-[42%] h-[210px] w-[210px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c7a96b]/[0.10]" />
                       </div>
                     )}
                   </motion.div>
 
                   <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.87)_0%,rgba(0,0,0,0.25)_52%,rgba(0,0,0,0.48)_100%)]" />
+
                   <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.02)_38%,rgba(0,0,0,0.88)_100%)]" />
+
                   <div className="absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.82)]" />
 
                   <motion.div
@@ -750,21 +914,31 @@ export default function CharactersPreview() {
                     className="pointer-events-none absolute inset-0"
                   >
                     <div className="absolute left-[52%] top-[46%] h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06] lg:h-[510px] lg:w-[510px]" />
+
                     <div className="absolute left-[52%] top-[46%] h-[320px] w-[510px] -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] rounded-[50%] border border-[#c7a96b]/[0.10]" />
+
                     <div className="absolute left-[52%] top-[46%] h-px w-[520px] -translate-x-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+
                     <div className="absolute left-[52%] top-[46%] h-[510px] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.055] to-transparent" />
                   </motion.div>
 
                   <div className="pointer-events-none absolute inset-5 border border-white/[0.055] sm:inset-7">
                     <span
                       className="absolute left-[-1px] top-[-1px] h-10 w-10 border-l border-t"
-                      style={{ borderColor: `${GOLD}55` }}
+                      style={{
+                        borderColor: `${GOLD}55`,
+                      }}
                     />
+
                     <span className="absolute right-[-1px] top-[-1px] h-10 w-10 border-r border-t border-white/[0.07]" />
+
                     <span className="absolute bottom-[-1px] left-[-1px] h-10 w-10 border-b border-l border-white/[0.055]" />
+
                     <span
                       className="absolute bottom-[-1px] right-[-1px] h-10 w-10 border-b border-r"
-                      style={{ borderColor: `${GOLD}28` }}
+                      style={{
+                        borderColor: `${GOLD}28`,
+                      }}
                     />
                   </div>
 
@@ -774,28 +948,53 @@ export default function CharactersPreview() {
                         aria-hidden="true"
                         size={14}
                         strokeWidth={1.2}
-                        style={{ color: GOLD }}
+                        style={{
+                          color: GOLD,
+                        }}
                       />
+
                       <span
                         className="font-mono text-[8px] uppercase tracking-[0.3em]"
-                        style={{ color: `${GOLD_LIGHT}cc` }}
+                        style={{
+                          color: `${GOLD_LIGHT}cc`,
+                        }}
                       >
                         {copy.livingArchive}
                       </span>
                     </div>
+
                     <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-white/22">
-                      {String(safeActiveIndex + 1).padStart(2, "0")} / {String(filteredCharacters.length).padStart(2, "0")}
+                      {String(
+                        Math.max(
+                          activeIndex,
+                          0,
+                        ) + 1,
+                      ).padStart(
+                        2,
+                        "0",
+                      )}{" "}
+                      /{" "}
+                      {String(
+                        filteredCharacters.length,
+                      ).padStart(
+                        2,
+                        "0",
+                      )}
                     </span>
                   </div>
 
-                  {activeCharacter.image ? null : (
+                  {!activeCharacter.image ? (
                     <span
                       className="pointer-events-none absolute bottom-[8.7rem] right-7 z-10 font-mono text-[6px] uppercase tracking-[0.28em]"
-                      style={{ color: `${GOLD_LIGHT}46` }}
+                      style={{
+                        color: `${GOLD_LIGHT}46`,
+                      }}
                     >
-                      {copy.portraitPending}
+                      {
+                        copy.portraitPending
+                      }
                     </span>
-                  )}
+                  ) : null}
 
                   <div className="absolute inset-x-7 bottom-4 sm:inset-x-10">
                     <div
@@ -804,21 +1003,28 @@ export default function CharactersPreview() {
                         background: `linear-gradient(90deg, ${GOLD}28, rgba(255,255,255,.07), transparent)`,
                       }}
                     />
+
                     <div className="mt-3 flex select-none items-center justify-between">
                       <div className="flex items-center gap-3">
                         <ScanLine
                           aria-hidden="true"
                           size={13}
                           strokeWidth={1.2}
-                          style={{ color: `${GOLD}72` }}
+                          style={{
+                            color: `${GOLD}72`,
+                          }}
                         />
+
                         <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/18">
                           {copy.spatialIndex}
                         </span>
                       </div>
+
                       <span
                         className="font-mono text-[7px] tracking-[0.2em]"
-                        style={{ color: `${GOLD_LIGHT}40` }}
+                        style={{
+                          color: `${GOLD_LIGHT}40`,
+                        }}
                       >
                         UMBRA
                       </span>
@@ -832,9 +1038,14 @@ export default function CharactersPreview() {
                     opacity: 0,
                     y: reducedMotion ? 0 : 24,
                   }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
                   transition={{
-                    duration: reducedMotion ? 0 : 0.64,
+                    duration: reducedMotion
+                      ? 0
+                      : 0.64,
                     ease: EASE,
                   }}
                   className="pointer-events-none absolute inset-x-7 bottom-10 z-10 sm:inset-x-10 sm:bottom-10"
@@ -846,36 +1057,55 @@ export default function CharactersPreview() {
                         locale,
                       )}
                       className="pointer-events-auto font-mono text-[7px] uppercase tracking-[0.3em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
-                      style={{ color: `${GOLD_LIGHT}c4` }}
+                      style={{
+                        color: `${GOLD_LIGHT}c4`,
+                      }}
                     >
-                      {activeCharacter.projectTitle}
+                      {
+                        activeCharacter.projectTitle
+                      }
                     </Link>
+
                     <span
                       aria-hidden="true"
                       className="h-px w-7 bg-white/15"
                     />
+
                     <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-white/30">
-                      {getRoleLabel(activeCharacter.category, locale)}
+                      {getRoleLabel(
+                        activeCharacter.category,
+                        locale,
+                      )}
                     </span>
                   </div>
 
                   <Link
-                    href={getCharacterHref(activeCharacter, locale)}
+                    href={getCharacterHref(
+                      activeCharacter,
+                      locale,
+                    )}
                     aria-label={`${copy.openDossier}: ${activeCharacter.name}`}
                     className="pointer-events-auto group/name block w-fit max-w-4xl outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <h3 className="select-none text-[clamp(3.8rem,7.6vw,8rem)] font-[430] leading-[0.79] tracking-[-0.075em] text-white transition-transform duration-500 group-hover/portrait:-translate-y-1 group-hover/name:text-white/92">
-                      {activeCharacter.name}
+                      {
+                        activeCharacter.name
+                      }
                     </h3>
                   </Link>
 
                   <div className="mt-7 flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
                     <p className="max-w-xl text-[13px] leading-7 text-white/44 sm:text-[14px]">
-                      {activeCharacter.shortDescription}
+                      {
+                        activeCharacter.shortDescription
+                      }
                     </p>
 
                     <Link
-                      href={getCharacterHref(activeCharacter, locale)}
+                      href={getCharacterHref(
+                        activeCharacter,
+                        locale,
+                      )}
                       className="pointer-events-auto group/cta inline-flex h-11 shrink-0 items-center gap-3 border px-5 text-[8px] font-semibold uppercase tracking-[0.26em] outline-none transition-colors duration-300 hover:bg-white/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                       style={{
                         borderColor: `${GOLD}58`,
@@ -885,6 +1115,7 @@ export default function CharactersPreview() {
                       {activeCharacter.profileAvailable
                         ? copy.openDossier
                         : copy.dossierPreparing}
+
                       <ArrowUpRight
                         aria-hidden="true"
                         size={14}
@@ -895,10 +1126,14 @@ export default function CharactersPreview() {
                   </div>
                 </motion.div>
 
-                {relatedCharacters.length > 0 ? (
+                {relatedCharacters.length >
+                0 ? (
                   <div className="pointer-events-none absolute inset-0 hidden lg:block">
                     {relatedCharacters.map(
-                      (related, index) => {
+                      (
+                        related,
+                        index,
+                      ) => {
                         const positions = [
                           "right-[9%] top-[30%]",
                           "right-[17%] top-[54%]",
@@ -907,7 +1142,9 @@ export default function CharactersPreview() {
 
                         return (
                           <motion.div
-                            key={related.id}
+                            key={
+                              related.id
+                            }
                             initial={{
                               opacity: 0,
                             }}
@@ -915,13 +1152,16 @@ export default function CharactersPreview() {
                               opacity: 1,
                             }}
                             transition={{
-                              delay: reducedMotion
-                                ? 0
-                                : 0.2 +
-                                  index * 0.08,
-                              duration: reducedMotion
-                                ? 0
-                                : 0.5,
+                              delay:
+                                reducedMotion
+                                  ? 0
+                                  : 0.2 +
+                                    index *
+                                      0.08,
+                              duration:
+                                reducedMotion
+                                  ? 0
+                                  : 0.5,
                             }}
                             className={`pointer-events-auto absolute ${positions[index]}`}
                           >
@@ -954,7 +1194,9 @@ export default function CharactersPreview() {
                               </span>
 
                               <span className="whitespace-nowrap border-b border-white/[0.08] pb-1 text-[8px] uppercase tracking-[0.2em] text-white/30 transition-colors duration-300 group-hover:text-white/72">
-                                {related.name}
+                                {
+                                  related.name
+                                }
                               </span>
                             </button>
                           </motion.div>
@@ -1013,7 +1255,10 @@ export default function CharactersPreview() {
 
               <div className="space-y-1.5">
                 {filteredCharacters.map(
-                  (character, index) => {
+                  (
+                    character,
+                    index,
+                  ) => {
                     const active =
                       character.id ===
                       activeCharacter.id;
@@ -1023,7 +1268,9 @@ export default function CharactersPreview() {
                         key={character.id}
                         type="button"
                         onClick={() =>
-                          selectCharacter(character)
+                          selectCharacter(
+                            character,
+                          )
                         }
                         aria-pressed={active}
                         className={[
@@ -1045,7 +1292,10 @@ export default function CharactersPreview() {
                             >
                               {String(
                                 index + 1,
-                              ).padStart(2, "0")}
+                              ).padStart(
+                                2,
+                                "0",
+                              )}
                             </span>
 
                             <span
@@ -1056,7 +1306,9 @@ export default function CharactersPreview() {
                                   : "text-white/42 group-hover:text-white/72",
                               ].join(" ")}
                             >
-                              {character.name}
+                              {
+                                character.name
+                              }
                             </span>
                           </div>
 
@@ -1074,7 +1326,9 @@ export default function CharactersPreview() {
                         </div>
 
                         <div className="mt-2 pl-7 text-[6px] uppercase tracking-[0.27em] text-white/16">
-                          {character.projectTitle}
+                          {
+                            character.projectTitle
+                          }
                         </div>
 
                         <span
@@ -1114,7 +1368,9 @@ export default function CharactersPreview() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={previousCharacter}
+                    onClick={
+                      previousCharacter
+                    }
                     aria-label={copy.previous}
                     className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#c7a96b]/30 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
@@ -1149,7 +1405,9 @@ export default function CharactersPreview() {
                   }
                   className="group mt-3 flex h-11 items-center justify-between border border-white/[0.07] px-4 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/28 transition-all duration-300 hover:border-white/[0.15] hover:text-white/68 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                 >
-                  <span>{copy.fullArchive}</span>
+                  <span>
+                    {copy.fullArchive}
+                  </span>
 
                   <ArrowUpRight
                     aria-hidden="true"

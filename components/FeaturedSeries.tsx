@@ -2,19 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  ExternalLink,
-} from "lucide-react";
-import {
-  motion,
-  useReducedMotion,
-} from "framer-motion";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { ArrowUpRight, ExternalLink } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useMemo, useState } from "react";
 
 import type { Locale } from "@/data/translations";
 import { projects } from "@/data/projects";
@@ -74,30 +64,24 @@ export default function FeaturedSeries({
     ? `/en/projects/${project.slug}`
     : `/serije/${project.slug}`;
 
-  const cover =
-    isEnglish
-      ? project.book?.coverEn ||
-        project.book?.coverSr ||
-        project.cover ||
-        FALLBACK_IMAGE
-      : project.book?.coverSr ||
-        project.book?.coverEn ||
-        project.cover ||
-        FALLBACK_IMAGE;
+  const cover = isEnglish
+    ? project.book?.coverEn ||
+      project.book?.coverSr ||
+      project.cover ||
+      FALLBACK_IMAGE
+    : project.book?.coverSr ||
+      project.book?.coverEn ||
+      project.cover ||
+      FALLBACK_IMAGE;
 
-  const [coverSrc, setCoverSrc] =
-    useState(cover);
-
-  useEffect(() => {
-    setCoverSrc(cover);
-  }, [cover]);
+  const [coverSrc, setCoverSrc] = useState(cover);
 
   const copy = useMemo(
     () =>
       isEnglish
         ? {
             eyebrow: "FEATURED SERIES",
-            title: "Stories that remain.",
+            title: "Stories that remain",
             intro:
               "Explore the world of Umbra Studio through stories, characters and productions built one scene at a time.",
             current: "CURRENT PRODUCTION",
@@ -117,7 +101,7 @@ export default function FeaturedSeries({
           }
         : {
             eyebrow: "ISTAKNUTA SERIJA",
-            title: "Priče koje ostaju.",
+            title: "Priče koje ostaju",
             intro:
               "Istraži svet Umbra Studija kroz priče, likove i produkcije koje gradimo scenu po scenu.",
             current: "AKTUELNA PRODUKCIJA",
@@ -479,9 +463,7 @@ export default function FeaturedSeries({
             </Link>
 
             <p className="mt-8 max-w-[500px] text-[12px] leading-7 text-white/[0.42]">
-              {isEnglish
-                ? project.longDescription
-                : project.longDescription}
+              {project.longDescription}
             </p>
 
             {project.book?.author ? (
@@ -496,21 +478,18 @@ export default function FeaturedSeries({
               >
                 <span>{copy.authorPrefix}</span>
                 <span>{project.book.author}</span>
-                <ExternalLink
-                  size={11}
-                  strokeWidth={1}
-                />
+                <ExternalLink size={11} strokeWidth={1} />
               </a>
             ) : null}
 
             <div className="mt-10 grid max-w-[560px] grid-cols-3 border-y border-white/[0.06] py-6">
               <MetaItem
-                label={isEnglish ? "FORMAT" : "FORMAT"}
+                label="FORMAT"
                 value={copy.format}
               />
 
               <MetaItem
-                label={isEnglish ? "STATUS" : "STATUS"}
+                label="STATUS"
                 value={copy.status}
               />
 

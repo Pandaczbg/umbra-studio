@@ -8,14 +8,14 @@ export const umbraColors = {
   textMuted: "rgba(241,237,228,0.34)",
   textFaint: "rgba(241,237,228,0.16)",
 
-  gold: "#C69A45",
-  goldLight: "#E7C57D",
-  goldSoft: "rgba(198,154,69,0.18)",
-  goldFaint: "rgba(198,154,69,0.07)",
+  gold: "#C7A96B",
+  goldLight: "#EAD39A",
+  goldSoft: "rgba(199,169,107,0.18)",
+  goldFaint: "rgba(199,169,107,0.07)",
 
   border: "rgba(255,255,255,0.07)",
   borderStrong: "rgba(255,255,255,0.11)",
-  borderGold: "rgba(198,154,69,0.34)",
+  borderGold: "rgba(199,169,107,0.34)",
 } as const;
 
 export const umbraTypography = {

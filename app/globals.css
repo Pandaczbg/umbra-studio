@@ -5,6 +5,8 @@
    GLOBAL DESIGN SYSTEM
    Cinematic / Editorial / Minimal / Luxury
 
+   V5 FINAL SYSTEM
+
    Architecture
    --------------------------------------------------------------------------
    01. Theme tokens
@@ -16,8 +18,13 @@
    07. Forced colors
    08. Print
 
-   Principle:
-   One visual language across the entire studio.
+   System principles
+   --------------------------------------------------------------------------
+   - One visual language across every route.
+   - Components own behavior; globals own the visual contract.
+   - Motion is progressive enhancement, never a requirement for usability.
+   - Gold is a signal, not a fill color.
+   - Decorative layers never become interaction surfaces.
    ========================================================================== */
 
 
@@ -31,10 +38,10 @@
   --color-umbra-surface: #070707;
   --color-umbra-surface-elevated: #0b0b0a;
 
-  --color-umbra-text-primary: #f4f0e8;
-  --color-umbra-text-secondary: rgba(244, 240, 232, 0.62);
-  --color-umbra-text-muted: rgba(244, 240, 232, 0.40);
-  --color-umbra-text-faint: rgba(244, 240, 232, 0.18);
+  --color-umbra-text-primary: #f1ede4;
+  --color-umbra-text-secondary: rgba(241, 237, 228, 0.58);
+  --color-umbra-text-muted: rgba(241, 237, 228, 0.34);
+  --color-umbra-text-faint: rgba(241, 237, 228, 0.16);
 
   --color-umbra-gold: #c7a96b;
   --color-umbra-gold-light: #ead39a;
@@ -80,170 +87,70 @@
    ========================================================================== */
 
 :root {
-  /* Core palette */
+  color-scheme: dark;
 
-  --umbra-bg:
-    #030303;
+  --umbra-bg: #030303;
+  --umbra-bg-deep: #020202;
+  --umbra-obsidian: #030303;
 
-  --umbra-bg-deep:
-    #020202;
+  --umbra-surface: #070707;
+  --umbra-surface-raised: #0b0b0a;
 
-  --umbra-obsidian:
-    #030303;
+  --umbra-ink: #f1ede4;
+  --umbra-ink-soft: rgba(241, 237, 228, 0.58);
+  --umbra-ink-muted: rgba(241, 237, 228, 0.34);
+  --umbra-ink-faint: rgba(241, 237, 228, 0.16);
 
-  --umbra-surface:
-    #070707;
+  --umbra-platinum: #fbf8f1;
 
-  --umbra-surface-raised:
-    #0b0b0a;
+  --umbra-gold: #c7a96b;
+  --umbra-gold-light: #ead39a;
+  --umbra-gold-dark: #8f7142;
 
-  --umbra-ink:
-    #f4f0e8;
+  --umbra-line: rgba(255, 255, 255, 0.085);
+  --umbra-line-strong: rgba(255, 255, 255, 0.13);
+  --umbra-line-soft: rgba(255, 255, 255, 0.048);
+  --umbra-line-faint: rgba(255, 255, 255, 0.026);
+  --umbra-line-gold: rgba(199, 169, 107, 0.34);
 
-  --umbra-ink-soft:
-    rgba(244, 240, 232, 0.62);
+  --umbra-content-max: 1500px;
+  --umbra-hero-max: 1680px;
+  --umbra-content-padding: 24px;
 
-  --umbra-ink-muted:
-    rgba(244, 240, 232, 0.40);
+  --umbra-section-space: clamp(104px, 12vw, 176px);
 
-  --umbra-ink-faint:
-    rgba(244, 240, 232, 0.18);
+  --umbra-duration-instant: 180ms;
+  --umbra-duration-fast: 300ms;
+  --umbra-duration: 500ms;
+  --umbra-duration-reveal: 800ms;
+  --umbra-duration-cinematic: 1050ms;
+  --umbra-duration-slow: 1500ms;
 
-  --umbra-platinum:
-    #fbf8f1;
+  /* Written by UmbraMotionSystem */
+  --umbra-scroll-y: 0px;
+  --umbra-scroll-progress: 0;
+  --umbra-scroll-velocity: 0;
+  --umbra-scroll-velocity-smoothed: 0;
+  --umbra-scroll-speed: 0;
+  --umbra-scroll-velocity-normalized: 0;
+  --umbra-scroll-energy: 0;
 
-  --umbra-gold:
-    #c7a96b;
+  --umbra-viewport-height: 100vh;
+  --umbra-document-height: 100vh;
+  --umbra-motion-sign: 0;
 
-  --umbra-gold-light:
-    #ead39a;
+  /* Written by UmbraSceneDirector */
+  --umbra-scene-progress: 0;
+  --umbra-scene-visibility: 1;
+  --umbra-scene-index: 1;
+  --umbra-scene-total: 5;
+  --umbra-scene-accent-opacity: 1;
 
-  --umbra-gold-dark:
-    #8f7142;
+  --umbra-header-progress: 0;
 
-
-  /* Borders */
-
-  --umbra-line:
-    rgba(255, 255, 255, 0.085);
-
-  --umbra-line-strong:
-    rgba(255, 255, 255, 0.13);
-
-  --umbra-line-soft:
-    rgba(255, 255, 255, 0.048);
-
-  --umbra-line-faint:
-    rgba(255, 255, 255, 0.026);
-
-  --umbra-line-gold:
-    rgba(199, 169, 107, 0.34);
-
-
-  /* Layout */
-
-  --umbra-content-max:
-    1500px;
-
-  --umbra-hero-max:
-    1680px;
-
-  --umbra-content-padding:
-    24px;
-
-  --umbra-section-space:
-    clamp(104px, 12vw, 176px);
-
-
-  /* Motion */
-
-  --umbra-duration-instant:
-    180ms;
-
-  --umbra-duration-fast:
-    300ms;
-
-  --umbra-duration:
-    500ms;
-
-  --umbra-duration-reveal:
-    800ms;
-
-  --umbra-duration-cinematic:
-    1050ms;
-
-  --umbra-duration-slow:
-    1500ms;
-
-
-  /* Scroll system */
-
-  --umbra-scroll-y:
-    0px;
-
-  --umbra-scroll-progress:
-    0;
-
-  --umbra-scroll-velocity:
-    0;
-
-  --umbra-scroll-velocity-smoothed:
-    0;
-
-  --umbra-scroll-speed:
-    0;
-
-  --umbra-scroll-velocity-normalized:
-    0;
-
-  --umbra-scroll-energy:
-    0;
-
-  --umbra-viewport-height:
-    100vh;
-
-  --umbra-document-height:
-    100vh;
-
-  --umbra-motion-sign:
-    0;
-
-
-  /* Scene system */
-
-  --umbra-scene-progress:
-    0;
-
-  --umbra-scene-visibility:
-    1;
-
-  --umbra-scene-index:
-    1;
-
-  --umbra-scene-total:
-    5;
-
-  --umbra-scene-accent-opacity:
-    1;
-
-
-  /* Header system */
-
-  --umbra-header-progress:
-    0;
-
-
-  /* Atmosphere */
-
-  --umbra-pointer-x:
-    68%;
-
-  --umbra-pointer-y:
-    28%;
-
-
-  color-scheme:
-    dark;
+  /* Written by UmbraAtmosphere */
+  --umbra-pointer-x: 68%;
+  --umbra-pointer-y: 28%;
 }
 
 
@@ -253,60 +160,28 @@
 
 @layer base {
   html {
-    min-height:
-      100%;
+    min-height: 100%;
+    margin: 0;
 
-    margin:
-      0;
+    background: var(--umbra-bg-deep);
+    color: var(--umbra-ink);
 
-    background:
-      var(--umbra-bg-deep);
+    overflow-x: clip;
+    scroll-behavior: auto;
+    text-rendering: optimizeLegibility;
 
-    color:
-      var(--umbra-ink);
-
-    scroll-behavior:
-      auto;
-
-    text-rendering:
-      optimizeLegibility;
-
-    -webkit-text-size-adjust:
-      100%;
-
-    -webkit-font-smoothing:
-      antialiased;
-
-    -moz-osx-font-smoothing:
-      grayscale;
-
-    scrollbar-width:
-      none;
-  }
-
-  html::-webkit-scrollbar {
-    width:
-      0;
-
-    height:
-      0;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    min-width:
-      320px;
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
 
-    min-height:
-      100vh;
-
-    margin:
-      0;
-
-    overflow-x:
-      clip;
-
-    overscroll-behavior-x:
-      none;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
 
     background:
       radial-gradient(
@@ -321,26 +196,20 @@
       ),
       linear-gradient(
         180deg,
-        #030303 0%,
-        #050505 46%,
+        var(--umbra-bg) 0%,
+        var(--umbra-surface) 46%,
         #040404 100%
       );
 
-    color:
-      var(--umbra-ink);
-
-    font-family:
-      var(--font-umbra-sans);
-
-    font-synthesis:
-      none;
+    color: var(--umbra-ink);
+    font-family: var(--font-umbra-sans);
+    font-synthesis: none;
   }
 
   *,
   *::before,
   *::after {
-    box-sizing:
-      border-box;
+    box-sizing: border-box;
   }
 
   button,
@@ -348,74 +217,57 @@
   input,
   textarea,
   select {
-    font:
-      inherit;
-
-    font-synthesis:
-      none;
+    font: inherit;
+    font-synthesis: none;
   }
 
   button,
   a {
-    -webkit-tap-highlight-color:
-      transparent;
+    -webkit-tap-highlight-color: transparent;
   }
 
   button {
-    border:
-      0;
-
-    background:
-      none;
-
-    color:
-      inherit;
+    border: 0;
+    background: none;
+    color: inherit;
   }
 
   img,
   video,
   svg,
   canvas {
-    display:
-      block;
-
-    max-width:
-      100%;
+    display: block;
+    max-width: 100%;
   }
 
   img {
-    color:
-      transparent;
+    color: transparent;
   }
 
   a {
-    color:
-      inherit;
-
-    text-decoration:
-      none;
+    color: inherit;
+    text-decoration: none;
   }
 
   ::selection {
-    background:
-      rgba(234, 211, 154, 0.20);
-
-    color:
-      #ffffff;
+    background: rgba(234, 211, 154, 0.20);
+    color: #ffffff;
   }
 
   :focus-visible {
-    outline:
-      1px solid
-      rgba(234, 211, 154, 0.78);
-
-    outline-offset:
-      4px;
+    outline: 1px solid rgba(234, 211, 154, 0.78);
+    outline-offset: 4px;
   }
 
   :focus:not(:focus-visible) {
-    outline:
-      none;
+    outline: none;
+  }
+
+  @media (prefers-contrast: more) {
+    :focus-visible {
+      outline-width: 2px;
+      outline-offset: 3px;
+    }
   }
 }
 
@@ -425,47 +277,30 @@
    ========================================================================== */
 
 @layer components {
-
   /* ------------------------------------------------------------------------
      ATMOSPHERE
      ------------------------------------------------------------------------ */
 
   .umbra-atmosphere {
-    position:
-      fixed;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
 
-    inset:
-      0;
-
-    z-index:
-      0;
-
-    overflow:
-      hidden;
-
-    pointer-events:
-      none;
-
-    isolation:
-      isolate;
+    overflow: hidden;
+    pointer-events: none;
+    isolation: isolate;
   }
 
   .umbra-atmosphere__aurora,
   .umbra-atmosphere__beam,
   .umbra-atmosphere__grid {
-    position:
-      absolute;
-
-    inset:
-      0;
-
-    pointer-events:
-      none;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
   }
 
   .umbra-atmosphere__aurora {
-    opacity:
-      0.72;
+    opacity: 0.72;
 
     background:
       radial-gradient(
@@ -482,14 +317,11 @@
       );
 
     transition:
-      opacity
-      500ms
-      var(--ease-umbra-smooth);
+      opacity var(--umbra-duration) var(--ease-umbra-smooth);
   }
 
   .umbra-atmosphere__beam {
-    opacity:
-      0.18;
+    opacity: 0.18;
 
     background:
       linear-gradient(
@@ -499,25 +331,17 @@
         transparent 60%
       );
 
-    transform:
-      translate3d(
-        calc(
-          var(--umbra-scroll-progress) *
-          5vw
-        ),
-        0,
-        0
-      );
+    transform: translate3d(
+      calc(var(--umbra-scroll-progress) * 5vw),
+      0,
+      0
+    );
+
+    will-change: transform;
   }
 
-  /*
-   * Keep the global grid extremely restrained.
-   * The Hero and individual scenes should own their
-   * stronger graphic treatment.
-   */
   .umbra-atmosphere__grid {
-    opacity:
-      0.032;
+    opacity: 0.032;
 
     background-image:
       linear-gradient(
@@ -530,22 +354,19 @@
         transparent 1px
       );
 
-    background-size:
-      120px 120px;
+    background-size: 120px 120px;
 
-    mask-image:
-      linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.2),
-        transparent 58%
-      );
+    mask-image: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.2),
+      transparent 58%
+    );
 
-    -webkit-mask-image:
-      linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.2),
-        transparent 58%
-      );
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.2),
+      transparent 58%
+    );
   }
 
 
@@ -554,25 +375,23 @@
      ------------------------------------------------------------------------ */
 
   .umbra-home {
-    position:
-      relative;
-
-    min-height:
-      100vh;
-
-    background:
-      var(--umbra-bg);
+    position: relative;
+    min-height: 100vh;
+    background: var(--umbra-bg);
+    isolation: isolate;
   }
 
   .umbra-home > section {
-    position:
-      relative;
+    position: relative;
   }
 
   [data-umbra-scene],
   [data-umbra-prefooter] {
-    position:
-      relative;
+    position: relative;
+  }
+
+  [data-umbra-scene] {
+    scroll-margin-top: 72px;
   }
 
 
@@ -581,40 +400,23 @@
      ------------------------------------------------------------------------ */
 
   .umbra-site-header {
-    position:
-      fixed;
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 500;
 
-    inset-inline:
-      0;
+    isolation: isolate;
+    width: 100%;
 
-    top:
-      0;
+    pointer-events: none;
+    visibility: visible;
+    opacity: 1;
 
-    z-index:
-      500;
-
-    isolation:
-      isolate;
-
-    width:
-      100%;
-
-    pointer-events:
-      none;
-
-    visibility:
-      visible;
-
-    opacity:
-      1;
-
-    mix-blend-mode:
-      normal;
+    mix-blend-mode: normal;
   }
 
   .umbra-site-header__hit-area {
-    isolation:
-      isolate;
+    isolation: isolate;
   }
 
 
@@ -623,88 +425,53 @@
      ------------------------------------------------------------------------ */
 
   .umbra-serif {
-    font-family:
-      var(--font-umbra-serif);
+    font-family: var(--font-umbra-serif);
   }
 
   .umbra-mono {
-    font-family:
-      var(--font-umbra-mono);
+    font-family: var(--font-umbra-mono);
   }
 
   .umbra-label {
-    font-size:
-      9px;
-
-    line-height:
-      1;
-
-    font-weight:
-      600;
-
-    text-transform:
-      uppercase;
-
-    letter-spacing:
-      0.26em;
-
-    color:
-      rgba(234, 211, 154, 0.64);
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: rgba(234, 211, 154, 0.64);
   }
 
   .umbra-code {
-    font-family:
-      var(--font-umbra-mono);
-
-    font-size:
-      7px;
-
-    line-height:
-      1.2;
-
-    text-transform:
-      uppercase;
-
-    letter-spacing:
-      0.24em;
-
-    color:
-      rgba(255, 255, 255, 0.23);
+    font-family: var(--font-umbra-mono);
+    font-size: 7px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: rgba(255, 255, 255, 0.23);
   }
 
   .umbra-display {
-    letter-spacing:
-      -0.075em;
-
-    line-height:
-      0.80;
+    letter-spacing: -0.075em;
+    line-height: 0.80;
   }
 
   .umbra-display-tight {
-    letter-spacing:
-      -0.055em;
-
-    line-height:
-      0.90;
+    letter-spacing: -0.055em;
+    line-height: 0.90;
   }
 
   .umbra-home p {
-    color:
-      var(--umbra-ink-muted);
+    color: var(--umbra-ink-muted);
   }
 
   .umbra-home p strong,
   .umbra-home p em {
-    color:
-      var(--umbra-platinum);
+    color: var(--umbra-platinum);
   }
 
   .umbra-home a:focus-visible {
-    outline-color:
-      var(--umbra-gold-light);
-
-    outline-offset:
-      5px;
+    outline-color: var(--umbra-gold-light);
+    outline-offset: 5px;
   }
 
 
@@ -713,50 +480,28 @@
      ------------------------------------------------------------------------ */
 
   .umbra-container {
-    width:
-      min(
-        calc(
-          100% -
-          (
-            var(--umbra-content-padding) *
-            2
-          )
-        ),
-        var(--umbra-content-max)
-      );
-
-    margin-inline:
-      auto;
+    width: min(
+      calc(100% - (var(--umbra-content-padding) * 2)),
+      var(--umbra-content-max)
+    );
+    margin-inline: auto;
   }
 
   .umbra-container-hero {
-    width:
-      min(
-        calc(
-          100% -
-          (
-            var(--umbra-content-padding) *
-            2
-          )
-        ),
-        var(--umbra-hero-max)
-      );
-
-    margin-inline:
-      auto;
+    width: min(
+      calc(100% - (var(--umbra-content-padding) * 2)),
+      var(--umbra-hero-max)
+    );
+    margin-inline: auto;
   }
 
   .umbra-section {
-    position:
-      relative;
-
-    width:
-      100%;
+    position: relative;
+    width: 100%;
   }
 
   .umbra-section-space {
-    padding-block:
-      var(--umbra-section-space);
+    padding-block: var(--umbra-section-space);
   }
 
 
@@ -767,43 +512,37 @@
   .umbra-hairline,
   .umbra-gold-line,
   .umbra-gold-line-center {
-    width:
-      100%;
-
-    height:
-      1px;
+    width: 100%;
+    height: 1px;
   }
 
   .umbra-hairline {
-    background:
-      linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.12),
-        transparent
-      );
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.12),
+      transparent
+    );
   }
 
   .umbra-gold-line {
-    background:
-      linear-gradient(
-        90deg,
-        var(--umbra-gold),
-        rgba(199, 169, 107, 0.22),
-        transparent
-      );
+    background: linear-gradient(
+      90deg,
+      var(--umbra-gold),
+      rgba(199, 169, 107, 0.22),
+      transparent
+    );
   }
 
   .umbra-gold-line-center {
-    background:
-      linear-gradient(
-        90deg,
-        transparent,
-        rgba(199, 169, 107, 0.07) 18%,
-        rgba(234, 211, 154, 0.62) 50%,
-        rgba(199, 169, 107, 0.07) 82%,
-        transparent
-      );
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(199, 169, 107, 0.07) 18%,
+      rgba(234, 211, 154, 0.62) 50%,
+      rgba(199, 169, 107, 0.07) 82%,
+      transparent
+    );
   }
 
 
@@ -812,71 +551,77 @@
      ------------------------------------------------------------------------ */
 
   .umbra-vignette {
-    position:
-      absolute;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
 
-    inset:
-      0;
-
-    pointer-events:
-      none;
-
-    background:
-      radial-gradient(
-        ellipse at center,
-        transparent 30%,
-        rgba(0, 0, 0, 0.10) 62%,
-        rgba(0, 0, 0, 0.42) 100%
-      );
+    background: radial-gradient(
+      ellipse at center,
+      transparent 30%,
+      rgba(0, 0, 0, 0.10) 62%,
+      rgba(0, 0, 0, 0.42) 100%
+    );
   }
 
   .umbra-grain,
   .umbra-grain-fine {
-    position:
-      absolute;
-
-    inset:
-      0;
-
-    pointer-events:
-      none;
-
-    overflow:
-      hidden;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
   }
 
   .umbra-grain {
-    opacity:
-      0.014;
+    opacity: 0.014;
 
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        rgba(255, 255, 255, 0.22) 0px,
-        rgba(255, 255, 255, 0.22) 1px,
-        transparent 1px,
-        transparent 4px
-      );
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.22) 0px,
+      rgba(255, 255, 255, 0.22) 1px,
+      transparent 1px,
+      transparent 4px
+    );
 
-    mix-blend-mode:
-      screen;
+    mix-blend-mode: screen;
   }
 
   .umbra-grain-fine {
-    opacity:
-      0.007;
+    opacity: 0.007;
 
-    background-image:
-      repeating-linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.14) 0px,
-        rgba(255, 255, 255, 0.14) 1px,
-        transparent 1px,
-        transparent 5px
-      );
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.14) 0px,
+      rgba(255, 255, 255, 0.14) 1px,
+      transparent 1px,
+      transparent 5px
+    );
 
-    mix-blend-mode:
-      soft-light;
+    mix-blend-mode: soft-light;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     IMAGE TREATMENT
+     ------------------------------------------------------------------------ */
+
+  .umbra-image-fade {
+    background: linear-gradient(
+      180deg,
+      transparent 42%,
+      rgba(0, 0, 0, 0.76) 100%
+    );
+  }
+
+  .umbra-image-fade-strong {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.04) 0%,
+      rgba(0, 0, 0, 0.88) 100%
+    );
+  }
+
+  .umbra-image-shade {
+    background: rgba(0, 0, 0, 0.12);
   }
 
 
@@ -885,62 +630,31 @@
      ------------------------------------------------------------------------ */
 
   .umbra-focus-frame {
-    position:
-      relative;
-
-    border:
-      1px solid
-      var(--umbra-line);
+    position: relative;
+    border: 1px solid var(--umbra-line);
   }
 
   .umbra-focus-frame::before,
   .umbra-focus-frame::after {
-    content:
-      "";
-
-    position:
-      absolute;
-
-    width:
-      32px;
-
-    height:
-      32px;
-
-    pointer-events:
-      none;
+    content: "";
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
   }
 
   .umbra-focus-frame::before {
-    left:
-      -1px;
-
-    top:
-      -1px;
-
-    border-left:
-      1px solid
-      rgba(199, 169, 107, 0.24);
-
-    border-top:
-      1px solid
-      rgba(199, 169, 107, 0.24);
+    left: -1px;
+    top: -1px;
+    border-left: 1px solid rgba(199, 169, 107, 0.24);
+    border-top: 1px solid rgba(199, 169, 107, 0.24);
   }
 
   .umbra-focus-frame::after {
-    right:
-      -1px;
-
-    bottom:
-      -1px;
-
-    border-right:
-      1px solid
-      rgba(199, 169, 107, 0.18);
-
-    border-bottom:
-      1px solid
-      rgba(199, 169, 107, 0.18);
+    right: -1px;
+    bottom: -1px;
+    border-right: 1px solid rgba(199, 169, 107, 0.18);
+    border-bottom: 1px solid rgba(199, 169, 107, 0.18);
   }
 
 
@@ -949,43 +663,23 @@
      ------------------------------------------------------------------------ */
 
   .umbra-surface {
-    border:
-      1px solid
-      var(--umbra-line-soft);
-
-    background:
-      rgba(255, 255, 255, 0.012);
+    border: 1px solid var(--umbra-line-soft);
+    background: rgba(255, 255, 255, 0.012);
   }
 
   .umbra-surface-hover {
     transition:
-      border-color
-      350ms
-      var(--ease-umbra-out),
-      background-color
-      350ms
-      var(--ease-umbra-out),
-      transform
-      350ms
-      var(--ease-umbra-out),
-      box-shadow
-      350ms
-      var(--ease-umbra-out);
+      border-color 350ms var(--ease-umbra-out),
+      background-color 350ms var(--ease-umbra-out),
+      transform 350ms var(--ease-umbra-out),
+      box-shadow 350ms var(--ease-umbra-out);
   }
 
   .umbra-surface-hover:hover {
-    border-color:
-      rgba(234, 211, 154, 0.15);
-
-    background:
-      rgba(255, 255, 255, 0.016);
-
-    box-shadow:
-      0 18px 48px
-      rgba(0, 0, 0, 0.16);
-
-    transform:
-      translateY(-2px);
+    border-color: rgba(234, 211, 154, 0.15);
+    background: rgba(255, 255, 255, 0.016);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
+    transform: translateY(-2px);
   }
 
 
@@ -994,28 +688,39 @@
      ------------------------------------------------------------------------ */
 
   html[data-umbra-scene="hero"] {
-    --umbra-scene-accent-opacity:
-      0.86;
+    --umbra-scene-accent-opacity: 0.86;
   }
 
   html[data-umbra-scene="project"] {
-    --umbra-scene-accent-opacity:
-      1;
+    --umbra-scene-accent-opacity: 1;
   }
 
   html[data-umbra-scene="characters"] {
-    --umbra-scene-accent-opacity:
-      0.90;
+    --umbra-scene-accent-opacity: 0.90;
   }
 
   html[data-umbra-scene="studio"] {
-    --umbra-scene-accent-opacity:
-      0.92;
+    --umbra-scene-accent-opacity: 0.92;
   }
 
   html[data-umbra-scene="watch"] {
-    --umbra-scene-accent-opacity:
-      1;
+    --umbra-scene-accent-opacity: 1;
+  }
+
+  html[data-umbra-scene="projects-archive"] {
+    --umbra-scene-accent-opacity: 0.94;
+  }
+
+  html[data-umbra-scene="project-detail"] {
+    --umbra-scene-accent-opacity: 1;
+  }
+
+  html[data-umbra-scene="characters-archive"] {
+    --umbra-scene-accent-opacity: 0.92;
+  }
+
+  html[data-umbra-scene="character-dossier"] {
+    --umbra-scene-accent-opacity: 0.96;
   }
 
 
@@ -1023,19 +728,19 @@
      MOTION STATE
      ------------------------------------------------------------------------ */
 
-  html[data-umbra-scroll-direction="down"] {
-    --umbra-motion-sign:
-      1;
+  html[data-umbra-scroll-direction="down"],
+  html[data-umbra-scene-direction="down"] {
+    --umbra-motion-sign: 1;
   }
 
-  html[data-umbra-scroll-direction="up"] {
-    --umbra-motion-sign:
-      -1;
+  html[data-umbra-scroll-direction="up"],
+  html[data-umbra-scene-direction="up"] {
+    --umbra-motion-sign: -1;
   }
 
-  html[data-umbra-scroll-direction="idle"] {
-    --umbra-motion-sign:
-      0;
+  html[data-umbra-scroll-direction="idle"],
+  html[data-umbra-scene-direction="idle"] {
+    --umbra-motion-sign: 0;
   }
 
 
@@ -1044,8 +749,12 @@
      ------------------------------------------------------------------------ */
 
   [data-cursor-interactive] {
-    cursor:
-      pointer;
+    cursor: pointer;
+  }
+
+  [data-umbra-scene] a,
+  [data-umbra-scene] button {
+    -webkit-tap-highlight-color: transparent;
   }
 
 
@@ -1054,11 +763,8 @@
      ------------------------------------------------------------------------ */
 
   .umbra-scrollbar {
-    pointer-events:
-      auto;
-
-    user-select:
-      none;
+    pointer-events: auto;
+    user-select: none;
   }
 
 
@@ -1067,12 +773,8 @@
      ------------------------------------------------------------------------ */
 
   #footer {
-    position:
-      relative;
-
-    border-bottom:
-      1px solid
-      rgba(255, 255, 255, 0.055);
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
   }
 
 
@@ -1081,90 +783,43 @@
      ------------------------------------------------------------------------ */
 
   .umbra-transition-frame {
-    position:
-      absolute;
-
-    pointer-events:
-      none;
-
-    border:
-      1px solid
-      rgba(255, 255, 255, 0.06);
+    position: absolute;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .umbra-transition-corner {
-    position:
-      absolute;
-
-    width:
-      38px;
-
-    height:
-      38px;
+    position: absolute;
+    width: 38px;
+    height: 38px;
   }
 
   .umbra-transition-corner.top-left {
-    left:
-      -1px;
-
-    top:
-      -1px;
-
-    border-left:
-      1px solid
-      rgba(199, 169, 107, 0.19);
-
-    border-top:
-      1px solid
-      rgba(199, 169, 107, 0.19);
+    left: -1px;
+    top: -1px;
+    border-left: 1px solid rgba(199, 169, 107, 0.19);
+    border-top: 1px solid rgba(199, 169, 107, 0.19);
   }
 
   .umbra-transition-corner.top-right {
-    right:
-      -1px;
-
-    top:
-      -1px;
-
-    border-right:
-      1px solid
-      rgba(255, 255, 255, 0.045);
-
-    border-top:
-      1px solid
-      rgba(255, 255, 255, 0.045);
+    right: -1px;
+    top: -1px;
+    border-right: 1px solid rgba(255, 255, 255, 0.045);
+    border-top: 1px solid rgba(255, 255, 255, 0.045);
   }
 
   .umbra-transition-corner.bottom-left {
-    left:
-      -1px;
-
-    bottom:
-      -1px;
-
-    border-left:
-      1px solid
-      rgba(255, 255, 255, 0.032);
-
-    border-bottom:
-      1px solid
-      rgba(255, 255, 255, 0.032);
+    left: -1px;
+    bottom: -1px;
+    border-left: 1px solid rgba(255, 255, 255, 0.032);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.032);
   }
 
   .umbra-transition-corner.bottom-right {
-    right:
-      -1px;
-
-    bottom:
-      -1px;
-
-    border-right:
-      1px solid
-      rgba(199, 169, 107, 0.15);
-
-    border-bottom:
-      1px solid
-      rgba(199, 169, 107, 0.15);
+    right: -1px;
+    bottom: -1px;
+    border-right: 1px solid rgba(199, 169, 107, 0.15);
+    border-bottom: 1px solid rgba(199, 169, 107, 0.15);
   }
 
 
@@ -1173,16 +828,12 @@
      ------------------------------------------------------------------------ */
 
   .umbra-scroll-hidden {
-    -ms-overflow-style:
-      none;
-
-    scrollbar-width:
-      none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .umbra-scroll-hidden::-webkit-scrollbar {
-    display:
-      none;
+    display: none;
   }
 }
 
@@ -1194,54 +845,66 @@
 @layer components {
   @media (min-width: 640px) {
     :root {
-      --umbra-content-padding:
-        32px;
+      --umbra-content-padding: 32px;
     }
   }
 
   @media (min-width: 1024px) {
     :root {
-      --umbra-content-padding:
-        48px;
+      --umbra-content-padding: 48px;
+    }
+
+    /*
+      Desktop uses the Umbra custom scrollbar. The native scrollbar is hidden
+      only from desktop upward; touch layouts retain native scrolling UI.
+    */
+    html {
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar {
+      width: 0;
+      height: 0;
     }
   }
 
   @media (min-width: 1440px) {
     :root {
-      --umbra-content-padding:
-        56px;
+      --umbra-content-padding: 56px;
     }
   }
 
   @media (max-width: 639px) {
     .umbra-grain,
     .umbra-grain-fine {
-      opacity:
-        0.005;
+      opacity: 0.005;
     }
 
     .umbra-focus-frame::before,
     .umbra-focus-frame::after {
-      width:
-        24px;
-
-      height:
-        24px;
+      width: 24px;
+      height: 24px;
     }
 
     .umbra-atmosphere__grid {
-      opacity:
-        0.020;
+      opacity: 0.020;
+      background-size: 72px 72px;
+    }
 
-      background-size:
-        72px 72px;
+    [data-umbra-scene] {
+      scroll-margin-top: 62px;
     }
   }
 
   @media (pointer: coarse) {
     [data-cursor-interactive] {
-      cursor:
-        auto;
+      cursor: auto;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-cursor-interactive] {
+      cursor: pointer;
     }
   }
 }
@@ -1254,35 +917,26 @@
 @layer base {
   @media (prefers-reduced-motion: reduce) {
     html {
-      scroll-behavior:
-        auto;
+      scroll-behavior: auto;
     }
 
     *,
     *::before,
     *::after {
-      animation-duration:
-        0.01ms !important;
-
-      animation-iteration-count:
-        1 !important;
-
-      transition-duration:
-        0.01ms !important;
-
-      scroll-behavior:
-        auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
 
     .umbra-grain,
     .umbra-grain-fine {
-      opacity:
-        0;
+      opacity: 0;
     }
 
     .umbra-atmosphere__beam {
-      transform:
-        none;
+      transform: none;
+      will-change: auto;
     }
   }
 }
@@ -1294,12 +948,22 @@
 
 @layer components {
   @media (forced-colors: active) {
-    .umbra-site-header,
-    .umbra-scrollbar,
+    /*
+      Deliberately do not opt the system out of forced-color painting.
+      Browser/system colors should remain authoritative for accessibility.
+    */
+
+    .umbra-atmosphere,
+    .umbra-transition-frame,
+    .umbra-grain,
+    .umbra-grain-fine {
+      display: none !important;
+    }
+
     .umbra-focus-frame,
-    .umbra-transition-frame {
-      forced-color-adjust:
-        none;
+    .umbra-site-header,
+    .umbra-scrollbar {
+      forced-color-adjust: auto;
     }
   }
 }
@@ -1312,19 +976,13 @@
 @layer base {
   @media print {
     html {
-      background:
-        #ffffff;
-
-      color:
-        #000000;
+      background: #ffffff;
+      color: #000000;
     }
 
     body {
-      background:
-        #ffffff;
-
-      color:
-        #000000;
+      background: #ffffff;
+      color: #000000;
     }
   }
 }
@@ -1334,8 +992,7 @@
     .umbra-atmosphere,
     .umbra-scrollbar,
     .umbra-transition-frame {
-      display:
-        none !important;
+      display: none !important;
     }
   }
 }

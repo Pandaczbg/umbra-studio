@@ -12,10 +12,7 @@ import {
   useInView,
   useReducedMotion,
 } from "framer-motion";
-import {
-  useMemo,
-  useRef,
-} from "react";
+import { useRef } from "react";
 
 import { projects } from "@/data/projects";
 import type { Locale } from "@/data/translations";
@@ -96,21 +93,20 @@ function resolveProjectImage(
 export default function ProjectsPreview({
   locale = "sr",
 }: ProjectsPreviewProps) {
-  const reducedMotion = useReducedMotion() ?? false;
+  const reducedMotion =
+    useReducedMotion() ?? false;
   const isEnglish = locale === "en";
   const copy = COPY[locale];
 
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const sectionRef =
+    useRef<HTMLElement | null>(null);
 
   const inView = useInView(sectionRef, {
     once: true,
     amount: 0.12,
   });
 
-  const visibleProjects = useMemo(
-    () => projects.filter(Boolean),
-    [],
-  );
+  const visibleProjects = projects;
 
   const statusLabels = isEnglish
     ? STATUS_EN
@@ -124,7 +120,9 @@ export default function ProjectsPreview({
     ? "/en"
     : "/";
 
-  const hrefForProject = (slug: string) =>
+  const hrefForProject = (
+    slug: string,
+  ) =>
     isEnglish
       ? `/en/projects/${slug}`
       : `/serije/${slug}`;
@@ -138,10 +136,9 @@ export default function ProjectsPreview({
       id="projects"
       ref={sectionRef}
       aria-labelledby="projects-preview-title"
-      data-umbra-scene="projects"
-      className="relative overflow-hidden border-b border-white/[0.055] bg-[#030303] py-20 sm:py-24 lg:py-28"
+      data-umbra-scene="project"
+      className="relative overflow-hidden border-b border-white/[0.055] bg-[var(--umbra-bg)] py-20 sm:py-24 lg:py-28"
     >
-      {/* Ambient background */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -162,7 +159,7 @@ export default function ProjectsPreview({
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, #030303 0%, rgba(3,3,3,.90) 20%, rgba(3,3,3,.96) 80%, #030303 100%)",
+              "linear-gradient(180deg, var(--umbra-bg) 0%, rgba(3,3,3,.90) 20%, rgba(3,3,3,.96) 80%, var(--umbra-bg) 100%)",
           }}
         />
 
@@ -201,7 +198,8 @@ export default function ProjectsPreview({
               : undefined
           }
           transition={{
-            duration: reducedMotion ? 0 : 0.72,
+            duration:
+              reducedMotion ? 0 : 0.72,
             ease: EASE,
           }}
           className="mb-10 flex flex-col gap-6 sm:mb-12 lg:mb-14 lg:flex-row lg:items-end lg:justify-between"
@@ -211,7 +209,8 @@ export default function ProjectsPreview({
               <span
                 className="text-[8px] font-semibold uppercase tracking-[0.32em]"
                 style={{
-                  color: `${GOLD_LIGHT}78`,
+                  color:
+                    `${GOLD_LIGHT}78`,
                 }}
               >
                 {copy.eyebrow}
@@ -221,7 +220,8 @@ export default function ProjectsPreview({
                 aria-hidden="true"
                 className="h-px w-10"
                 style={{
-                  background: `${GOLD}2e`,
+                  background:
+                    `${GOLD}2e`,
                 }}
               />
 
@@ -252,7 +252,8 @@ export default function ProjectsPreview({
                 <span
                   className="transition-colors duration-300 group-hover:text-white"
                   style={{
-                    color: `${GOLD_LIGHT}a8`,
+                    color:
+                      `${GOLD_LIGHT}a8`,
                   }}
                 >
                   {copy.archive}
@@ -262,7 +263,8 @@ export default function ProjectsPreview({
                   aria-hidden="true"
                   className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                   style={{
-                    color: `${GOLD_LIGHT}70`,
+                    color:
+                      `${GOLD_LIGHT}70`,
                   }}
                 />
               </span>
@@ -327,7 +329,6 @@ export default function ProjectsPreview({
                   }}
                   className="group flex min-w-0 flex-col overflow-hidden border border-white/[0.075] bg-[#070707]"
                 >
-                  {/* Visual portal */}
                   <Link
                     href={projectHref}
                     aria-label={
@@ -342,7 +343,8 @@ export default function ProjectsPreview({
                       alt={project.title}
                       fill
                       sizes={
-                        visibleProjects.length >= 3
+                        visibleProjects.length >=
+                        3
                           ? "(min-width: 1280px) 31vw, (min-width: 640px) 48vw, 92vw"
                           : "(min-width: 640px) 48vw, 92vw"
                       }
@@ -372,7 +374,6 @@ export default function ProjectsPreview({
                       }}
                     />
 
-                    {/* Quiet cinematic frame */}
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute inset-4 border border-white/[0.06] sm:inset-5"
@@ -380,7 +381,8 @@ export default function ProjectsPreview({
                       <span
                         className="absolute -left-px -top-px h-10 w-10 border-l border-t"
                         style={{
-                          borderColor: `${GOLD}38`,
+                          borderColor:
+                            `${GOLD}38`,
                         }}
                       />
 
@@ -391,7 +393,8 @@ export default function ProjectsPreview({
                       <span
                         className="absolute -bottom-px -right-px h-10 w-10 border-b border-r"
                         style={{
-                          borderColor: `${GOLD}20`,
+                          borderColor:
+                            `${GOLD}20`,
                         }}
                       />
                     </div>
@@ -400,13 +403,17 @@ export default function ProjectsPreview({
                       <span
                         className="text-[8px] font-semibold uppercase tracking-[0.28em]"
                         style={{
-                          color: `${GOLD_LIGHT}8c`,
+                          color:
+                            `${GOLD_LIGHT}8c`,
                         }}
                       >
                         {copy.project}{" "}
                         {String(
                           index + 1,
-                        ).padStart(2, "0")}
+                        ).padStart(
+                          2,
+                          "0",
+                        )}
                       </span>
 
                       <span className="text-[7px] uppercase tracking-[0.24em] text-white/[0.28]">
@@ -428,7 +435,8 @@ export default function ProjectsPreview({
                           <p
                             className="mb-3 text-[8px] font-semibold uppercase tracking-[0.28em]"
                             style={{
-                              color: `${GOLD_LIGHT}8c`,
+                              color:
+                                `${GOLD_LIGHT}8c`,
                             }}
                           >
                             {project.type}
@@ -450,13 +458,13 @@ export default function ProjectsPreview({
                     </div>
                   </Link>
 
-                  {/* Supporting project information */}
                   <div className="flex flex-1 flex-col px-6 py-6 sm:px-8 sm:py-7">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <span
                         className="text-[7px] font-semibold uppercase tracking-[0.28em]"
                         style={{
-                          color: `${GOLD_LIGHT}78`,
+                          color:
+                            `${GOLD_LIGHT}78`,
                         }}
                       >
                         {project.platform}
@@ -477,12 +485,16 @@ export default function ProjectsPreview({
                             aria-label={`${copy.authorAria}: ${project.book.author}`}
                             className="inline-flex max-w-full items-center gap-2 rounded-sm outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
                             style={{
-                              color: `${GOLD_LIGHT}a8`,
+                              color:
+                                `${GOLD_LIGHT}a8`,
                             }}
                           >
                             <span className="truncate text-[7px] font-semibold uppercase tracking-[0.18em]">
                               {copy.novel}{" "}
-                              {project.book.author}
+                              {
+                                project.book
+                                  .author
+                              }
                             </span>
 
                             <ArrowUpRight
@@ -501,7 +513,8 @@ export default function ProjectsPreview({
                           <span
                             className="inline-flex items-center gap-2 text-[7px] font-semibold uppercase tracking-[0.18em]"
                             style={{
-                              color: `${GOLD_LIGHT}55`,
+                              color:
+                                `${GOLD_LIGHT}55`,
                             }}
                           >
                             <Clapperboard
@@ -510,7 +523,9 @@ export default function ProjectsPreview({
                             />
 
                             <span>
-                              {copy.studioOriginal}
+                              {
+                                copy.studioOriginal
+                              }
                             </span>
                           </span>
                         </>
@@ -524,7 +539,8 @@ export default function ProjectsPreview({
                       <span className="inline-flex items-center gap-2 text-[8px] font-semibold uppercase tracking-[0.24em]">
                         <span
                           style={{
-                            color: `${GOLD_LIGHT}78`,
+                            color:
+                              `${GOLD_LIGHT}78`,
                           }}
                         >
                           {copy.enter}
@@ -534,14 +550,17 @@ export default function ProjectsPreview({
                           aria-hidden="true"
                           className="h-3.5 w-3.5 transition-transform duration-300 group-hover/title:-translate-y-0.5 group-hover/title:translate-x-0.5"
                           style={{
-                            color: `${GOLD_LIGHT}58`,
+                            color:
+                              `${GOLD_LIGHT}58`,
                           }}
                         />
                       </span>
                     </Link>
 
                     <p className="mt-4 max-w-[560px] text-[10px] leading-5 text-white/[0.30] sm:text-[11px]">
-                      {project.shortDescription}
+                      {
+                        project.shortDescription
+                      }
                     </p>
 
                     <div className="mt-6 flex items-end justify-between gap-5 border-t border-white/[0.055] pt-4">
@@ -556,13 +575,18 @@ export default function ProjectsPreview({
                       </div>
 
                       <Link
-                        href={projectHref}
+                        href={
+                          projectHref
+                        }
                         className="group/cta inline-flex shrink-0 items-center gap-2 rounded-sm text-[7px] font-semibold uppercase tracking-[0.22em] outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
                         style={{
-                          color: `${GOLD_LIGHT}88`,
+                          color:
+                            `${GOLD_LIGHT}88`,
                         }}
                       >
-                        <span>{copy.enter}</span>
+                        <span>
+                          {copy.enter}
+                        </span>
 
                         <ArrowUpRight
                           aria-hidden="true"
@@ -589,8 +613,10 @@ export default function ProjectsPreview({
               : undefined
           }
           transition={{
-            delay: reducedMotion ? 0 : 0.30,
-            duration: reducedMotion ? 0 : 0.55,
+            delay:
+              reducedMotion ? 0 : 0.30,
+            duration:
+              reducedMotion ? 0 : 0.55,
             ease: EASE,
           }}
           className="mt-9 flex flex-col gap-4 border-t border-white/[0.055] pt-5 sm:flex-row sm:items-center sm:justify-between"
@@ -606,7 +632,8 @@ export default function ProjectsPreview({
               aria-hidden="true"
               className="h-3.5 w-3.5"
               style={{
-                color: `${GOLD}45`,
+                color:
+                  `${GOLD}45`,
               }}
             />
 
@@ -616,7 +643,8 @@ export default function ProjectsPreview({
               aria-hidden="true"
               className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
               style={{
-                color: `${GOLD_LIGHT}55`,
+                color:
+                  `${GOLD_LIGHT}55`,
               }}
             />
           </Link>
@@ -632,7 +660,8 @@ export default function ProjectsPreview({
               aria-hidden="true"
               className="h-3.5 w-3.5"
               style={{
-                color: `${GOLD}40`,
+                color:
+                  `${GOLD}40`,
               }}
             />
 

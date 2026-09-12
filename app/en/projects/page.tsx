@@ -58,9 +58,15 @@ function getProjectNumber(id: string) {
 
 export default function EnglishProjectsPage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030303] text-[#f1ede4]">
+    <main
+      data-umbra-scene="projects-archive"
+      className="min-h-screen overflow-hidden bg-[#030303] text-[#f1ede4]"
+    >
       {/* INTRO */}
-      <section className="relative border-b border-white/[0.055] px-6 pb-20 pt-36 sm:px-9 sm:pb-24 lg:px-12 lg:pb-28 lg:pt-44 xl:px-16">
+      <section
+        aria-labelledby="projects-title"
+        className="relative scroll-mt-[150px] border-b border-white/[0.055] px-6 pb-20 pt-36 sm:px-9 sm:pb-24 lg:px-12 lg:pb-28 lg:pt-44 xl:px-16"
+      >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -103,7 +109,10 @@ export default function EnglishProjectsPage() {
 
           <div className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] lg:items-end lg:gap-20">
             <div>
-              <h1 className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.80] tracking-[-0.075em] text-white">
+              <h1
+                id="projects-title"
+                className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.80] tracking-[-0.075em] text-white"
+              >
                 Worlds
                 <br />
                 <span className="font-serif italic normal-case text-white/[0.58]">
@@ -120,7 +129,10 @@ export default function EnglishProjectsPage() {
               </p>
 
               <div className="mt-7 flex items-center gap-4 border-t border-white/[0.065] pt-4">
-                <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.17]">
+                <span
+                  className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.17]"
+                  aria-live="polite"
+                >
                   {projects.length}{" "}
                   {projects.length === 1
                     ? "project"
@@ -142,8 +154,15 @@ export default function EnglishProjectsPage() {
       </section>
 
       {/* PROJECT ARCHIVE */}
-      <section className="px-6 py-20 sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16">
+      <section
+        aria-labelledby="projects-archive-title"
+        className="px-6 py-20 sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16"
+      >
         <div className="mx-auto max-w-[1480px]">
+          <h2 id="projects-archive-title" className="sr-only">
+            Umbra Studio projects
+          </h2>
+
           <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
             {projects.map((project) => {
               const image =
@@ -246,9 +265,9 @@ export default function EnglishProjectsPage() {
                             </span>
                           </div>
 
-                          <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
+                          <h3 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
                             {project.title}
-                          </h2>
+                          </h3>
                         </div>
 
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
@@ -347,7 +366,10 @@ export default function EnglishProjectsPage() {
       </section>
 
       {/* LOWER NAVIGATION */}
-      <section className="px-6 pb-24 pt-2 sm:px-9 sm:pb-32 lg:px-12 xl:px-16">
+      <section
+        aria-label="Project navigation"
+        className="px-6 pb-24 pt-2 sm:px-9 sm:pb-32 lg:px-12 xl:px-16"
+      >
         <div className="mx-auto max-w-[1480px] border-t border-white/[0.065] pt-8">
           <div className="grid gap-4 sm:grid-cols-2">
             <Link

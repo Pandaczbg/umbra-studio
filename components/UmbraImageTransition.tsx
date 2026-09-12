@@ -14,7 +14,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA IMAGE TRANSITION
+   UMBRA IMAGE TRANSITION — V5
 
    Optional image carried across navigation.
 
@@ -30,14 +30,15 @@ import {
    It never listens to scroll.
 
    Design rule:
-   The image is the transition itself. UI remains secondary.
+   The image is the transition itself.
+   UI remains secondary.
    ========================================================================== */
 
 const STORAGE_KEY =
   "umbra-image-transition";
 
 const DISPLAY_DURATION =
-  560;
+  520;
 
 const REDUCED_DISPLAY_DURATION =
   60;
@@ -55,7 +56,8 @@ const EASE = [
   1,
 ] as const;
 
-function readStoredImage() {
+function readStoredImage():
+  string | null {
   try {
     const stored =
       window.sessionStorage.getItem(
@@ -87,7 +89,10 @@ export default function UmbraImageTransition() {
       null,
     );
 
-  const [image, setImage] =
+  const [
+    image,
+    setImage,
+  ] =
     useState<string | null>(
       null,
     );
@@ -123,36 +128,83 @@ export default function UmbraImageTransition() {
     const storedImage =
       readStoredImage();
 
-    if (
-      !storedImage
-    ) {
-      setImage(null);
-      return;
-    }
-
-    setTransitionKey(
-      (value) =>
-        value + 1,
-    );
-
-    setImage(
-      storedImage,
-    );
-
-    timerRef.current =
-      window.setTimeout(
-        () => {
+    if (!storedImage) {
+      timerRef.current =
+        window.setTimeout(() => {
           timerRef.current =
             null;
 
           setImage(null);
-        },
-        reducedMotion
-          ? REDUCED_DISPLAY_DURATION
-          : DISPLAY_DURATION,
-      );
+        }, 0);
+
+      return () => {
+        if (
+          timerRef.current !==
+          null
+        ) {
+          window.clearTimeout(
+            timerRef.current,
+          );
+
+          timerRef.current =
+            null;
+        }
+      };
+    }
+
+    timerRef.current =
+      window.setTimeout(() => {
+        timerRef.current =
+          null;
+
+        setTransitionKey(
+          (value) =>
+            value + 1,
+        );
+
+        setImage(storedImage);
+      }, 0);
+
+    return () => {
+      if (
+        timerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          timerRef.current,
+        );
+
+        timerRef.current =
+          null;
+      }
+    };
   }, [
     pathname,
+    reducedMotion,
+  ]);
+
+  useEffect(() => {
+    if (!image) {
+      return;
+    }
+
+    const displayDuration =
+      reducedMotion
+        ? REDUCED_DISPLAY_DURATION
+        : DISPLAY_DURATION;
+
+    const hideTimer =
+      window.setTimeout(() => {
+        setImage(null);
+      }, displayDuration);
+
+    return () => {
+      window.clearTimeout(
+        hideTimer,
+      );
+    };
+  }, [
+    image,
     reducedMotion,
   ]);
 
@@ -175,7 +227,7 @@ export default function UmbraImageTransition() {
   return (
     <AnimatePresence
       initial={false}
-      mode="sync"
+      mode="wait"
     >
       {image && (
         <motion.div
@@ -195,9 +247,8 @@ export default function UmbraImageTransition() {
             duration:
               reducedMotion
                 ? 0.01
-                : 0.20,
-            ease:
-              EASE,
+                : 0.16,
+            ease: EASE,
           }}
         >
           <motion.div
@@ -206,27 +257,29 @@ export default function UmbraImageTransition() {
               scale:
                 reducedMotion
                   ? 1
-                  : 1.045,
+                  : 1.035,
               opacity:
                 reducedMotion
                   ? 1
-                  : 0.76,
+                  : 0.78,
             }}
             animate={{
               scale: 1,
               opacity: 1,
             }}
             exit={{
-              scale: 1.01,
+              scale:
+                reducedMotion
+                  ? 1
+                  : 1.008,
               opacity: 0,
             }}
             transition={{
               duration:
                 reducedMotion
                   ? 0.01
-                  : 0.48,
-              ease:
-                EASE,
+                  : 0.44,
+              ease: EASE,
             }}
           >
             <Image
@@ -234,97 +287,112 @@ export default function UmbraImageTransition() {
               alt=""
               fill
               sizes="100vw"
-              priority
               className="object-cover object-center"
+              priority
             />
           </motion.div>
 
           <div
+            aria-hidden="true"
             className="absolute inset-0"
             style={{
               background:
                 `linear-gradient(
                   90deg,
-                  rgba(2,2,2,.84),
-                  rgba(2,2,2,.12) 52%,
-                  rgba(2,2,2,.74)
+                  rgba(2,2,2,.78),
+                  rgba(2,2,2,.08) 50%,
+                  rgba(2,2,2,.68)
                 )`,
             }}
           />
 
           <div
+            aria-hidden="true"
             className="absolute inset-0"
             style={{
               background:
                 `radial-gradient(
                   circle at 50% 50%,
-                  transparent 28%,
-                  rgba(0,0,0,.44) 100%
+                  transparent 30%,
+                  rgba(0,0,0,.50) 100%
                 )`,
             }}
           />
 
           <div
             aria-hidden="true"
-            className="absolute inset-5 border border-white/[0.065] sm:inset-6"
+            className="absolute inset-4 border border-white/[0.075] sm:inset-6"
+            style={{
+              boxShadow:
+                `inset 0 0 0 1px ${GOLD}08`,
+            }}
           >
             <span
-              className="absolute left-[-1px] top-[-1px] h-9 w-9 border-l border-t"
+              aria-hidden="true"
+              className="absolute left-[-1px] top-[-1px] h-10 w-10 border-l border-t"
               style={{
                 borderColor:
-                  `${GOLD}32`,
+                  `${GOLD}38`,
               }}
             />
 
             <span
-              className="absolute bottom-[-1px] right-[-1px] h-9 w-9 border-b border-r"
+              aria-hidden="true"
+              className="absolute bottom-[-1px] right-[-1px] h-10 w-10 border-b border-r"
               style={{
                 borderColor:
-                  `${GOLD_LIGHT}22`,
+                  `${GOLD_LIGHT}28`,
               }}
             />
           </div>
 
-          <motion.div
-            aria-hidden="true"
-            className="absolute left-1/2 top-1/2 h-px w-[min(22vw,280px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/20 to-transparent"
-            initial={{
-              scaleX: 0.35,
-              opacity: 0,
-            }}
-            animate={{
-              scaleX: 1,
-              opacity: 1,
-            }}
-            exit={{
-              scaleX: 0.65,
-              opacity: 0,
-            }}
-            transition={{
-              duration:
-                reducedMotion
-                  ? 0
-                  : 0.22,
-              delay:
-                reducedMotion
-                  ? 0
-                  : 0.03,
-              ease:
-                EASE,
-            }}
-          />
+          {!reducedMotion && (
+            <>
+              <motion.span
+                aria-hidden="true"
+                className="absolute left-1/2 top-1/2 h-px w-[min(24vw,300px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/30 to-transparent"
+                initial={{
+                  scaleX: 0.3,
+                  opacity: 0,
+                }}
+                animate={{
+                  scaleX: 1,
+                  opacity: 1,
+                }}
+                exit={{
+                  scaleX: 0.72,
+                  opacity: 0,
+                }}
+                transition={{
+                  duration: 0.20,
+                  delay: 0.03,
+                  ease: EASE,
+                }}
+              />
 
-          <div className="absolute bottom-7 left-7 sm:bottom-8 sm:left-8">
-            <span
-              className="font-mono text-[6px] uppercase tracking-[0.32em]"
-              style={{
-                color:
-                  `${GOLD_LIGHT}66`,
-              }}
-            >
-              UMBRA / IMAGE TRANSITION
-            </span>
-          </div>
+              <motion.span
+                aria-hidden="true"
+                className="absolute left-1/2 top-1/2 h-8 w-[min(30vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c7a96b]/[0.035] blur-lg"
+                initial={{
+                  opacity: 0,
+                  scaleX: 0.72,
+                }}
+                animate={{
+                  opacity: 1,
+                  scaleX: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  scaleX: 0.85,
+                }}
+                transition={{
+                  duration: 0.24,
+                  delay: 0.01,
+                  ease: EASE,
+                }}
+              />
+            </>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

@@ -13,20 +13,19 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA PAGE TRANSITION
+   UMBRA PAGE TRANSITION — V5
 
    Route-level transition only.
 
    Layering:
    - Header: 500
-   - Scrollbar: 110
-   - Page transition: 180
    - Image transition: 190
-
-   Header therefore remains the permanent interface layer.
+   - Page transition: 180
+   - Scrollbar: 110
 
    Design rule:
-   The transition should feel like a cinematic cut, not a loading screen.
+   A cinematic cut — fast, restrained and premium.
+   It should never resemble a loading screen.
    ========================================================================== */
 
 const EASE = [
@@ -36,11 +35,11 @@ const EASE = [
   1,
 ] as const;
 
-const TRANSITION_MS =
-  420;
+const TRANSITION_DURATION = 420;
+const REDUCED_TRANSITION_DURATION = 60;
 
-const REDUCED_TRANSITION_MS =
-  60;
+const PANEL_DURATION = 260;
+const PANEL_DELAY = 24;
 
 export default function UmbraPageTransition() {
   const pathname =
@@ -85,17 +84,19 @@ export default function UmbraPageTransition() {
 
     setVisible(true);
 
+    const duration =
+      reducedMotion
+        ? REDUCED_TRANSITION_DURATION
+        : TRANSITION_DURATION;
+
     timerRef.current =
       window.setTimeout(
         () => {
           setVisible(false);
-
           timerRef.current =
             null;
         },
-        reducedMotion
-          ? REDUCED_TRANSITION_MS
-          : TRANSITION_MS,
+        duration,
       );
 
     return () => {
@@ -125,6 +126,9 @@ export default function UmbraPageTransition() {
         window.clearTimeout(
           timerRef.current,
         );
+
+        timerRef.current =
+          null;
       }
     };
   }, []);
@@ -132,7 +136,7 @@ export default function UmbraPageTransition() {
   return (
     <AnimatePresence
       initial={false}
-      mode="sync"
+      mode="wait"
     >
       {visible && (
         <motion.div
@@ -152,11 +156,12 @@ export default function UmbraPageTransition() {
             duration:
               reducedMotion
                 ? 0.01
-                : 0.24,
+                : 0.16,
             ease: EASE,
           }}
         >
           <motion.div
+            aria-hidden="true"
             className="absolute inset-x-0 top-0 h-1/2 origin-top bg-[#050505]"
             initial={{
               scaleY: 0,
@@ -171,12 +176,14 @@ export default function UmbraPageTransition() {
               duration:
                 reducedMotion
                   ? 0.01
-                  : 0.26,
+                  : PANEL_DURATION /
+                    1000,
               ease: EASE,
             }}
           />
 
           <motion.div
+            aria-hidden="true"
             className="absolute inset-x-0 bottom-0 h-1/2 origin-bottom bg-[#050505]"
             initial={{
               scaleY: 0,
@@ -191,18 +198,20 @@ export default function UmbraPageTransition() {
               duration:
                 reducedMotion
                   ? 0.01
-                  : 0.30,
+                  : PANEL_DURATION /
+                    1000,
               delay:
                 reducedMotion
                   ? 0
-                  : 0.04,
+                  : PANEL_DELAY /
+                    1000,
               ease: EASE,
             }}
           />
 
           <div className="absolute inset-0 flex items-center justify-center">
             <motion.span
-              className="font-mono text-[7px] uppercase tracking-[0.36em] text-white/[0.20]"
+              className="font-mono text-[7px] uppercase tracking-[0.38em] text-[#ead39a]/30"
               initial={{
                 opacity: 0,
                 y: 4,
@@ -219,20 +228,18 @@ export default function UmbraPageTransition() {
                 duration:
                   reducedMotion
                     ? 0
-                    : 0.18,
+                    : 0.14,
                 ease: EASE,
               }}
             >
               UMBRA
             </motion.span>
-          </div>
 
-          {!reducedMotion && (
-            <motion.div
+            <motion.span
               aria-hidden="true"
-              className="absolute left-1/2 top-1/2 h-px w-[min(22vw,280px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/18 to-transparent"
+              className="absolute left-1/2 top-1/2 h-px w-[min(24vw,300px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/35 to-transparent"
               initial={{
-                scaleX: 0.4,
+                scaleX: 0.25,
                 opacity: 0,
               }}
               animate={{
@@ -240,16 +247,46 @@ export default function UmbraPageTransition() {
                 opacity: 1,
               }}
               exit={{
-                scaleX: 0.6,
+                scaleX: 0.7,
                 opacity: 0,
               }}
               transition={{
-                duration: 0.24,
-                delay: 0.04,
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.18,
+                delay:
+                  reducedMotion
+                    ? 0
+                    : 0.03,
                 ease: EASE,
               }}
             />
-          )}
+
+            {!reducedMotion && (
+              <motion.span
+                aria-hidden="true"
+                className="absolute left-1/2 top-1/2 h-5 w-[min(30vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c7a96b]/[0.05] blur-md"
+                initial={{
+                  opacity: 0,
+                  scaleX: 0.7,
+                }}
+                animate={{
+                  opacity: 1,
+                  scaleX: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  scaleX: 0.85,
+                }}
+                transition={{
+                  duration: 0.22,
+                  delay: 0.02,
+                  ease: EASE,
+                }}
+              />
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

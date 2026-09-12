@@ -39,7 +39,7 @@ export default function SectionBridge({
   return (
     <section
       aria-label={title}
-      className="relative overflow-hidden border-t border-white/[0.055] bg-[#030303] px-6 py-24 text-[#F1EDE4] sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16"
+      className="relative overflow-hidden border-t border-white/[0.055] bg-[var(--umbra-bg)] px-6 py-24 text-[#F1EDE4] sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16"
     >
       <div
         aria-hidden="true"

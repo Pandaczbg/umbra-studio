@@ -57,8 +57,10 @@ export const projects: Project[] = [
       author: "Branislav Bojčić",
 
       // Fajlovi koji su trenutno u public/books/Mrzim-svog-brata/
-      coverSr: "/books/Mrzim-svog-brata/cover-sr.jpg",
-      coverEn: "/books/Mrzim-svog-brata/cover-en.jpg",
+      coverSr:
+        "/books/Mrzim-svog-brata/cover-sr.png",
+      coverEn:
+        "/books/Mrzim-svog-brata/cover-en.jpg",
 
       pdfSr:
         "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",

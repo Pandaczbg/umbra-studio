@@ -6,28 +6,52 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA SCENE DIRECTOR
+   UMBRA STUDIO
+   SCENE DIRECTOR
+   V5 FINAL SYSTEM — TYPECHECK / METRIC FIX
 
    SINGLE SCENE AUTHORITY
 
-   Source of scene truth:
-   - elements carrying data-umbra-scene
+   Source of scene truth
+   --------------------------------------------------------------------------
+   Elements carrying [data-umbra-scene]
 
-   Source of motion truth:
-   - "umbra:motion"
+   Source of motion truth
+   --------------------------------------------------------------------------
+   "umbra:motion"
 
-   Responsibilities:
-   - discover and measure scenes
-   - determine the active scene
-   - determine scene visibility
+   Responsibilities
+   --------------------------------------------------------------------------
+   - discover scene elements
+   - measure scene geometry
+   - determine active scene
+   - determine visibility
    - determine scene progress
    - publish global CSS scene state
-   - dispatch "umbra:scene-change"
-   - dispatch "umbra:scene-enter"
-   - dispatch "umbra:scene-leave"
-   - dispatch "umbra:scene-progress"
+   - dispatch scene lifecycle events
+   - support homepage scenes and deep-route scenes
+   - recover cleanly from dynamic DOM changes
 
-   It intentionally does NOT install its own native scroll listener.
+   Important V5 correction
+   --------------------------------------------------------------------------
+   Scene index / total are based on the scenes currently present in the DOM.
+
+   This means:
+   - homepage => 1 / 5 ... 5 / 5
+   - archive/detail route with one scene => 1 / 1
+
+   The component never reports a deep-route scene as 7 / 9 merely because
+   that scene exists later in the global SceneId union.
+
+   Architecture rule
+   --------------------------------------------------------------------------
+   This component owns scene state only.
+
+   It does NOT:
+   - install its own native scroll listener
+   - own page navigation
+   - own visual animation
+   - own pointer tracking
    ========================================================================== */
 
 type SceneId =
@@ -35,7 +59,11 @@ type SceneId =
   | "project"
   | "characters"
   | "studio"
-  | "watch";
+  | "watch"
+  | "projects-archive"
+  | "project-detail"
+  | "characters-archive"
+  | "character-dossier";
 
 type MotionDirection =
   | "up"
@@ -45,6 +73,7 @@ type MotionDirection =
 type MotionDetail = {
   scrollY?: number;
   progress?: number;
+  speed?: number;
   direction?: MotionDirection;
 };
 
@@ -80,28 +109,19 @@ const SCENE_ORDER: SceneId[] = [
   "characters",
   "studio",
   "watch",
+  "projects-archive",
+  "project-detail",
+  "characters-archive",
+  "character-dossier",
 ];
 
-const VISIBILITY_WEIGHT =
-  0.72;
+const VISIBILITY_WEIGHT = 0.72;
+const CENTER_WEIGHT = 0.28;
 
-const CENTER_WEIGHT =
-  0.28;
-
-/**
- * Prevents the active scene from flickering when two adjacent scenes
- * temporarily have nearly identical scores.
- */
-const CHANGE_HYSTERESIS =
-  0.045;
-
-/**
- * A scene needs a meaningful presence in the viewport before it can
- * replace the current scene. This prevents tiny slivers at the edge
- * from becoming active.
- */
-const MIN_ACTIVE_VISIBILITY =
-  0.12;
+const CHANGE_HYSTERESIS = 0.045;
+const MIN_ACTIVE_VISIBILITY = 0.12;
+const PROGRESS_THRESHOLD = 0.0015;
+const VISIBILITY_THRESHOLD = 0.005;
 
 function clamp(
   value: number,
@@ -110,7 +130,10 @@ function clamp(
 ) {
   return Math.min(
     max,
-    Math.max(min, value),
+    Math.max(
+      min,
+      value,
+    ),
   );
 }
 
@@ -140,8 +163,7 @@ function calculateVisibility(
     );
 
   const bottom =
-    top +
-    safeHeight;
+    top + safeHeight;
 
   const visibleTop =
     Math.max(
@@ -174,8 +196,7 @@ function calculateCenterScore(
   viewportHeight: number,
 ) {
   const center =
-    top +
-    height / 2;
+    top + height / 2;
 
   const viewportCenter =
     viewportHeight / 2;
@@ -196,15 +217,6 @@ function calculateCenterScore(
   );
 }
 
-/**
- * Progress across the complete scene travel:
- *
- * 0 = scene is entering from the bottom
- * 0.5 = scene is centered through the viewport
- * 1 = scene is leaving through the top
- *
- * This remains stable for scenes both shorter and taller than the viewport.
- */
 function calculateSceneProgress(
   top: number,
   height: number,
@@ -221,49 +233,16 @@ function calculateSceneProgress(
     );
 
   return clamp(
-    (
-      viewportHeight -
-      top
-    ) /
+    (viewportHeight -
+      top) /
       totalTravel,
-  );
-}
-
-function sameMetricSet(
-  previous: SceneMetric[],
-  next: SceneMetric[],
-) {
-  if (
-    previous.length !==
-    next.length
-  ) {
-    return false;
-  }
-
-  return previous.every(
-    (
-      metric,
-      index,
-    ) => {
-      const candidate =
-        next[index];
-
-      return (
-        candidate?.id ===
-          metric.id &&
-        candidate?.element ===
-          metric.element &&
-        candidate?.index ===
-          metric.index
-      );
-    },
   );
 }
 
 export default function UmbraSceneDirector() {
   const activeSceneRef =
-    useRef<SceneId>(
-      "hero",
+    useRef<SceneId | null>(
+      null,
     );
 
   const activeSnapshotRef =
@@ -309,447 +288,22 @@ export default function UmbraSceneDirector() {
     const root =
       document.documentElement;
 
-    let destroyed =
-      false;
+    let destroyed = false;
 
-    const rebuildMetrics =
-      () => {
-        if (
-          destroyed
-        ) {
-          return;
-        }
+    let evaluateScene:
+      | ((
+          motion?: MotionDetail,
+        ) => void)
+      | null = null;
 
-        const elements =
-          Array.from(
-            document.querySelectorAll<HTMLElement>(
-              "[data-umbra-scene]",
-            ),
-          );
-
-        const metrics:
-          SceneMetric[] = [];
-
-        for (
-          const element of
-            elements
-        ) {
-          const id =
-            getSceneId(
-              element
-                .dataset
-                .umbraScene ??
-                null,
-            );
-
-          if (
-            !id
-          ) {
-            continue;
-          }
-
-          metrics.push({
-            id,
-            element,
-            index:
-              SCENE_ORDER.indexOf(
-                id,
-              ) + 1,
-          });
-        }
-
-        metrics.sort(
-          (
-            a,
-            b,
-          ) =>
-            a.index -
-            b.index,
-        );
-
-        if (
-          sameMetricSet(
-            metricsRef.current,
-            metrics,
-          )
-        ) {
-          return;
-        }
-
-        metricsRef.current =
-          metrics;
-
-        resizeObserverRef.current?.disconnect();
-
-        if (
-          typeof ResizeObserver !==
-          "undefined"
-        ) {
-          const resizeObserver =
-            new ResizeObserver(
-              () =>
-                scheduleEvaluate(),
-            );
-
-          metrics.forEach(
-            (
-              metric,
-            ) =>
-              resizeObserver.observe(
-                metric.element,
-              ),
-          );
-
-          resizeObserverRef.current =
-            resizeObserver;
-        }
-      };
-
-    const publishScene =
-      (
-        candidate: SceneCandidate,
-        direction: MotionDirection,
-      ) => {
-        const previousId =
-          activeSceneRef.current;
-
-        const changed =
-          candidate.id !==
-          previousId;
-
-        if (
-          changed
-        ) {
-          activeSceneRef.current =
-            candidate.id;
-        }
-
-        root.dataset
-          .umbraScene =
-          candidate.id;
-
-        root.dataset
-          .umbraSceneDirection =
-          direction;
-
-        root.style.setProperty(
-          "--umbra-scene-index",
-          String(
-            candidate.index,
-          ),
-        );
-
-        root.style.setProperty(
-          "--umbra-scene-total",
-          String(
-            SCENE_ORDER.length,
-          ),
-        );
-
-        root.style.setProperty(
-          "--umbra-scene-progress",
-          candidate.progress.toFixed(
-            5,
-          ),
-        );
-
-        root.style.setProperty(
-          "--umbra-scene-visibility",
-          candidate.visibility.toFixed(
-            5,
-          ),
-        );
-
-        const detail:
-          SceneEventDetail = {
-          id:
-            candidate.id,
-          index:
-            candidate.index,
-          total:
-            SCENE_ORDER.length,
-          progress:
-            candidate.progress,
-          visibility:
-            candidate.visibility,
-          direction,
-          previousId:
-            changed
-              ? previousId
-              : activeSnapshotRef
-                  .current
-                  ?.previousId ??
-                null,
-        };
-
-        activeSnapshotRef.current =
-          detail;
-
-        if (
-          changed
-        ) {
-          window.dispatchEvent(
-            new CustomEvent<SceneEventDetail>(
-              "umbra:scene-leave",
-              {
-                detail: {
-                  ...detail,
-                  id:
-                    previousId,
-                  index:
-                    SCENE_ORDER.indexOf(
-                      previousId,
-                    ) + 1,
-                  previousId:
-                    previousId,
-                },
-              },
-            ),
-          );
-
-          window.dispatchEvent(
-            new CustomEvent<SceneEventDetail>(
-              "umbra:scene-change",
-              {
-                detail,
-              },
-            ),
-          );
-
-          window.dispatchEvent(
-            new CustomEvent<SceneEventDetail>(
-              "umbra:scene-enter",
-              {
-                detail,
-              },
-            ),
-          );
-        }
-
-        const progressChanged =
-          Math.abs(
-            candidate.progress -
-              lastProgressRef.current,
-          ) >=
-          0.0015;
-
-        const visibilityChanged =
-          Math.abs(
-            candidate.visibility -
-              lastVisibilityRef.current,
-          ) >=
-          0.005;
-
-        const directionChanged =
-          direction !==
-          lastDirectionRef.current;
-
-        if (
-          changed ||
-          progressChanged ||
-          visibilityChanged ||
-          directionChanged
-        ) {
-          lastProgressRef.current =
-            candidate.progress;
-
-          lastVisibilityRef.current =
-            candidate.visibility;
-
-          lastDirectionRef.current =
-            direction;
-
-          window.dispatchEvent(
-            new CustomEvent<SceneEventDetail>(
-              "umbra:scene-progress",
-              {
-                detail,
-              },
-            ),
-          );
-        }
-      };
-
-    const chooseActiveScene =
-      (
-        viewportHeight: number,
-      ): SceneCandidate | null => {
-        const metrics =
-          metricsRef.current;
-
-        if (
-          metrics.length ===
-          0
-        ) {
-          return null;
-        }
-
-        const candidates =
-          metrics
-            .map(
-              (
-                metric,
-              ) => {
-                const rect =
-                  metric.element.getBoundingClientRect();
-
-                const height =
-                  Math.max(
-                    1,
-                    rect.height,
-                  );
-
-                const visibility =
-                  calculateVisibility(
-                    rect.top,
-                    height,
-                    viewportHeight,
-                  );
-
-                const centerScore =
-                  calculateCenterScore(
-                    rect.top,
-                    height,
-                    viewportHeight,
-                  );
-
-                const score =
-                  visibility *
-                    VISIBILITY_WEIGHT +
-                  centerScore *
-                    CENTER_WEIGHT;
-
-                const progress =
-                  calculateSceneProgress(
-                    rect.top,
-                    height,
-                    viewportHeight,
-                  );
-
-                return {
-                  id:
-                    metric.id,
-                  element:
-                    metric.element,
-                  index:
-                    metric.index,
-                  visibility,
-                  centerScore,
-                  score,
-                  progress,
-                };
-              },
-            )
-            .filter(
-              (
-                candidate,
-              ) =>
-                candidate.visibility >=
-                MIN_ACTIVE_VISIBILITY,
-            );
-
-        if (
-          candidates.length ===
-          0
-        ) {
-          return null;
-        }
-
-        candidates.sort(
-          (
-            a,
-            b,
-          ) =>
-            b.score -
-            a.score,
-        );
-
-        let best =
-          candidates[0];
-
-        const current =
-          candidates.find(
-            (
-              candidate,
-            ) =>
-              candidate.id ===
-              activeSceneRef.current,
-          );
-
-        if (
-          current &&
-          best.id !==
-            current.id &&
-          best.score <
-            current.score +
-              CHANGE_HYSTERESIS
-        ) {
-          best =
-            current;
-        }
-
-        return best;
-      };
-
-    const evaluate =
-      (
-        motion?: MotionDetail,
-      ) => {
-        frameRef.current =
-          null;
-
-        rebuildMetrics();
-
-        if (
-          destroyed
-        ) {
-          return;
-        }
-
-        const viewportHeight =
-          Math.max(
-            1,
-            window.innerHeight,
-          );
-
-        const resolvedMotion =
-          motion ??
-          latestMotionRef.current;
-
-        const direction =
-          resolvedMotion
-            ?.direction ??
-          "idle";
-
-        const best =
-          chooseActiveScene(
-            viewportHeight,
-          );
-
-        if (
-          !best
-        ) {
-          return;
-        }
-
-        publishScene(
-          best,
-          direction,
-        );
-      };
-
-    function scheduleEvaluate(
+    const scheduleEvaluate = (
       motion?: MotionDetail,
-    ) {
-      if (
-        destroyed
-      ) {
+    ) => {
+      if (destroyed) {
         return;
       }
 
-      if (
-        motion
-      ) {
+      if (motion) {
         latestMotionRef.current =
           motion;
       }
@@ -763,48 +317,543 @@ export default function UmbraSceneDirector() {
 
       frameRef.current =
         window.requestAnimationFrame(
-          () =>
-            evaluate(),
-        );
-    }
+          () => {
+            frameRef.current =
+              null;
 
-    const handleMotion =
-      (
-        event: Event,
-      ) => {
-        const detail =
+            if (destroyed) {
+              return;
+            }
+
+            evaluateScene?.();
+          },
+        );
+    };
+
+    const rebuildMetrics = () => {
+      if (destroyed) {
+        return;
+      }
+
+      const elements =
+        Array.from(
+          document.querySelectorAll<HTMLElement>(
+            "[data-umbra-scene]",
+          ),
+        );
+
+      const metrics: SceneMetric[] =
+        [];
+
+      for (
+        const element of
+          elements
+      ) {
+        const id =
+          getSceneId(
+            element.dataset
+              .umbraScene ??
+              null,
+          );
+
+        if (!id) {
+          continue;
+        }
+
+        metrics.push({
+          id,
+          element,
+          index: 0,
+        });
+      }
+
+      metrics.sort(
+        (a, b) => {
+          const aTop =
+            a.element
+              .getBoundingClientRect()
+              .top;
+
+          const bTop =
+            b.element
+              .getBoundingClientRect()
+              .top;
+
+          if (
+            Math.abs(
+              aTop -
+                bTop,
+            ) > 0.5
+          ) {
+            return (
+              aTop -
+              bTop
+            );
+          }
+
+          return (
+            SCENE_ORDER.indexOf(
+              a.id,
+            ) -
+            SCENE_ORDER.indexOf(
+              b.id,
+            )
+          );
+        },
+      );
+
+      metrics.forEach(
+        (
+          metric,
+          index,
+        ) => {
+          metric.index =
+            index + 1;
+        },
+      );
+
+      metricsRef.current =
+        metrics;
+
+      resizeObserverRef.current?.disconnect();
+
+      if (
+        typeof ResizeObserver !==
+        "undefined"
+      ) {
+        const resizeObserver =
+          new ResizeObserver(
+            () =>
+              scheduleEvaluate(),
+          );
+
+        metrics.forEach(
           (
-            event as CustomEvent<MotionDetail>
-          ).detail;
-
-        scheduleEvaluate(
-          detail,
+            metric,
+          ) =>
+            resizeObserver.observe(
+              metric.element,
+            ),
         );
+
+        resizeObserverRef.current =
+          resizeObserver;
+      }
+
+      if (
+        !activeSceneRef.current &&
+        metrics[0]
+      ) {
+        activeSceneRef.current =
+          metrics[0].id;
+      }
+    };
+
+    const publishScene = (
+      candidate: SceneCandidate,
+      direction: MotionDirection,
+    ) => {
+      const previousId =
+        activeSceneRef.current;
+
+      const changed =
+        candidate.id !==
+        previousId;
+
+      if (changed) {
+        activeSceneRef.current =
+          candidate.id;
+      }
+
+      const total =
+        Math.max(
+          1,
+          metricsRef.current.length,
+        );
+
+      root.dataset
+        .umbraScene =
+        candidate.id;
+
+      root.dataset
+        .umbraSceneDirection =
+        direction;
+
+      root.style.setProperty(
+        "--umbra-scene-index",
+        String(
+          candidate.index,
+        ),
+      );
+
+      root.style.setProperty(
+        "--umbra-scene-total",
+        String(total),
+      );
+
+      root.style.setProperty(
+        "--umbra-scene-progress",
+        candidate.progress.toFixed(
+          5,
+        ),
+      );
+
+      root.style.setProperty(
+        "--umbra-scene-visibility",
+        candidate.visibility.toFixed(
+          5,
+        ),
+      );
+
+      const detail:
+        SceneEventDetail = {
+        id: candidate.id,
+        index:
+          candidate.index,
+        total,
+        progress:
+          candidate.progress,
+        visibility:
+          candidate.visibility,
+        direction,
+        previousId:
+          changed
+            ? previousId
+            : activeSnapshotRef
+                .current
+                ?.previousId ??
+              null,
       };
+
+      activeSnapshotRef.current =
+        detail;
+
+      if (changed) {
+        if (previousId) {
+          const previousMetric =
+            metricsRef.current.find(
+              (
+                metric,
+              ) =>
+                metric.id ===
+                previousId,
+            );
+
+          window.dispatchEvent(
+            new CustomEvent<SceneEventDetail>(
+              "umbra:scene-leave",
+              {
+                detail: {
+                  ...detail,
+                  id: previousId,
+                  index:
+                    previousMetric
+                      ?.index ??
+                    detail.index,
+                  previousId:
+                    previousId,
+                },
+              },
+            ),
+          );
+        }
+
+        window.dispatchEvent(
+          new CustomEvent<SceneEventDetail>(
+            "umbra:scene-change",
+            {
+              detail,
+            },
+          ),
+        );
+
+        window.dispatchEvent(
+          new CustomEvent<SceneEventDetail>(
+            "umbra:scene-enter",
+            {
+              detail,
+            },
+          ),
+        );
+      }
+
+      const progressChanged =
+        Math.abs(
+          candidate.progress -
+            lastProgressRef.current,
+        ) >=
+        PROGRESS_THRESHOLD;
+
+      const visibilityChanged =
+        Math.abs(
+          candidate.visibility -
+            lastVisibilityRef.current,
+        ) >=
+        VISIBILITY_THRESHOLD;
+
+      const directionChanged =
+        direction !==
+        lastDirectionRef.current;
+
+      if (
+        changed ||
+        progressChanged ||
+        visibilityChanged ||
+        directionChanged
+      ) {
+        lastProgressRef.current =
+          candidate.progress;
+
+        lastVisibilityRef.current =
+          candidate.visibility;
+
+        lastDirectionRef.current =
+          direction;
+
+        window.dispatchEvent(
+          new CustomEvent<SceneEventDetail>(
+            "umbra:scene-progress",
+            {
+              detail,
+            },
+          ),
+        );
+      }
+    };
+
+    const chooseActiveScene = (
+      viewportHeight: number,
+    ): SceneCandidate | null => {
+      const metrics =
+        metricsRef.current;
+
+      if (
+        metrics.length === 0
+      ) {
+        return null;
+      }
+
+      const candidates =
+        metrics
+          .map(
+            (
+              metric,
+            ) => {
+              const rect =
+                metric.element.getBoundingClientRect();
+
+              const height =
+                Math.max(
+                  1,
+                  rect.height,
+                );
+
+              const visibility =
+                calculateVisibility(
+                  rect.top,
+                  height,
+                  viewportHeight,
+                );
+
+              const centerScore =
+                calculateCenterScore(
+                  rect.top,
+                  height,
+                  viewportHeight,
+                );
+
+              const score =
+                visibility *
+                  VISIBILITY_WEIGHT +
+                centerScore *
+                  CENTER_WEIGHT;
+
+              const progress =
+                calculateSceneProgress(
+                  rect.top,
+                  height,
+                  viewportHeight,
+                );
+
+              return {
+                id: metric.id,
+                element:
+                  metric.element,
+                index:
+                  metric.index,
+                visibility,
+                centerScore,
+                score,
+                progress,
+              };
+            },
+          )
+          .filter(
+            (
+              candidate,
+            ) =>
+              candidate.visibility >=
+              MIN_ACTIVE_VISIBILITY,
+          );
+
+      if (
+        candidates.length ===
+        0
+      ) {
+        return null;
+      }
+
+      candidates.sort(
+        (
+          a,
+          b,
+        ) =>
+          b.score -
+          a.score,
+      );
+
+      let best =
+        candidates[0];
+
+      const current =
+        candidates.find(
+          (
+            candidate,
+          ) =>
+            candidate.id ===
+            activeSceneRef.current,
+        );
+
+      if (
+        current &&
+        best.id !==
+          current.id &&
+        best.score <
+          current.score +
+            CHANGE_HYSTERESIS
+      ) {
+        best =
+          current;
+      }
+
+      return best;
+    };
+
+    evaluateScene = (
+      motion?: MotionDetail,
+    ) => {
+      if (destroyed) {
+        return;
+      }
+
+      rebuildMetrics();
+
+      if (
+        metricsRef.current
+          .length === 0
+      ) {
+        return;
+      }
+
+      const viewportHeight =
+        Math.max(
+          1,
+          window.innerHeight,
+        );
+
+      const resolvedMotion =
+        motion ??
+        latestMotionRef.current;
+
+      const direction =
+        resolvedMotion?.direction ??
+        "idle";
+
+      const best =
+        chooseActiveScene(
+          viewportHeight,
+        );
+
+      if (!best) {
+        return;
+      }
+
+      publishScene(
+        best,
+        direction,
+      );
+    };
+
+    const handleMotion = (
+      event: Event,
+    ) => {
+      const detail =
+        (
+          event as CustomEvent<MotionDetail>
+        ).detail;
+
+      scheduleEvaluate(
+        detail,
+      );
+    };
 
     const handleResize =
       () => {
         scheduleEvaluate();
       };
 
-    const observer =
+    const mutationObserver =
       new MutationObserver(
-        () => {
+        (mutations) => {
+          let relevant =
+            false;
+
+          for (
+            const mutation of
+              mutations
+          ) {
+            if (
+              mutation.type ===
+              "childList"
+            ) {
+              relevant =
+                true;
+              break;
+            }
+
+            if (
+              mutation.type ===
+                "attributes" &&
+              mutation.attributeName ===
+                "data-umbra-scene"
+            ) {
+              relevant =
+                true;
+              break;
+            }
+          }
+
+          if (!relevant) {
+            return;
+          }
+
           rebuildMetrics();
           scheduleEvaluate();
         },
       );
 
     observerRef.current =
-      observer;
+      mutationObserver;
 
-    observer.observe(
+    mutationObserver.observe(
       document.body,
       {
-        childList:
-          true,
-        subtree:
-          true,
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: [
+          "data-umbra-scene",
+        ],
       },
     );
 
@@ -817,62 +866,52 @@ export default function UmbraSceneDirector() {
       "resize",
       handleResize,
       {
-        passive:
-          true,
+        passive: true,
       },
     );
 
     rebuildMetrics();
 
-    root.dataset
-      .umbraScene =
-      "hero";
+    if (
+      metricsRef.current[0]
+    ) {
+      root.dataset
+        .umbraScene =
+        metricsRef.current[0]
+          .id;
 
-    root.dataset
-      .umbraSceneDirection =
-      "idle";
-
-    root.style.setProperty(
-      "--umbra-scene-index",
-      "1",
-    );
-
-    root.style.setProperty(
-      "--umbra-scene-total",
-      String(
-        SCENE_ORDER.length,
-      ),
-    );
+      root.dataset
+        .umbraSceneDirection =
+        "idle";
+    }
 
     const initialFrame =
       window.requestAnimationFrame(
         () => {
           window.requestAnimationFrame(
             () => {
-              if (
-                destroyed
-              ) {
+              if (destroyed) {
                 return;
               }
 
-              latestMotionRef.current = {
-                scrollY:
-                  window.scrollY,
-                direction:
-                  "idle",
-              };
+              latestMotionRef.current =
+                {
+                  scrollY:
+                    window.scrollY,
+                  direction:
+                    "idle",
+                };
 
-              evaluate();
+              evaluateScene?.();
             },
           );
         },
       );
 
     return () => {
-      destroyed =
-        true;
+      destroyed = true;
 
-      observer.disconnect();
+      mutationObserver.disconnect();
 
       observerRef.current =
         null;
@@ -908,7 +947,18 @@ export default function UmbraSceneDirector() {
           null;
       }
 
+      evaluateScene =
+        null;
+
       latestMotionRef.current =
+        null;
+
+      metricsRef.current = [];
+
+      activeSceneRef.current =
+        null;
+
+      activeSnapshotRef.current =
         null;
 
       delete root.dataset

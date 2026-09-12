@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -9,6 +10,12 @@ import {
 import { characters } from "@/data/characters";
 import { projects } from "@/data/projects";
 
+type CharacterPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
+
 export function generateStaticParams() {
   return characters.map((character) => ({
     slug: character.slug,
@@ -17,10 +24,9 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+}: CharacterPageProps): Promise<Metadata> {
   const { slug } = await params;
+
   const character = getCharacterBySlug(slug);
 
   if (!character) {
@@ -31,43 +37,63 @@ export async function generateMetadata({
     (item) => item.slug === character.projectSlug,
   );
 
+  const projectTitle =
+    project?.title ??
+    character.projectTitle ??
+    "Umbra Studio";
+
   const description =
     character.shortDescription.trim() ||
-    `Character dossier for ${character.name} within ${
-      project?.title ??
-      character.projectTitle ??
-      "Umbra Studio"
-    }.`;
+    `Character dossier for ${character.name} within ${projectTitle}.`;
+
+  const title = `${character.name} — Character Dossier`;
+
+  const portrait =
+    character.image ||
+    project?.book?.coverEn ||
+    project?.book?.coverSr ||
+    project?.cover;
 
   return {
-    title: `${character.name} — Character Dossier`,
+    title,
     description,
+    alternates: {
+      canonical: `/en/characters/${character.slug}`,
+    },
     openGraph: {
-      title: `${character.name} — Character Dossier`,
+      title,
       description,
       type: "website",
+      ...(portrait
+        ? {
+            images: [
+              {
+                url: portrait,
+                alt: `${character.name} — Character Dossier`,
+              },
+            ],
+          }
+        : {}),
     },
   };
 }
 
 export default async function EnglishCharacterPage({
   params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+}: CharacterPageProps) {
   const { slug } = await params;
+
   const character = getCharacterBySlug(slug);
 
   if (!character) {
     notFound();
   }
 
-  const relatedCharacters =
-    getCharactersForProject(
-      character.projectSlug,
-    ).filter(
-      (item) => item.slug !== character.slug,
-    );
+  const relatedCharacters = getCharactersForProject(
+    character.projectSlug,
+  ).filter(
+    (item) => item.slug !== character.slug,
+  );
 
   return (
     <CharacterDossier

@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   getLocalePrefix,
@@ -15,7 +18,10 @@ type LanguageOption = {
   ariaLabel: string;
 };
 
-const OPTIONS: Record<Locale, LanguageOption> = {
+const OPTIONS: Record<
+  Locale,
+  LanguageOption
+> = {
   sr: {
     locale: "sr",
     label: "SR",
@@ -28,14 +34,18 @@ const OPTIONS: Record<Locale, LanguageOption> = {
   },
 };
 
-function detectLocale(pathname: string): Locale {
+function detectLocale(
+  pathname: string,
+): Locale {
   return pathname === "/en" ||
     pathname.startsWith("/en/")
     ? "en"
     : "sr";
 }
 
-function stripEnglishPrefix(pathname: string) {
+function stripEnglishPrefix(
+  pathname: string,
+) {
   const normalizedPath =
     pathname || "/";
 
@@ -45,7 +55,9 @@ function stripEnglishPrefix(pathname: string) {
       "",
     );
 
-  return withoutEnglishPrefix || "/";
+  return (
+    withoutEnglishPrefix || "/"
+  );
 }
 
 function mapLocalizedRoute(
@@ -123,10 +135,11 @@ function preserveUrlState(
   hash: string,
   search: string,
 ) {
-  const targetPath = mapLocalizedRoute(
-    pathname,
-    targetLocale,
-  );
+  const targetPath =
+    mapLocalizedRoute(
+      pathname,
+      targetLocale,
+    );
 
   return `${targetPath}${search}${hash}`;
 }
@@ -182,21 +195,19 @@ export default function LanguageSwitcher() {
     };
   }, [pathname]);
 
-  const targetPath = useMemo(
-    () =>
-      preserveUrlState(
-        pathname || "/",
-        target,
-        hash,
-        search,
-      ),
-    [
-      hash,
-      pathname,
-      search,
+  const targetPath =
+    preserveUrlState(
+      pathname || "/",
       target,
-    ],
-  );
+      hash,
+      search,
+    );
+
+  const activeOption =
+    OPTIONS[locale];
+
+  const targetOption =
+    OPTIONS[target];
 
   return (
     <div
@@ -206,24 +217,40 @@ export default function LanguageSwitcher() {
           ? "Language"
           : "Jezik"
       }
-      className="flex items-center rounded-full border border-white/[0.12] bg-white/[0.028] p-1 shadow-[0_8px_28px_rgba(0,0,0,0.18)] backdrop-blur-sm"
+      className="flex items-center gap-1 rounded-full border border-white/[0.10] bg-black/[0.20] p-1 shadow-[0_8px_28px_rgba(0,0,0,0.18)] backdrop-blur-md"
     >
       <span
         aria-current="page"
-        className="rounded-full bg-white/[0.065] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/[0.76]"
+        className="relative inline-flex min-w-9 items-center justify-center rounded-full px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-[#ead39a]/88"
       >
-        {OPTIONS[locale].label}
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-2 bottom-1 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(234,211,154,.72), transparent)",
+          }}
+        />
+
+        <span className="relative">
+          {activeOption.label}
+        </span>
       </span>
+
+      <span
+        aria-hidden="true"
+        className="h-3 w-px bg-white/[0.10]"
+      />
 
       <Link
         href={targetPath}
         aria-label={
-          OPTIONS[target].ariaLabel
+          targetOption.ariaLabel
         }
         data-cursor-interactive
-        className="rounded-full px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/[0.38] transition-all duration-300 hover:bg-white/[0.065] hover:text-white/[0.92] focus-visible:bg-white/[0.065] focus-visible:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+        className="inline-flex min-w-9 items-center justify-center rounded-full px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/[0.34] outline-none transition-[background-color,color,transform] duration-300 hover:bg-white/[0.055] hover:text-white/[0.88] focus-visible:bg-white/[0.055] focus-visible:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
       >
-        {OPTIONS[target].label}
+        {targetOption.label}
       </Link>
     </div>
   );

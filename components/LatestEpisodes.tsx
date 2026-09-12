@@ -1,19 +1,22 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import {
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 
+import { studioProfile } from "@/data/studio";
 import type { Locale } from "@/data/translations";
+
+type StudioManifestoProps = {
+  locale?: Locale;
+};
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const GOLD_DARK = "#8f7142";
-
-const YOUTUBE_URL = "https://www.youtube.com/@umbrastud";
-
-const PROJECT_SR = "/serije/mrzim-svog-brata";
-const PROJECT_EN = "/en/projects/mrzim-svog-brata";
 
 const EASE = [
   0.22,
@@ -22,147 +25,242 @@ const EASE = [
   1,
 ] as const;
 
-type LatestEpisodesProps = {
-  locale?: Locale;
-};
+const COPY = {
+  sr: {
+    eyebrow: "04 / Umbra Studio",
+    descriptor:
+      "Originalne priče / filmska slika / novi prostor",
+    body:
+      "Umbra Studio je prostor za priče koje traže više od jednog kadra — od originalnih priča do ekranizacija koje spajaju pripovedanje, sliku i savremenu tehnologiju.",
+    cta: "Istraži projekte",
+    metaLeft:
+      "STORY / IMAGE / MOTION",
+    metaRight:
+      "PRIČE KOJE OSTAVLJAJU SENKU",
+    signature:
+      "Priča ostaje",
+  },
 
-export default function LatestEpisodes({
+  en: {
+    eyebrow: "04 / Umbra Studio",
+    descriptor:
+      "Original stories / cinematic image / a new space",
+    body:
+      "Umbra Studio is a space for stories that ask for more than a single frame — from original stories to adaptations that bring together storytelling, image and contemporary technology.",
+    cta: "Explore projects",
+    metaLeft:
+      "STORY / IMAGE / MOTION",
+    metaRight:
+      "STORIES THAT LEAVE A SHADOW",
+    signature:
+      "The story remains",
+  },
+} as const;
+
+function splitSlogan(
+  slogan: string,
+) {
+  const words =
+    slogan
+      .trim()
+      .split(/\s+/);
+
+  if (
+    words.length < 2
+  ) {
+    return {
+      before: slogan,
+      accent: "",
+    };
+  }
+
+  return {
+    before:
+      words
+        .slice(
+          0,
+          -1,
+        )
+        .join(" "),
+    accent:
+      words[
+        words.length - 1
+      ],
+  };
+}
+
+export default function StudioManifesto({
   locale = "sr",
-}: LatestEpisodesProps) {
+}: StudioManifestoProps) {
   const reducedMotion =
     useReducedMotion() ?? false;
 
-  const isEnglish =
-    locale === "en";
+  const copy =
+    COPY[locale];
 
-  const projectHref =
-    isEnglish
-      ? PROJECT_EN
-      : PROJECT_SR;
+  const projectsHref =
+    locale === "en"
+      ? "/en/projects"
+      : "/serije";
+
+  const slogan =
+    splitSlogan(
+      studioProfile.slogan,
+    );
 
   return (
     <section
-      id="episodes"
-      aria-labelledby="latest-episodes-title"
-      data-umbra-scene="episodes" data-umbra-interactive="episode-hub"
-      className="relative overflow-hidden border-t border-white/[0.055] bg-[#030303]"
+      data-umbra-prefooter
+      className="relative overflow-hidden border-b border-white/[0.06] bg-[#040404]"
     >
+      {/* ====================================================================
+         ATMOSPHERE
+         ==================================================================== */}
+
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
       >
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#040404_0%,#050505_52%,#030303_100%)]" />
+
         <div
-          className="absolute -right-[12%] top-[6%] h-[620px] w-[620px] rounded-full"
+          className="absolute left-[4%] top-[17%] h-[500px] w-[500px] rounded-full blur-3xl"
           style={{
             background: `
               radial-gradient(
                 circle,
-                ${GOLD}05 0%,
-                ${GOLD}014 34%,
+                ${GOLD}048,
+                transparent 70%
+              )
+            `,
+          }}
+        />
+
+        <div
+          className="absolute right-[-12%] bottom-[-14%] h-[600px] w-[600px] rounded-full blur-3xl"
+          style={{
+            background: `
+              radial-gradient(
+                circle,
+                ${GOLD_DARK}028,
                 transparent 72%
               )
             `,
-            filter: "blur(80px)",
           }}
         />
 
-        <div
-          className="absolute -left-[18%] bottom-[-30%] h-[560px] w-[760px]"
-          style={{
-            background:
-              "radial-gradient(ellipse, rgba(255,255,255,.012), transparent 70%)",
-            filter: "blur(90px)",
-          }}
-        />
-
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,.08), transparent 28%, transparent 70%, rgba(0,0,0,.32))",
-          }}
-        />
+        <div className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.006] blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1680px] px-6 pb-24 pt-24 sm:px-9 sm:pb-28 sm:pt-28 lg:px-12 lg:pb-32 lg:pt-32 xl:px-16">
+      {/* ====================================================================
+         EDITORIAL GUIDES
+         ==================================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+      >
+        <div className="absolute left-[6%] top-0 h-full w-px bg-white/[0.011]" />
+
+        <div className="absolute right-[6%] top-0 h-full w-px bg-white/[0.011]" />
+
+        <div className="absolute left-1/2 top-0 hidden h-full w-px bg-white/[0.005] lg:block" />
+
+        <div className="absolute inset-x-[6%] top-0 h-px bg-white/[0.025]" />
+
+        <div className="absolute inset-x-[6%] bottom-0 h-px bg-white/[0.018]" />
+      </div>
+
+      {/* ====================================================================
+         CONTENT
+         ==================================================================== */}
+
+      <div className="relative mx-auto max-w-[1440px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-36 xl:px-16">
+        {/* ==================================================================
+           TOP HEADER
+           ================================================================== */}
+
         <motion.div
-          initial={{
-            opacity: 0,
-            y:
-              reducedMotion
-                ? 0
-                : 10,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
+          initial={
+            reducedMotion
+              ? undefined
+              : {
+                  opacity: 0,
+                  y: 8,
+                }
+          }
+          whileInView={
+            reducedMotion
+              ? undefined
+              : {
+                  opacity: 1,
+                  y: 0,
+                }
+          }
           viewport={{
             once: true,
-            amount: 0.15,
+            amount: 0.18,
           }}
           transition={{
             duration:
               reducedMotion
                 ? 0
-                : 0.68,
+                : 0.5,
             ease: EASE,
           }}
-          className="flex items-center justify-between border-b border-white/[0.055] pb-5"
+          className="flex items-center justify-between border-b border-white/[0.05] pb-5"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span
-              className="font-mono text-[7px] tracking-[0.32em]"
-              style={{
-                color:
-                  `${GOLD_LIGHT}82`,
-              }}
-            >
-              04
-            </span>
-
-            <span
-              className="h-px w-12"
+              aria-hidden="true"
+              className="h-px w-9"
               style={{
                 background:
-                  `linear-gradient(90deg, ${GOLD}68, transparent)`,
+                  `linear-gradient(90deg, transparent, ${GOLD})`,
               }}
             />
 
             <span
-              className="text-[8px] font-semibold uppercase tracking-[0.30em]"
+              className="font-mono text-[7px] uppercase tracking-[0.34em]"
               style={{
                 color:
-                  `${GOLD_LIGHT}76`,
+                  `${GOLD_LIGHT}78`,
               }}
             >
-              {isEnglish
-                ? "EPISODES"
-                : "EPIZODE"}
+              {copy.eyebrow}
             </span>
           </div>
 
-          <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.14] sm:block">
-            04 / 05
+          <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.13] sm:block">
+            UMBRA STUDIO
           </span>
         </motion.div>
 
-        <div className="grid gap-14 pt-14 lg:grid-cols-[1fr_0.84fr] lg:items-end lg:gap-24 lg:pt-16">
+        {/* ==================================================================
+           STATEMENT
+           ================================================================== */}
+
+        <div className="mt-16 lg:mt-20">
           <motion.div
-            initial={{
-              opacity: 0,
-              y:
-                reducedMotion
-                  ? 0
-                  : 18,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
+            initial={
+              reducedMotion
+                ? undefined
+                : {
+                    opacity: 0,
+                    y: 20,
+                  }
+            }
+            whileInView={
+              reducedMotion
+                ? undefined
+                : {
+                    opacity: 1,
+                    y: 0,
+                  }
+            }
             viewport={{
               once: true,
-              amount: 0.12,
+              amount: 0.16,
             }}
             transition={{
               duration:
@@ -172,250 +270,319 @@ export default function LatestEpisodes({
               ease: EASE,
             }}
           >
-            <p
-              className="text-[8px] font-semibold uppercase tracking-[0.32em]"
-              style={{
-                color:
-                  `${GOLD_LIGHT}82`,
-              }}
-            >
-              {isEnglish
-                ? "THE STORY CONTINUES"
-                : "PRIČA SE NASTAVLJA"}
-            </p>
-
-            <h2
-              id="latest-episodes-title"
-              className="mt-6 max-w-[820px] text-[clamp(3.2rem,7vw,8rem)] font-[430] leading-[0.82] tracking-[-0.08em] text-white"
-            >
-              {isEnglish ? (
-                <>
-                  The story
-                  <br />
-                  continues.
-                </>
-              ) : (
-                <>
-                  Priča uskoro
-                  <br />
-                  dobija nastavak.
-                </>
-              )}
-            </h2>
-          </motion.div>
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              x:
-                reducedMotion
-                  ? 0
-                  : 16,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.12,
-            }}
-            transition={{
-              delay:
-                reducedMotion
-                  ? 0
-                  : 0.08,
-              duration:
-                reducedMotion
-                  ? 0
-                  : 0.68,
-              ease: EASE,
-            }}
-            className="max-w-[520px] lg:justify-self-end"
-          >
-            <p className="text-[12px] leading-7 text-white/[0.40] sm:text-[13px]">
-              {isEnglish
-                ? "New Umbra Studio episodes will appear here as production moves forward. For now, the story is still being built behind the scenes."
-                : "Nove epizode Umbra Studija biće objavljivane ovde kako produkcija bude napredovala. Za sada se priča još uvek gradi iza kulisa."}
-            </p>
-
-            <a
-              href={YOUTUBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group/youtube mt-7 inline-flex min-h-[42px] items-center gap-4 text-[8px] font-semibold uppercase tracking-[0.28em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
-              style={{
-                color:
-                  `${GOLD_LIGHT}88`,
-              }}
-            >
-              <span>
-                {isEnglish
-                  ? "Follow Umbra Studio on YouTube"
-                  : "Prati Umbra Studio na YouTube-u"}
-              </span>
-
-              <ArrowUpRight
-                size={14}
-                strokeWidth={1}
-                className="transition-transform duration-500 group-hover/youtube:translate-x-1 group-hover/youtube:-translate-y-0.5"
-              />
-
-            </a>
-          </motion.div>
-        </div>
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y:
-              reducedMotion
-                ? 0
-                : 14,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.12,
-          }}
-          transition={{
-            delay:
-              reducedMotion
-                ? 0
-                : 0.12,
-            duration:
-              reducedMotion
-                ? 0
-                : 0.68,
-            ease: EASE,
-          }}
-          className="relative mt-16 overflow-hidden border-y border-white/[0.055] lg:mt-20"
-        >
-          <div className="grid min-h-[250px] items-center lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="relative px-6 py-10 sm:px-8 lg:px-10">
-              <div
-                aria-hidden="true"
-                className="absolute left-0 top-0 h-full w-px"
+            <div className="flex items-center gap-3">
+              <span
+                className="h-[5px] w-[5px] rounded-full"
                 style={{
                   background:
-                    `linear-gradient(180deg, transparent, ${GOLD_DARK}44, transparent)`,
+                    GOLD,
+                  boxShadow:
+                    `0 0 9px ${GOLD}30`,
                 }}
               />
 
-              <p
-                className="text-[8px] font-semibold uppercase tracking-[0.32em]"
-                style={{
-                  color:
-                    `${GOLD_LIGHT}72`,
-                }}
-              >
-                001 /{" "}
-                {isEnglish
-                  ? "CURRENT PRODUCTION"
-                  : "AKTUELNA PRODUKCIJA"}
-              </p>
-
-              <p className="mt-5 max-w-[720px] text-[clamp(1.25rem,2.5vw,2.35rem)] font-[400] leading-[1.05] tracking-[-0.04em] text-white/[0.72]">
-                {isEnglish
-                  ? "The first episode will arrive when it is ready — with the story setting the pace."
-                  : "Prva epizoda stiže kada bude spremna — priča određuje tempo."}
-              </p>
-
-              <p className="mt-5 max-w-[620px] text-[10px] uppercase leading-5 tracking-[0.20em] text-white/[0.20]">
-                {isEnglish
-                  ? "Production in progress / Episode release to follow"
-                  : "Produkcija u toku / Objavljivanje epizoda sledi"}
+              <p className="text-[8px] font-semibold uppercase tracking-[0.34em] text-white/[0.2]">
+                {copy.descriptor}
               </p>
             </div>
 
-            <Link
-              href={projectHref}
+            <h2
               aria-label={
-                isEnglish
-                  ? "Open MRZIM SVOG BRATA project"
-                  : "Otvori projekat MRZIM SVOG BRATA"
+                studioProfile.slogan
               }
-              className="group/current relative flex min-h-[190px] items-center border-t border-white/[0.05] px-6 py-8 outline-none transition-colors duration-300 hover:bg-white/[0.018] focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/60 sm:px-8 lg:min-h-full lg:border-l lg:border-t-0 lg:px-10"
+              className="mt-7 max-w-[1160px] font-serif text-[clamp(3.2rem,6.55vw,7.5rem)] font-normal italic leading-[0.89] tracking-[-0.066em]"
+            >
+              <span className="text-white/[0.7]">
+                {slogan.before}
+              </span>
+
+              {" "}
+
+              <span
+                style={{
+                  color:
+                    GOLD_LIGHT,
+                  textShadow:
+                    `0 0 36px ${GOLD}10`,
+                }}
+              >
+                {
+                  slogan.accent
+                }
+              </span>
+            </h2>
+          </motion.div>
+
+          {/* =================================================================
+             BODY + CTA
+             ================================================================= */}
+
+          <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end lg:gap-20">
+            <motion.div
+              initial={
+                reducedMotion
+                  ? undefined
+                  : {
+                      opacity: 0,
+                      y: 10,
+                    }
+              }
+              whileInView={
+                reducedMotion
+                  ? undefined
+                  : {
+                      opacity: 1,
+                      y: 0,
+                    }
+              }
+              viewport={{
+                once: true,
+                amount: 0.16,
+              }}
+              transition={{
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.55,
+                delay:
+                  reducedMotion
+                    ? 0
+                    : 0.07,
+                ease: EASE,
+              }}
             >
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 opacity-60 transition-opacity duration-300 group-hover/current:opacity-100"
+                className="h-px w-full max-w-[650px]"
                 style={{
                   background:
-                    `radial-gradient(circle at 22% 50%, ${GOLD_LIGHT}08, transparent 48%)`,
+                    `linear-gradient(90deg, ${GOLD_LIGHT}68, ${GOLD}26, transparent)`,
                 }}
               />
 
-              <div className="relative z-10 w-full">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[6px] uppercase tracking-[0.30em] text-white/[0.16]">
-                    {isEnglish
-                      ? "CURRENT"
-                      : "AKTUELNO"}
-                  </span>
+              <p className="mt-7 max-w-[700px] text-[14px] leading-7 text-white/[0.4] sm:text-[15px] sm:leading-8">
+                {
+                  copy.body
+                }
+              </p>
+            </motion.div>
 
-                  <span
-                    className="font-mono text-[6px] tracking-[0.24em]"
-                    style={{
-                      color:
-                        `${GOLD_LIGHT}60`,
-                    }}
-                  >
-                    001
-                  </span>
-                </div>
+            <motion.div
+              initial={
+                reducedMotion
+                  ? undefined
+                  : {
+                      opacity: 0,
+                      y: 10,
+                    }
+              }
+              whileInView={
+                reducedMotion
+                  ? undefined
+                  : {
+                      opacity: 1,
+                      y: 0,
+                    }
+              }
+              viewport={{
+                once: true,
+                amount: 0.16,
+              }}
+              transition={{
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.55,
+                delay:
+                  reducedMotion
+                    ? 0
+                    : 0.15,
+                ease: EASE,
+              }}
+              className="lg:justify-self-end"
+            >
+              <Link
+                href={projectsHref}
+                data-cursor-interactive
+                className="group relative inline-flex h-12 items-center gap-4 overflow-hidden border px-6 text-[9px] font-semibold uppercase tracking-[0.25em] transition-[background-color,border-color,transform] duration-400 hover:-translate-y-px"
+                style={{
+                  borderColor:
+                    `${GOLD}5c`,
+                  background:
+                    `linear-gradient(180deg, ${GOLD}08, transparent)`,
+                  color:
+                    GOLD_LIGHT,
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{
+                    background:
+                      `radial-gradient(circle at 50% 100%, ${GOLD}0f, transparent 70%)`,
+                  }}
+                />
 
-                <div className="mt-8 h-px w-full bg-white/[0.07]">
-                  <span
-                    aria-hidden="true"
-                    className="block h-px w-[32%] origin-left transition-[width] duration-500 group-hover/current:w-[58%]"
-                    style={{
-                      background:
-                        `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
-                    }}
-                  />
-                </div>
+                <span className="relative z-10">
+                  {copy.cta}
+                </span>
 
-                <div className="mt-6 flex items-end justify-between gap-6">
-                  <div>
-                    <p className="text-[9px] uppercase tracking-[0.26em] text-white/[0.32] transition-colors duration-300 group-hover/current:text-white/[0.64]">
-                      MRZIM SVOG BRATA
-                    </p>
+                <ArrowUpRight
+                  size={14}
+                  strokeWidth={1.2}
+                  className="relative z-10 transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
 
-                    <p className="mt-2 text-[8px] uppercase tracking-[0.24em] text-white/[0.16]">
-                      {isEnglish
-                        ? "IN PRODUCTION"
-                        : "U PRODUKCIJI"}
-                    </p>
-                  </div>
-
-                  <span
-                    className="inline-flex shrink-0 items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.26em] text-white/[0.30] transition-colors duration-300 group-hover/current:text-[#ead39a]/90"
-                  >
-                    <span>
-                      {isEnglish
-                        ? "PROJECT"
-                        : "PROJEKAT"}
-                    </span>
-
-                    <ArrowUpRight
-                      size={13}
-                      strokeWidth={1}
-                      style={{
-                        color:
-                          `${GOLD_LIGHT}6a`,
-                      }}
-                      className="transition-transform duration-300 group-hover/current:translate-x-0.5 group-hover/current:-translate-y-0.5"
-                    />
-                  </span>
-                </div>
-              </div>
-            </Link>
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-0 left-0 h-px w-[32%] transition-[width] duration-600 group-hover:w-full"
+                  style={{
+                    background: `
+                      linear-gradient(
+                        90deg,
+                        ${GOLD_LIGHT},
+                        ${GOLD},
+                        transparent
+                      )
+                    `,
+                  }}
+                />
+              </Link>
+            </motion.div>
           </div>
+        </div>
+
+        {/* ==================================================================
+           SIGNATURE
+           ================================================================== */}
+
+        <motion.div
+          initial={
+            reducedMotion
+              ? undefined
+              : {
+                  opacity: 0,
+                  y: 14,
+                }
+          }
+          whileInView={
+            reducedMotion
+              ? undefined
+              : {
+                  opacity: 1,
+                  y: 0,
+                }
+          }
+          viewport={{
+            once: true,
+            amount: 0.1,
+          }}
+          transition={{
+            duration:
+              reducedMotion
+                ? 0
+                : 0.65,
+            delay:
+              reducedMotion
+                ? 0
+                : 0.1,
+            ease: EASE,
+          }}
+          className="relative mt-20 overflow-hidden border border-white/[0.065] bg-[#050505]"
+        >
+          {/* optical circle */}
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full border lg:block"
+            style={{
+              borderColor:
+                `${GOLD}07`,
+            }}
+          />
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[230px] w-[230px] -translate-x-1/2 -translate-y-1/2 rounded-full border lg:block"
+            style={{
+              borderColor:
+                `${GOLD}09`,
+            }}
+          />
+
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[4px] w-[4px] -translate-x-1/2 -translate-y-1/2 rounded-full lg:block"
+            style={{
+              background:
+                `${GOLD_LIGHT}62`,
+              boxShadow:
+                `0 0 13px ${GOLD}30`,
+            }}
+          />
+
+          <div className="relative z-10 flex min-h-[240px] items-center justify-between gap-8 px-6 py-10 sm:px-9 sm:py-12 lg:px-12">
+            <div>
+              <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.12]">
+                UMBRA / SIGNATURE
+              </span>
+
+              <p className="mt-5 max-w-[600px] font-serif text-[clamp(2rem,3.8vw,4rem)] italic leading-[0.92] tracking-[-0.05em] text-white/[0.6]">
+                {copy.signature}
+              </p>
+            </div>
+
+            <span
+              aria-hidden="true"
+              className="hidden h-[74px] w-[74px] shrink-0 items-center justify-center rounded-full border sm:flex"
+              style={{
+                borderColor:
+                  `${GOLD}20`,
+              }}
+            >
+              <span
+                className="h-[5px] w-[5px] rounded-full"
+                style={{
+                  background:
+                    GOLD_LIGHT,
+                  boxShadow:
+                    `0 0 10px ${GOLD_LIGHT}`,
+                }}
+              />
+            </span>
+          </div>
+
+          {/* bottom signal */}
+
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-0 left-0 h-px w-[36%]"
+            style={{
+              background: `
+                linear-gradient(
+                  90deg,
+                  ${GOLD_DARK},
+                  ${GOLD},
+                  ${GOLD_LIGHT}24,
+                  transparent
+                )
+              `,
+            }}
+          />
+
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 h-px w-[18%]"
+            style={{
+              background:
+                `linear-gradient(90deg, transparent, ${GOLD}20)`,
+            }}
+          />
         </motion.div>
+
+        {/* ==================================================================
+           META
+           ================================================================== */}
 
         <motion.div
           initial={{
@@ -429,46 +596,83 @@ export default function LatestEpisodes({
             amount: 0.08,
           }}
           transition={{
-            delay:
-              reducedMotion
-                ? 0
-                : 0.16,
             duration:
               reducedMotion
                 ? 0
-                : 0.55,
-            ease: EASE,
+                : 0.5,
+            delay:
+              reducedMotion
+                ? 0
+                : 0.1,
           }}
-          className="mt-7 flex items-center justify-between border-t border-white/[0.05] pt-5"
+          className="mt-16 flex items-center justify-between border-t border-white/[0.05] pt-5"
         >
-          <span className="font-mono text-[6px] uppercase tracking-[0.30em] text-white/[0.14]">
-            {isEnglish
-              ? "MORE TO COME"
-              : "JOŠ SLEDI"}
+          <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.13]">
+            {copy.metaLeft}
           </span>
 
-          <Link
-            href={projectHref}
-            className="group/bottom inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.25em] text-white/[0.22] transition-colors duration-300 hover:text-white/[0.62] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+          <span
+            className="hidden font-mono text-[6px] uppercase tracking-[0.28em] sm:block"
+            style={{
+              color:
+                `${GOLD_LIGHT}32`,
+            }}
           >
-            <span>
-              {isEnglish
-                ? "OPEN PROJECT"
-                : "OTVORI PROJEKAT"}
-            </span>
-
-            <ArrowUpRight
-              size={13}
-              strokeWidth={1}
-              style={{
-                color:
-                  `${GOLD_LIGHT}68`,
-              }}
-              className="transition-transform duration-500 group-hover/bottom:translate-x-0.5 group-hover/bottom:-translate-y-0.5"
-            />
-          </Link>
+            {
+              copy.metaRight
+            }
+          </span>
         </motion.div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.08]">
+            UMBRA / 04
+          </span>
+
+          <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.08]">
+            {locale === "en"
+              ? "CONTINUES"
+              : "NASTAVLJA SE"}
+          </span>
+        </div>
       </div>
+
+      {/* ====================================================================
+         BOTTOM LINE
+         ==================================================================== */}
+
+      <motion.div
+        aria-hidden="true"
+        initial={{
+          scaleX: 0,
+        }}
+        whileInView={{
+          scaleX: 1,
+        }}
+        viewport={{
+          once: true,
+          amount: 0.08,
+        }}
+        transition={{
+          duration:
+            reducedMotion
+              ? 0
+              : 0.85,
+          ease: EASE,
+        }}
+        className="pointer-events-none absolute bottom-0 left-0 h-px w-[38%] origin-left"
+        style={{
+          background: `
+            linear-gradient(
+              90deg,
+              ${GOLD_DARK},
+              ${GOLD},
+              ${GOLD_LIGHT}26,
+              transparent
+            )
+          `,
+        }}
+      />
     </section>
   );
 }

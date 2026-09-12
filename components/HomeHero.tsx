@@ -32,7 +32,8 @@ const GOLD_DARK = "#8f7142";
 const BACKGROUND_IMAGE =
   "/umbra-background.png";
 
-const FALLBACK_IMAGE = "/umbra-background.png";
+const FALLBACK_IMAGE =
+  "/umbra-background.png";
 
 const YOUTUBE_CHANNEL =
   "https://www.youtube.com/@umbrastud";
@@ -76,10 +77,10 @@ function getYouTubeId(
   }
 
   const patterns = [
-    /youtu.be\/([^?&/]+)/i,
-    /youtube.com\/watch\?v=([^?&/]+)/i,
-    /youtube.com\/embed\/([^?&/]+)/i,
-    /youtube.com\/shorts\/([^?&/]+)/i,
+    /youtu\.be\/([^?&/]+)/i,
+    /youtube\.com\/watch\?v=([^?&/]+)/i,
+    /youtube\.com\/embed\/([^?&/]+)/i,
+    /youtube\.com\/shorts\/([^?&/]+)/i,
   ];
 
   for (const pattern of patterns) {
@@ -97,16 +98,23 @@ function getYouTubeId(
 function getCurrentProductionProject() {
   return (
     projects.find(
-      (project) => project.status === "in-production",
+      (project) =>
+        project.status ===
+        "in-production",
     ) ??
-    projects.find((project) => project.featured) ??
+    projects.find(
+      (project) =>
+        project.featured,
+    ) ??
     projects[0] ??
     null
   );
 }
 
 function resolveProjectImage(
-  project: (typeof projects)[number] | null,
+  project:
+    | (typeof projects)[number]
+    | null,
   locale: Locale,
 ) {
   if (!project) {
@@ -132,7 +140,9 @@ function resolveProjectImage(
 
 function buildPanels(
   locale: Locale,
-  currentProject: (typeof projects)[number] | null,
+  currentProject:
+    | (typeof projects)[number]
+    | null,
 ): HeroPanel[] {
   if (locale === "en") {
     return [
@@ -140,9 +150,12 @@ function buildPanels(
         id: "featured",
         number: "01",
         tab: "FEATURED",
-        eyebrow: "CURRENT PRODUCTION",
+        eyebrow:
+          "CURRENT PRODUCTION",
         category: "IN FOCUS",
-        title: currentProject?.title ?? "MRZIM SVOG BRATA",
+        title:
+          currentProject?.title ??
+          "MRZIM SVOG BRATA",
         description:
           currentProject?.shortDescription ??
           "Umbra Studio's current production.",
@@ -150,67 +163,86 @@ function buildPanels(
           ? `/en/projects/${currentProject.slug}`
           : "/en/projects",
         cta: "Enter project",
-        mediaLabel: "PROJECT WINDOW",
+        mediaLabel:
+          "PROJECT WINDOW",
         type: "image",
-        image: resolveProjectImage(currentProject, locale),
+        image:
+          resolveProjectImage(
+            currentProject,
+            locale,
+          ),
       },
       {
         id: "series",
         number: "02",
         tab: "SERIES",
-        eyebrow: "SERIES ARCHIVE",
-        category: "THE STORY WORLD",
+        eyebrow:
+          "SERIES ARCHIVE",
+        category:
+          "THE STORY WORLD",
         title: "SERIES",
         description:
           "Explore the productions and worlds being developed inside Umbra Studio.",
         href: "/en/projects",
         cta: "Explore projects",
-        mediaLabel: "SERIES INDEX",
+        mediaLabel:
+          "SERIES INDEX",
         type: "page",
-        image: BACKGROUND_IMAGE,
+        image:
+          BACKGROUND_IMAGE,
       },
       {
         id: "characters",
         number: "03",
         tab: "CHARACTERS",
-        eyebrow: "CHARACTER & RELATIONSHIPS",
-        category: "PEOPLE IN THE STORY",
+        eyebrow:
+          "CHARACTER & RELATIONSHIPS",
+        category:
+          "PEOPLE IN THE STORY",
         title: "CHARACTERS",
         description:
           "Meet the people and relationships that shape the stories behind the images.",
         href: "/en/characters",
         cta: "Meet characters",
-        mediaLabel: "CHARACTER WINDOW",
+        mediaLabel:
+          "CHARACTER WINDOW",
         type: "page",
-        image: BACKGROUND_IMAGE,
+        image:
+          BACKGROUND_IMAGE,
       },
       {
         id: "archive",
         number: "04",
         tab: "ARCHIVE",
-        eyebrow: "SELECTED WORK",
-        category: "STORIES THAT REMAIN",
+        eyebrow:
+          "SELECTED WORK",
+        category:
+          "STORIES THAT REMAIN",
         title: "ARCHIVE",
         description:
           "A quieter space for projects, notes and stories that remain part of the Umbra world.",
         href: "/en/projects",
         cta: "Open archive",
-        mediaLabel: "ARCHIVE WINDOW",
+        mediaLabel:
+          "ARCHIVE WINDOW",
         type: "page",
-        image: BACKGROUND_IMAGE,
+        image:
+          BACKGROUND_IMAGE,
       },
       {
         id: "watch",
         number: "05",
         tab: "WATCH",
-        eyebrow: "UMBRA ON YOUTUBE",
+        eyebrow:
+          "UMBRA ON YOUTUBE",
         category: "VIDEO",
         title: "WATCH UMBRA",
         description:
           "When a concrete episode or film is selected, its YouTube player lives here. The channel remains one click away.",
         href: YOUTUBE_CHANNEL,
         cta: "Open YouTube",
-        mediaLabel: "YOUTUBE WINDOW",
+        mediaLabel:
+          "YOUTUBE WINDOW",
         type: "youtube",
         external: true,
       },
@@ -222,9 +254,12 @@ function buildPanels(
       id: "aktuelno",
       number: "01",
       tab: "AKTUELNO",
-      eyebrow: "SERIJA U PRODUKCIJI",
+      eyebrow:
+        "SERIJA U PRODUKCIJI",
       category: "U FOKUSU",
-      title: currentProject?.title ?? "MRZIM SVOG BRATA",
+      title:
+        currentProject?.title ??
+        "MRZIM SVOG BRATA",
       description:
         currentProject?.shortDescription ??
         "Trenutna produkcija Umbra Studija.",
@@ -232,67 +267,86 @@ function buildPanels(
         ? `/serije/${currentProject.slug}`
         : "/serije",
       cta: "Uđi u projekat",
-      mediaLabel: "PROZOR PROJEKTA",
+      mediaLabel:
+        "PROZOR PROJEKTA",
       type: "image",
-      image: resolveProjectImage(currentProject, locale),
+      image:
+        resolveProjectImage(
+          currentProject,
+          locale,
+        ),
     },
     {
       id: "serije",
       number: "02",
       tab: "SERIJE",
-      eyebrow: "ARHIVA SERIJA",
-      category: "SVETOVI PRIČA",
+      eyebrow:
+        "ARHIVA SERIJA",
+      category:
+        "SVETOVI PRIČA",
       title: "SERIJE",
       description:
         "Istraži serije i produkcije koje Umbra razvija, jednu priču po jednu.",
       href: "/serije",
       cta: "Pogledaj serije",
-      mediaLabel: "INDEKS SERIJA",
+      mediaLabel:
+        "INDEKS SERIJA",
       type: "page",
-      image: BACKGROUND_IMAGE,
+      image:
+        BACKGROUND_IMAGE,
     },
     {
       id: "likovi",
       number: "03",
       tab: "LIKOVI",
-      eyebrow: "KARAKTERI I ODNOSI",
-      category: "LJUDI U PRIČI",
+      eyebrow:
+        "KARAKTERI I ODNOSI",
+      category:
+        "LJUDI U PRIČI",
       title: "LIKOVI",
       description:
         "Upoznaj ljude i odnose koji nose težinu priča koje Umbra gradi.",
       href: "/likovi",
       cta: "Upoznaj likove",
-      mediaLabel: "PROZOR LIKOVA",
+      mediaLabel:
+        "PROZOR LIKOVA",
       type: "page",
-      image: BACKGROUND_IMAGE,
+      image:
+        BACKGROUND_IMAGE,
     },
     {
       id: "arhiva",
       number: "04",
       tab: "ARHIVA",
-      eyebrow: "ODABRANI SADRŽAJ",
-      category: "PRIČE KOJE OSTAJU",
+      eyebrow:
+        "ODABRANI SADRŽAJ",
+      category:
+        "PRIČE KOJE OSTAJU",
       title: "ARHIVA",
       description:
         "Mirniji sloj Umbra sveta — projekti, zapisi i priče koje ostaju dostupni.",
       href: "/serije",
       cta: "Otvori arhivu",
-      mediaLabel: "PROZOR ARHIVE",
+      mediaLabel:
+        "PROZOR ARHIVE",
       type: "page",
-      image: BACKGROUND_IMAGE,
+      image:
+        BACKGROUND_IMAGE,
     },
     {
       id: "gledaj",
       number: "05",
       tab: "GLEDAJ",
-      eyebrow: "UMBRA NA YOUTUBE-U",
+      eyebrow:
+        "UMBRA NA YOUTUBE-U",
       category: "VIDEO",
       title: "GLEDAJ UMBRU",
       description:
         "Kada je konkretan video aktuelan, njegov YouTube player preuzima ovaj prozor.",
       href: YOUTUBE_CHANNEL,
       cta: "Otvori kanal",
-      mediaLabel: "YOUTUBE PROZOR",
+      mediaLabel:
+        "YOUTUBE PROZOR",
       type: "youtube",
       external: true,
     },
@@ -312,7 +366,7 @@ function MediaWindow({
     );
 
   const mediaIsClickable =
-    !youtubeId;
+    panel.type !== "youtube";
 
   const mediaLinkLabel =
     panel.type === "youtube"
@@ -326,7 +380,8 @@ function MediaWindow({
   return (
     <div className="group/window relative overflow-hidden border border-white/[0.085] bg-[#070707] shadow-[0_32px_96px_rgba(0,0,0,.36)]">
       <div className="relative aspect-[1.14/0.93] overflow-hidden">
-        {panel.type === "youtube" &&
+        {panel.type ===
+        "youtube" &&
         youtubeId ? (
           <iframe
             title={`${panel.title} YouTube video`}
@@ -342,14 +397,15 @@ function MediaWindow({
                 panel.image ??
                 BACKGROUND_IMAGE
               }
-              alt={panel.title}
+              alt=""
               fill
               sizes="(min-width: 1280px) 38vw, (min-width: 1024px) 44vw, 94vw"
               className="object-cover transition-transform duration-[950ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/window:scale-[1.018]"
               priority={
                 panel.id ===
                   "aktuelno" ||
-                panel.id === "featured"
+                panel.id ===
+                  "featured"
               }
             />
 
@@ -438,6 +494,7 @@ function MediaWindow({
         <div className="absolute left-5 right-5 top-5 flex items-center justify-between sm:left-6 sm:right-6 sm:top-6 lg:left-7 lg:right-7 lg:top-7">
           <div className="flex items-center gap-3">
             <span
+              aria-hidden="true"
               className="h-[5px] w-[5px] rounded-full"
               style={{
                 background:
@@ -474,7 +531,8 @@ function MediaWindow({
             </p>
           </div>
 
-          {panel.type === "youtube" &&
+          {panel.type ===
+            "youtube" &&
           !youtubeId ? (
             <span
               className="hidden shrink-0 rounded-full border px-3 py-2 font-mono text-[6px] uppercase tracking-[0.24em] sm:block"
@@ -574,30 +632,54 @@ export default function HomeHero({
   const reducedMotion =
     useReducedMotion() ?? false;
 
-  const currentProject = useMemo(
-    () => getCurrentProductionProject(),
-    [],
-  );
+  const currentProject =
+    useMemo(
+      () =>
+        getCurrentProductionProject(),
+      [],
+    );
 
-  const panels = useMemo(
-    () => buildPanels(locale, currentProject),
-    [locale, currentProject],
-  );
+  const panels =
+    useMemo(
+      () =>
+        buildPanels(
+          locale,
+          currentProject,
+        ),
+      [
+        locale,
+        currentProject,
+      ],
+    );
 
-  const [activeIndex, setActiveIndex] =
-    useState(0);
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
 
-  const [navHovered, setNavHovered] =
-    useState(false);
+  const [
+    navHovered,
+    setNavHovered,
+  ] = useState(false);
 
-  const [userSelected, setUserSelected] =
-    useState(false);
+  const [
+    userSelected,
+    setUserSelected,
+  ] = useState(false);
 
   const activePanel =
-    panels[
-      activeIndex
-    ] ??
-    panels[0];
+    panels[activeIndex] ??
+    panels[0] ??
+    null;
+
+  const activeTitleLines =
+    useMemo(
+      () =>
+        activePanel
+          ? activePanel.title.split(" ")
+          : [],
+      [activePanel],
+    );
 
   const timerRef =
     useRef<number | null>(
@@ -610,13 +692,15 @@ export default function HomeHero({
   const clearTimer =
     useCallback(() => {
       if (
-        timerRef.current !== null
+        timerRef.current !==
+        null
       ) {
         window.clearTimeout(
           timerRef.current,
         );
 
-        timerRef.current = null;
+        timerRef.current =
+          null;
       }
     }, []);
 
@@ -629,7 +713,9 @@ export default function HomeHero({
           | "click"
           | "focus" = "click",
       ) => {
-        if (!panels.length) {
+        if (
+          !panels.length
+        ) {
           return;
         }
 
@@ -659,15 +745,18 @@ export default function HomeHero({
     );
 
   const next =
-    useCallback(() => {
-      goTo(
-        activeIndex + 1,
-        "click",
-      );
-    }, [
-      activeIndex,
-      goTo,
-    ]);
+    useCallback(
+      () => {
+        goTo(
+          activeIndex + 1,
+          "click",
+        );
+      },
+      [
+        activeIndex,
+        goTo,
+      ],
+    );
 
   const previous =
     useCallback(
@@ -683,17 +772,15 @@ export default function HomeHero({
       ],
     );
 
-  useEffect(() => {
-    setActiveIndex(0);
-    setUserSelected(false);
-  }, [locale]);
+  const rotationActive =
+    !reducedMotion &&
+    !navHovered &&
+    !userSelected &&
+    panels.length > 1;
 
   useEffect(() => {
     if (
-      reducedMotion ||
-      navHovered ||
-      userSelected ||
-      panels.length <= 1
+      !rotationActive
     ) {
       clearTimer();
       return;
@@ -719,22 +806,41 @@ export default function HomeHero({
   }, [
     activeIndex,
     clearTimer,
-    navHovered,
     panels.length,
-    reducedMotion,
-    userSelected,
+    rotationActive,
   ]);
 
-  useEffect(
-    () => () => clearTimer(),
-    [clearTimer],
-  );
+  useEffect(() => {
+    return () => {
+      clearTimer();
+    };
+  }, [clearTimer]);
 
   useEffect(() => {
-    pointerFine.current =
+    const media =
       window.matchMedia(
         "(pointer: fine)",
-      ).matches;
+      );
+
+    const update =
+      () => {
+        pointerFine.current =
+          media.matches;
+      };
+
+    update();
+
+    media.addEventListener(
+      "change",
+      update,
+    );
+
+    return () => {
+      media.removeEventListener(
+        "change",
+        update,
+      );
+    };
   }, []);
 
   const handlePanelHover =
@@ -774,23 +880,27 @@ export default function HomeHero({
       activePanel.external,
     );
 
-  const projectTitle =
-    activePanel.id === "aktuelno" ||
-    activePanel.id === "featured";
+  const isCurrentProduction =
+    activePanel.id ===
+      "aktuelno" ||
+    activePanel.id ===
+      "featured";
 
   return (
     <section
       id="hero"
       data-umbra-scene="hero"
       aria-labelledby="umbra-hero-title"
-      className="relative min-h-[88svh] overflow-hidden bg-[#020202] text-white lg:min-h-[calc(100svh-4.5rem)]"
+      className="relative min-h-[88svh] overflow-hidden bg-[var(--umbra-bg-deep)] text-white lg:min-h-[calc(100svh-4.5rem)]"
     >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <Image
-          src={BACKGROUND_IMAGE}
+          src={
+            BACKGROUND_IMAGE
+          }
           alt=""
           fill
           priority
@@ -861,10 +971,13 @@ export default function HomeHero({
                   `${GOLD_LIGHT}80`,
               }}
             >
-              {activePanel.number}
+              {
+                activePanel.number
+              }
             </span>
 
             <span
+              aria-hidden="true"
               className="h-px w-12"
               style={{
                 background:
@@ -879,7 +992,9 @@ export default function HomeHero({
                   `${GOLD_LIGHT}76`,
               }}
             >
-              {activePanel.eyebrow}
+              {
+                activePanel.eyebrow
+              }
             </span>
           </div>
 
@@ -902,7 +1017,9 @@ export default function HomeHero({
 
         <div className="grid min-h-[calc(88svh-8rem)] items-center gap-10 pb-8 pt-6 lg:grid-cols-[1fr_0.78fr] lg:gap-16 lg:pb-10 lg:pt-2 xl:grid-cols-[1.02fr_0.76fr] xl:gap-20">
           <motion.div
-            key={activePanel.id}
+            key={
+              activePanel.id
+            }
             initial={{
               opacity: 0,
               x:
@@ -924,7 +1041,9 @@ export default function HomeHero({
             className="max-w-[980px]"
           >
             <Link
-              href={activePanel.href}
+              href={
+                activePanel.href
+              }
               target={
                 isExternal
                   ? "_blank"
@@ -944,6 +1063,7 @@ export default function HomeHero({
             >
               <div className="mb-7 flex items-center gap-3">
                 <span
+                  aria-hidden="true"
                   className="h-[6px] w-[6px] rounded-full"
                   style={{
                     background:
@@ -960,7 +1080,9 @@ export default function HomeHero({
                       `${GOLD_LIGHT}82`,
                   }}
                 >
-                  {activePanel.category}
+                  {
+                    activePanel.category
+                  }
                 </span>
               </div>
 
@@ -973,43 +1095,35 @@ export default function HomeHero({
                   fontSize:
                     "clamp(3.6rem, 7.2vw, 8.8rem)",
                   fontWeight: 430,
-                  lineHeight: 0.80,
+                  lineHeight: 0.8,
                   letterSpacing:
                     "-0.085em",
                 }}
               >
-                {activePanel.title
-                  .split(
-                    " ",
-                  )
-                  .map(
-                    (
-                      word,
-                      index,
-                    ) => (
-                      <span
-                        key={`${activePanel.id}-${word}-${index}`}
-                        className={[
-                          "block",
-                          index >
-                          Math.floor(
-                            activePanel.title
-                              .split(
-                                " ",
-                              )
-                              .length /
-                              2,
-                          )
-                            ? "text-white/[0.48]"
-                            : "",
-                        ].join(
-                          " ",
-                        )}
-                      >
-                        {word}
-                      </span>
-                    ),
-                  )}
+                {activeTitleLines.map(
+                  (
+                    word,
+                    index,
+                  ) => (
+                    <span
+                      key={`${activePanel.id}-${word}-${index}`}
+                      className={[
+                        "block",
+                        index >
+                        Math.floor(
+                          activeTitleLines.length /
+                            2,
+                        )
+                          ? "text-white/[0.48]"
+                          : "",
+                      ].join(
+                        " ",
+                      )}
+                    >
+                      {word}
+                    </span>
+                  ),
+                )}
               </h1>
 
               <div
@@ -1030,7 +1144,9 @@ export default function HomeHero({
                     `${GOLD_LIGHT}a2`,
                 }}
               >
-                {activePanel.eyebrow}
+                {
+                  activePanel.eyebrow
+                }
               </span>
 
               <span
@@ -1042,14 +1158,21 @@ export default function HomeHero({
                 }}
               />
 
-              <span className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/[0.18]">
-                {activePanel.number} /{" "}
-                {activePanel.tab}
+              <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.18]">
+                {
+                  activePanel.number
+                }{" "}
+                /{" "}
+                {
+                  activePanel.tab
+                }
               </span>
             </div>
 
             <p className="mt-6 max-w-[570px] text-[12px] leading-7 text-white/[0.39] sm:text-[13px]">
-              {activePanel.description}
+              {
+                activePanel.description
+              }
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
@@ -1095,7 +1218,7 @@ export default function HomeHero({
               </Link>
 
               <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.14]">
-                {projectTitle
+                {isCurrentProduction
                   ? locale ===
                     "en"
                     ? "SELECTED PRODUCTION"
@@ -1261,6 +1384,7 @@ export default function HomeHero({
 
               {!reducedMotion ? (
                 <motion.span
+                  aria-hidden="true"
                   animate={{
                     y: [
                       0,
@@ -1275,8 +1399,10 @@ export default function HomeHero({
                   }}
                   transition={{
                     duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
+                    repeat:
+                      Infinity,
+                    ease:
+                      "easeInOut",
                   }}
                 >
                   <ArrowDown
@@ -1309,30 +1435,39 @@ export default function HomeHero({
           </div>
 
           <div className="mt-3 h-px w-full overflow-hidden bg-white/[0.045]">
-            <motion.span
-              key={
-                activePanel.id
-              }
-              initial={{
-                width: "0%",
-              }}
-              animate={{
-                width: "100%",
-              }}
-              transition={{
-                duration:
-                  reducedMotion
-                    ? 0
-                    : AUTO_ROTATE_MS /
-                      1000,
-                ease: "linear",
-              }}
-              className="block h-px"
-              style={{
-                background:
-                  `linear-gradient(90deg, transparent, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
-              }}
-            />
+            {rotationActive ? (
+              <motion.span
+                key={
+                  activePanel.id
+                }
+                initial={{
+                  width: "0%",
+                }}
+                animate={{
+                  width: "100%",
+                }}
+                transition={{
+                  duration:
+                    AUTO_ROTATE_MS /
+                    1000,
+                  ease:
+                    "linear",
+                }}
+                className="block h-px"
+                style={{
+                  background:
+                    `linear-gradient(90deg, transparent, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
+                }}
+              />
+            ) : (
+              <span
+                className="block h-px w-full"
+                style={{
+                  background:
+                    `linear-gradient(90deg, transparent, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -1343,12 +1478,16 @@ export default function HomeHero({
               : "Hero sekcije"
           }
           onMouseEnter={() =>
-            setNavHovered(true)
+            setNavHovered(
+              true,
+            )
           }
           onMouseLeave={() =>
-            setNavHovered(false)
+            setNavHovered(
+              false,
+            )
           }
-          className="absolute bottom-16 right-6 z-50 hidden w-[292px] isolate lg:right-12 lg:block xl:right-16"
+          className="absolute bottom-16 right-6 z-50 isolate hidden w-[292px] lg:right-12 lg:block xl:right-16"
         >
           <div className="relative z-10 border border-white/[0.10] bg-[#050505] px-5 pb-4 pt-5 shadow-[0_22px_70px_rgba(0,0,0,.52)]">
             <div className="mb-4 flex items-center justify-between">
@@ -1413,7 +1552,9 @@ export default function HomeHero({
                           "click",
                         )
                       }
-                      aria-pressed={active}
+                      aria-pressed={
+                        active
+                      }
                       className={[
                         "group relative flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
                         active
@@ -1438,6 +1579,7 @@ export default function HomeHero({
                       </span>
 
                       <span
+                        aria-hidden="true"
                         className="h-px transition-[width,background-color] duration-150"
                         style={{
                           width:

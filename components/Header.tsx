@@ -5,17 +5,17 @@ import {
   memo,
   useCallback,
   useEffect,
-  useRef,
   useState,
   type MouseEvent,
   type ReactNode,
 } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  usePathname,
+  useRouter,
+} from "next/navigation";
 import {
   motion,
-  useMotionValue,
   useReducedMotion,
-  useTransform,
 } from "framer-motion";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -26,30 +26,48 @@ import {
 } from "@/data/translations";
 
 /* ==========================================================================
-   UMBRA STUDIO — HEADER
+   UMBRA STUDIO
+   HEADER
+   V5 FINAL SYSTEM
+
    Premium / Cinematic / Editorial / Quiet Motion
 
    SYSTEM CONTRACT
    --------------------------------------------------------------------------
    Header is an interface consumer, not an independent motion engine.
 
-   Source of truth:
+   Source of truth
+   --------------------------------------------------------------------------
    - UmbraMotionSystem  -> "umbra:motion"
    - UmbraSceneDirector -> "umbra:scene-change"
+   - URL pathname        -> route / locale truth
 
-   Header owns:
+   Header owns
+   --------------------------------------------------------------------------
    - navigation UI
-   - active navigation state
    - mobile menu state
-   - programmatic section scrolling
    - local clock
+   - navigation intent
+   - route-aware active state
 
-   Header does NOT own:
+   Header does NOT own
+   --------------------------------------------------------------------------
    - native scroll tracking
    - scene calculation
-   - global cursor
-   - page atmosphere
+   - independent scroll animation loop
    - scrollbar geometry
+   - page atmosphere
+
+   V5 scene contract
+   --------------------------------------------------------------------------
+   Homepage:
+   hero / project / characters / studio / watch
+
+   Deep routes:
+   projects-archive / project-detail
+   characters-archive / character-dossier
+
+   Deep-route scenes resolve to the corresponding global navigation item.
    ========================================================================== */
 
 const GOLD = "#c7a96b";
@@ -64,11 +82,8 @@ const YOUTUBE_URL =
 const TIKTOK_URL =
   "https://www.tiktok.com/@umbrastud";
 
-const SCROLL_DURATION = 820;
-
-/* ==========================================================================
-   TYPES
-   ========================================================================== */
+const YOUTUBE_SUBSCRIBE_URL =
+  "https://www.youtube.com/@umbrastud?sub_confirmation=1";
 
 type NavItemKey =
   | "home"
@@ -81,7 +96,11 @@ type SceneKey =
   | "project"
   | "characters"
   | "studio"
-  | "watch";
+  | "watch"
+  | "projects-archive"
+  | "project-detail"
+  | "characters-archive"
+  | "character-dossier";
 
 type MotionDirection =
   | "up"
@@ -160,6 +179,10 @@ const SCENE_TO_NAV: Record<
   characters: "characters",
   studio: "studio",
   watch: "studio",
+  "projects-archive": "projects",
+  "project-detail": "projects",
+  "characters-archive": "characters",
+  "character-dossier": "characters",
 };
 
 /* ==========================================================================
@@ -195,15 +218,19 @@ function getActiveRoute(
   }
 
   if (
-    pathname.startsWith("/serije") ||
-    pathname.startsWith("/en/projects")
+    pathname === "/serije" ||
+    pathname.startsWith("/serije/") ||
+    pathname === "/en/projects" ||
+    pathname.startsWith("/en/projects/")
   ) {
     return "projects";
   }
 
   if (
-    pathname.startsWith("/likovi") ||
-    pathname.startsWith("/en/characters")
+    pathname === "/likovi" ||
+    pathname.startsWith("/likovi/") ||
+    pathname === "/en/characters" ||
+    pathname.startsWith("/en/characters/")
   ) {
     return "characters";
   }
@@ -257,26 +284,19 @@ function getSceneForNavItem(
   switch (item) {
     case "home":
       return "hero";
+
     case "projects":
       return "project";
+
     case "characters":
       return "characters";
+
     case "studio":
       return "studio";
+
     default:
       return null;
   }
-}
-
-function clamp(
-  value: number,
-  min = 0,
-  max = 1,
-): number {
-  return Math.min(
-    max,
-    Math.max(min, value),
-  );
 }
 
 function homeTarget(
@@ -309,7 +329,9 @@ function homeTarget(
 }
 
 function getViewerLocation(): string {
-  if (typeof window === "undefined") {
+  if (
+    typeof window === "undefined"
+  ) {
     return "LOCAL";
   }
 
@@ -322,42 +344,72 @@ function getViewerLocation(): string {
     string,
     string
   > = {
-    "Europe/Vienna": "VIENNA / AT",
-    "Europe/Belgrade": "BELGRADE / RS",
-    "Europe/Budapest": "BUDAPEST / HU",
-    "Europe/Berlin": "BERLIN / DE",
-    "Europe/Prague": "PRAGUE / CZ",
-    "Europe/Bratislava": "BRATISLAVA / SK",
-    "Europe/Ljubljana": "LJUBLJANA / SI",
-    "Europe/Zagreb": "ZAGREB / HR",
-    "Europe/Sarajevo": "SARAJEVO / BA",
-    "Europe/Paris": "PARIS / FR",
-    "Europe/Rome": "ROME / IT",
-    "Europe/London": "LONDON / UK",
-    "Europe/Amsterdam": "AMSTERDAM / NL",
-    "Europe/Brussels": "BRUSSELS / BE",
-    "Europe/Madrid": "MADRID / ES",
-    "Europe/Lisbon": "LISBON / PT",
-    "Europe/Stockholm": "STOCKHOLM / SE",
-    "Europe/Oslo": "OSLO / NO",
-    "Europe/Copenhagen": "COPENHAGEN / DK",
-    "Europe/Warsaw": "WARSAW / PL",
-    "Europe/Bucharest": "BUCHAREST / RO",
-    "Europe/Athens": "ATHENS / GR",
-    "America/New_York": "NEW YORK / US",
-    "America/Chicago": "CHICAGO / US",
-    "America/Denver": "DENVER / US",
+    "Europe/Vienna":
+      "VIENNA / AT",
+    "Europe/Belgrade":
+      "BELGRADE / RS",
+    "Europe/Budapest":
+      "BUDAPEST / HU",
+    "Europe/Berlin":
+      "BERLIN / DE",
+    "Europe/Prague":
+      "PRAGUE / CZ",
+    "Europe/Bratislava":
+      "BRATISLAVA / SK",
+    "Europe/Ljubljana":
+      "LJUBLJANA / SI",
+    "Europe/Zagreb":
+      "ZAGREB / HR",
+    "Europe/Sarajevo":
+      "SARAJEVO / BA",
+    "Europe/Paris":
+      "PARIS / FR",
+    "Europe/Rome":
+      "ROME / IT",
+    "Europe/London":
+      "LONDON / UK",
+    "Europe/Amsterdam":
+      "AMSTERDAM / NL",
+    "Europe/Brussels":
+      "BRUSSELS / BE",
+    "Europe/Madrid":
+      "MADRID / ES",
+    "Europe/Lisbon":
+      "LISBON / PT",
+    "Europe/Stockholm":
+      "STOCKHOLM / SE",
+    "Europe/Oslo":
+      "OSLO / NO",
+    "Europe/Copenhagen":
+      "COPENHAGEN / DK",
+    "Europe/Warsaw":
+      "WARSAW / PL",
+    "Europe/Bucharest":
+      "BUCHAREST / RO",
+    "Europe/Athens":
+      "ATHENS / GR",
+    "America/New_York":
+      "NEW YORK / US",
+    "America/Chicago":
+      "CHICAGO / US",
+    "America/Denver":
+      "DENVER / US",
     "America/Los_Angeles":
       "LOS ANGELES / US",
-    "America/Toronto": "TORONTO / CA",
+    "America/Toronto":
+      "TORONTO / CA",
     "America/Vancouver":
       "VANCOUVER / CA",
-    "Asia/Tokyo": "TOKYO / JP",
-    "Asia/Seoul": "SEOUL / KR",
+    "Asia/Tokyo":
+      "TOKYO / JP",
+    "Asia/Seoul":
+      "SEOUL / KR",
     "Asia/Singapore":
       "SINGAPORE / SG",
-    "Asia/Dubai": "DUBAI / AE",
-    "Asia/Kolkata": "DELHI / IN",
+    "Asia/Dubai":
+      "DUBAI / AE",
+    "Asia/Kolkata":
+      "DELHI / IN",
     "Australia/Sydney":
       "SYDNEY / AU",
   };
@@ -369,7 +421,10 @@ function getViewerLocation(): string {
         /^(Europe|America|Asia|Australia)\//,
         "",
       )
-      .replace(/_/g, " / ")
+      .replace(
+        /_/g,
+        " / ",
+      )
       .toUpperCase()
   );
 }
@@ -534,248 +589,270 @@ function YoutubeMark() {
    CLOCK
    ========================================================================== */
 
-const UmbraClock = memo(function UmbraClock({
-  locale,
-}: {
-  locale: Locale;
-}) {
-  const reducedMotion =
-    useReducedMotion() ?? false;
+const UmbraClock = memo(
+  function UmbraClock({
+    locale,
+    mobile = false,
+  }: {
+    locale: Locale;
+    mobile?: boolean;
+  }) {
+    const reducedMotion =
+      useReducedMotion() ?? false;
 
-  const [time, setTime] =
-    useState("--:--");
+    const [time, setTime] =
+      useState("--:--");
 
-  const [date, setDate] =
-    useState("-- ---");
+    const [date, setDate] =
+      useState("-- ---");
 
-  const [location, setLocation] =
-    useState("LOCAL");
+    const [location, setLocation] =
+      useState("LOCAL");
 
-  const [secondPulse, setSecondPulse] =
-    useState(false);
+    const [secondPulse, setSecondPulse] =
+      useState(false);
 
-  const pulseTimer =
-    useRef<number | null>(null);
-
-  useEffect(() => {
-    const formatterLocale =
-      locale === "en"
-        ? "en-GB"
-        : "sr-Latn-RS";
-
-    const timeFormatter =
-      new Intl.DateTimeFormat(
-        formatterLocale,
-        {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        },
-      );
-
-    const dateFormatter =
-      new Intl.DateTimeFormat(
-        formatterLocale,
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        },
-      );
-
-    setLocation(
-      getViewerLocation(),
-    );
-
-    const updateClock = () => {
-      const now = new Date();
-
-      setTime(
-        timeFormatter.format(now),
-      );
-
-      setDate(
-        dateFormatter
-          .format(now)
-          .replace(/\./g, "")
-          .toUpperCase(),
-      );
-
-      setSecondPulse(true);
-
-      if (
-        pulseTimer.current !== null
-      ) {
-        window.clearTimeout(
-          pulseTimer.current,
-        );
-      }
-
-      pulseTimer.current =
-        window.setTimeout(() => {
-          setSecondPulse(false);
-          pulseTimer.current = null;
-        }, 180);
-    };
-
-    updateClock();
-
-    const timer =
-      window.setInterval(
-        updateClock,
-        1000,
-      );
-
-    return () => {
-      window.clearInterval(
-        timer,
-      );
-
-      if (
-        pulseTimer.current !== null
-      ) {
-        window.clearTimeout(
-          pulseTimer.current,
-        );
-        pulseTimer.current = null;
-      }
-    };
-  }, [locale]);
-
-  return (
-    <div
-      className="hidden shrink-0 xl:flex"
-      aria-label={
+    useEffect(() => {
+      const formatterLocale =
         locale === "en"
-          ? "Local time, date and viewer location"
-          : "Lokalno vreme, datum i lokacija gledaoca"
-      }
-    >
-      <div className="relative flex min-w-[184px] items-start">
-        <div className="relative mr-3 mt-[5px] flex h-7 w-[7px] items-start justify-center">
-          <motion.span
-            aria-hidden="true"
-            animate={
-              reducedMotion
-                ? {
-                    opacity: 0.85,
-                  }
-                : {
-                    opacity:
-                      secondPulse
-                        ? [0.5, 1]
-                        : 0.75,
-                  }
-            }
-            transition={{
-              duration:
-                reducedMotion
-                  ? 0
-                  : 0.18,
-              ease: "easeOut",
-            }}
-            className="block h-[5px] w-[5px] rounded-full"
-            style={{
-              background:
-                GOLD_LIGHT,
-              boxShadow:
-                `0 0 8px ${GOLD_LIGHT}54`,
-            }}
-          />
+          ? "en-GB"
+          : "sr-Latn-RS";
 
-          <span
-            aria-hidden="true"
-            className="absolute left-1/2 top-[10px] h-[20px] w-px -translate-x-1/2"
-            style={{
-              background:
-                `linear-gradient(
+      const timeFormatter =
+        new Intl.DateTimeFormat(
+          formatterLocale,
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          },
+        );
+
+      const dateFormatter =
+        new Intl.DateTimeFormat(
+          formatterLocale,
+          {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          },
+        );
+
+      const locationTimer =
+        window.setTimeout(() => {
+          setLocation(
+            getViewerLocation(),
+          );
+        }, 0);
+
+      let pulseTimer:
+        | number
+        | null = null;
+
+      const updateClock = () => {
+        const now =
+          new Date();
+
+        setTime(
+          timeFormatter.format(now),
+        );
+
+        setDate(
+          dateFormatter
+            .format(now)
+            .replace(
+              /\./g,
+              "",
+            )
+            .toUpperCase(),
+        );
+
+        setSecondPulse(true);
+
+        if (
+          pulseTimer !==
+          null
+        ) {
+          window.clearTimeout(
+            pulseTimer,
+          );
+        }
+
+        pulseTimer =
+          window.setTimeout(() => {
+            setSecondPulse(false);
+            pulseTimer = null;
+          }, 180);
+      };
+
+      updateClock();
+
+      const timer =
+        window.setInterval(
+          updateClock,
+          1000,
+        );
+
+      return () => {
+        window.clearInterval(
+          timer,
+        );
+
+        window.clearTimeout(
+          locationTimer,
+        );
+
+        if (
+          pulseTimer !==
+          null
+        ) {
+          window.clearTimeout(
+            pulseTimer,
+          );
+        }
+      };
+    }, [locale]);
+
+    return (
+      <div
+        className={
+          mobile
+            ? "flex w-full items-start"
+            : "hidden shrink-0 xl:flex"
+        }
+        aria-label={
+          locale === "en"
+            ? "Local time, date and viewer location"
+            : "Lokalno vreme, datum i lokacija gledaoca"
+        }
+      >
+        <div className="relative flex min-w-[184px] items-start">
+          <div className="relative mr-3 mt-[5px] flex h-7 w-[7px] items-start justify-center">
+            <motion.span
+              aria-hidden="true"
+              animate={
+                reducedMotion
+                  ? {
+                      opacity: 0.85,
+                    }
+                  : {
+                      opacity:
+                        secondPulse
+                          ? [0.5, 1]
+                          : 0.75,
+                    }
+              }
+              transition={{
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.18,
+                ease: "easeOut",
+              }}
+              className="block h-[5px] w-[5px] rounded-full"
+              style={{
+                background:
+                  GOLD_LIGHT,
+                boxShadow:
+                  `0 0 8px ${GOLD_LIGHT}54`,
+              }}
+            />
+
+            <span
+              aria-hidden="true"
+              className="absolute left-1/2 top-[10px] h-[20px] w-px -translate-x-1/2"
+              style={{
+                background: `linear-gradient(
                   180deg,
                   ${GOLD}42,
                   transparent
                 )`,
-            }}
-          />
-        </div>
-
-        <div className="flex min-w-0 flex-col leading-none">
-          <div className="flex items-center gap-2">
-            <span
-              className="font-mono text-[7px] font-medium uppercase tracking-[0.28em]"
-              style={{
-                color:
-                  `${GOLD_LIGHT}88`,
-              }}
-            >
-              {locale === "en"
-                ? "LOCAL TIME"
-                : "LOKALNO VREME"}
-            </span>
-
-            <span
-              aria-hidden="true"
-              className="h-px w-5"
-              style={{
-                background:
-                  `linear-gradient(
-                    90deg,
-                    ${GOLD}32,
-                    transparent
-                  )`,
               }}
             />
           </div>
 
-          <motion.span
-            animate={
-              reducedMotion
-                ? undefined
-                : {
-                    opacity:
-                      secondPulse
-                        ? 0.78
-                        : 1,
-                  }
-            }
-            transition={{
-              duration: 0.16,
-            }}
-            className="mt-[5px] block font-mono text-[18px] font-semibold leading-none tracking-[0.11em]"
-            style={{
-              color:
-                `${GOLD_LIGHT}e6`,
-            }}
-          >
-            {time}
-          </motion.span>
+          <div className="flex min-w-0 flex-col leading-none">
+            <div className="flex items-center gap-2">
+              <span
+                className="font-mono text-[7px] font-medium uppercase tracking-[0.28em]"
+                style={{
+                  color:
+                    `${GOLD_LIGHT}88`,
+                }}
+              >
+                {locale === "en"
+                  ? "LOCAL TIME"
+                  : "LOKALNO VREME"}
+              </span>
 
-          <span className="mt-[6px] font-mono text-[7px] uppercase tracking-[0.24em] text-white/[0.68]">
-            {date}
-          </span>
+              <span
+                aria-hidden="true"
+                className="h-px w-5"
+                style={{
+                  background: `linear-gradient(
+                    90deg,
+                    ${GOLD}32,
+                    transparent
+                  )`,
+                }}
+              />
+            </div>
 
-          <span className="mt-[5px] font-mono text-[7px] uppercase tracking-[0.15em] text-white/[0.68]">
-            {location}
-          </span>
+            <motion.span
+              animate={
+                reducedMotion
+                  ? undefined
+                  : {
+                      opacity:
+                        secondPulse
+                          ? 0.78
+                          : 1,
+                    }
+              }
+              transition={{
+                duration: 0.16,
+              }}
+              className="mt-[5px] block font-mono text-[18px] font-semibold leading-none tracking-[0.11em]"
+              style={{
+                color:
+                  `${GOLD_LIGHT}e6`,
+              }}
+            >
+              {time}
+            </motion.span>
+
+            <span className="mt-[6px] font-mono text-[7px] uppercase tracking-[0.24em] text-white/[0.68]">
+              {date}
+            </span>
+
+            <span className="mt-[5px] font-mono text-[7px] uppercase tracking-[0.15em] text-white/[0.68]">
+              {location}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <span
-        aria-hidden="true"
-        className="ml-4 h-10 w-px"
-        style={{
-          background:
-            `linear-gradient(
+        <span
+          aria-hidden="true"
+          className={
+            mobile
+              ? "hidden"
+              : "ml-4 h-10 w-px"
+          }
+          style={{
+            background: `linear-gradient(
               180deg,
               transparent,
               ${GOLD}30,
               ${GOLD_LIGHT}18,
               transparent
             )`,
-        }}
-      />
-    </div>
-  );
-});
+          }}
+        />
+      </div>
+    );
+  },
+);
 
 /* ==========================================================================
    SOCIAL LINK
@@ -796,18 +873,17 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="group relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/[0.10] bg-white/[0.012] text-white/[0.52] transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.28] hover:bg-white/[0.025] hover:text-[#ead39a]"
+      className="group relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/[0.10] bg-white/[0.012] text-white/[0.52] transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.28] hover:bg-white/[0.025] hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/50"
     >
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
-          background:
-            `radial-gradient(
-              circle at 50% 0%,
-              ${GOLD_LIGHT}10,
-              transparent 68%
-            )`,
+          background: `radial-gradient(
+            circle at 50% 0%,
+            ${GOLD_LIGHT}10,
+            transparent 68%
+          )`,
         }}
       />
 
@@ -843,7 +919,9 @@ function DesktopNavItem({
   href: string;
   active: boolean;
   onClick: (
-    event: MouseEvent<HTMLAnchorElement>,
+    event: MouseEvent<
+      HTMLAnchorElement
+    >,
     item: NavItem,
   ) => void;
 }) {
@@ -895,7 +973,7 @@ function DesktopNavItem({
           background:
             GOLD_LIGHT,
           boxShadow:
-            `0 0 7px ${GOLD}55`,
+            `0 0 7px ${GOLD_LIGHT}55`,
         }}
       />
 
@@ -917,15 +995,15 @@ function DesktopSubscribe({
 }) {
   return (
     <a
-      href="https://www.youtube.com/@umbrastud?sub_confirmation=1"
+      href={YOUTUBE_SUBSCRIBE_URL}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="group relative flex h-11 items-center gap-3 overflow-hidden border border-[#c7a96b72] bg-[#c7a96b]/[0.025] px-5 text-[9px] font-semibold uppercase tracking-[0.20em] text-[#f7f2e8] transition-[border-color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.88] hover:bg-[#c7a96b0a]"
+      className="group relative flex h-11 items-center gap-3 overflow-hidden border border-[#c7a96b72] bg-[#c7a96b]/[0.025] px-5 text-[9px] font-semibold uppercase tracking-[0.20em] text-[#f7f2e8] transition-[border-color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.88] hover:bg-[#c7a96b]/[0.06] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
     >
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-[-50%] left-[-35%] w-[22%] skew-x-[-20deg] bg-gradient-to-r from-transparent via-[#ead39a]/[0.28] to-transparent opacity-0 blur-[2px] transition-[left,opacity] duration-700 ease-out group-hover:left-[125%] group-hover:opacity-100"
+        className="pointer-events-none absolute inset-y-[-50%] left-0 w-[22%] -translate-x-[170%] skew-x-[-20deg] bg-gradient-to-r from-transparent via-[#ead39a]/[0.22] to-transparent opacity-0 transition-[transform,opacity] duration-700 ease-out group-hover:translate-x-[620%] group-hover:opacity-100"
       />
 
       <span
@@ -949,9 +1027,7 @@ function DesktopSubscribe({
       </span>
 
       <span className="relative z-10 text-[#ead39a] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-        <ArrowUpRight
-          size={12}
-        />
+        <ArrowUpRight size={12} />
       </span>
     </a>
   );
@@ -973,7 +1049,9 @@ function MobileNavItem({
   href: string;
   active: boolean;
   onClick: (
-    event: MouseEvent<HTMLAnchorElement>,
+    event: MouseEvent<
+      HTMLAnchorElement
+    >,
     item: NavItem,
   ) => void;
 }) {
@@ -1013,9 +1091,7 @@ function MobileNavItem({
             : "rgba(255,255,255,.24)",
         }}
       >
-        <ArrowUpRight
-          size={13}
-        />
+        <ArrowUpRight size={13} />
       </span>
     </a>
   );
@@ -1025,43 +1101,7 @@ function MobileNavItem({
    PROGRESS FRAME
    ========================================================================== */
 
-function ScrollProgressFrame({
-  progress,
-}: {
-  progress: ReturnType<typeof useMotionValue<number>>;
-}) {
-  const top = useTransform(
-    progress,
-    (value) => clamp(value / 0.25),
-  );
-
-  const right = useTransform(
-    progress,
-    (value) =>
-      clamp(
-        (value - 0.25) /
-          0.25,
-      ),
-  );
-
-  const bottom = useTransform(
-    progress,
-    (value) =>
-      clamp(
-        (value - 0.5) /
-          0.25,
-      ),
-  );
-
-  const left = useTransform(
-    progress,
-    (value) =>
-      clamp(
-        (value - 0.75) /
-          0.25,
-      ),
-  );
-
+function ScrollProgressFrame() {
   return (
     <div
       aria-hidden="true"
@@ -1070,64 +1110,88 @@ function ScrollProgressFrame({
       <span
         className="absolute left-0 right-0 top-0 h-px"
         style={{
-          background: `${GOLD}24`,
+          background:
+            `${GOLD}24`,
         }}
       />
 
       <span
         className="absolute bottom-0 left-0 right-0 h-px"
         style={{
-          background: `${GOLD}20`,
+          background:
+            `${GOLD}20`,
         }}
       />
 
       <span
         className="absolute bottom-0 left-0 top-0 w-px"
         style={{
-          background: `${GOLD}20`,
+          background:
+            `${GOLD}20`,
         }}
       />
 
       <span
         className="absolute bottom-0 right-0 top-0 w-px"
         style={{
-          background: `${GOLD}24`,
+          background:
+            `${GOLD}24`,
         }}
       />
 
-      <motion.span
-        className="absolute left-0 top-0 h-px origin-left"
+      <span
+        className="absolute left-0 top-0 h-px w-full origin-left"
         style={{
-          width: "100%",
-          scaleX: top,
-          background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD})`,
+          transform:
+            "scaleX(clamp(0, calc(var(--umbra-scroll-progress) / 0.25), 1))",
+          background:
+            `linear-gradient(
+              90deg,
+              ${GOLD_LIGHT},
+              ${GOLD}
+            )`,
         }}
       />
 
-      <motion.span
-        className="absolute right-0 top-0 w-px origin-top"
+      <span
+        className="absolute right-0 top-0 h-full w-px origin-top"
         style={{
-          height: "100%",
-          scaleY: right,
-          background: `linear-gradient(180deg, ${GOLD_LIGHT}, ${GOLD})`,
+          transform:
+            "scaleY(clamp(0, calc((var(--umbra-scroll-progress) - 0.25) / 0.25), 1))",
+          background:
+            `linear-gradient(
+              180deg,
+              ${GOLD_LIGHT},
+              ${GOLD}
+            )`,
         }}
       />
 
-      <motion.span
-        className="absolute bottom-0 right-0 h-px origin-right"
+      <span
+        className="absolute bottom-0 right-0 h-px w-full origin-right"
         style={{
-          width: "100%",
-          scaleX: bottom,
-          background: `linear-gradient(270deg, ${GOLD_LIGHT}, ${GOLD})`,
+          transform:
+            "scaleX(clamp(0, calc((var(--umbra-scroll-progress) - 0.5) / 0.25), 1))",
+          background:
+            `linear-gradient(
+              270deg,
+              ${GOLD_LIGHT},
+              ${GOLD}
+            )`,
         }}
       />
 
-      <motion.span
-        className="absolute bottom-0 left-0 w-px origin-bottom"
+      <span
+        className="absolute bottom-0 left-0 h-full w-px origin-bottom"
         style={{
-          height: "100%",
-          scaleY: left,
-          background: `linear-gradient(0deg, ${GOLD_LIGHT}, ${GOLD})`,
+          transform:
+            "scaleY(clamp(0, calc((var(--umbra-scroll-progress) - 0.75) / 0.25), 1))",
+          background:
+            `linear-gradient(
+              0deg,
+              ${GOLD_LIGHT},
+              ${GOLD}
+            )`,
         }}
       />
     </div>
@@ -1154,23 +1218,25 @@ export default function Header() {
   const translations =
     getTranslations(locale);
 
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
+  const [
+    mobileOpen,
+    setMobileOpen,
+  ] = useState(false);
 
-  const [scrolled, setScrolled] =
-    useState(false);
+  const [
+    scrolled,
+    setScrolled,
+  ] = useState(false);
 
-  const [scene, setScene] =
-    useState<SceneKey>("hero");
-
-  const progress =
-    useMotionValue(0);
-
-  const scrollAnimationRef =
-    useRef<number | null>(null);
-
-  const navigationSceneRef =
-    useRef<SceneKey | null>(null);
+  const [
+    scene,
+    setScene,
+  ] = useState<SceneKey>(
+    getInitialScene(
+      pathname,
+      locale,
+    ),
+  );
 
   const activeRoute =
     getActiveRoute(pathname);
@@ -1184,260 +1250,74 @@ export default function Header() {
       : activeRoute;
 
   /* ------------------------------------------------------------------------
-     CANCEL PROGRAMMATIC SCROLL
-     ------------------------------------------------------------------------ */
-
-  const cancelScrollAnimation =
-    useCallback(() => {
-      if (
-        scrollAnimationRef.current !==
-        null
-      ) {
-        window.cancelAnimationFrame(
-          scrollAnimationRef.current,
-        );
-
-        scrollAnimationRef.current =
-          null;
-      }
-
-      navigationSceneRef.current =
-        null;
-    }, []);
-
-  /* ------------------------------------------------------------------------
-     CLEANUP
-     ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    return () => {
-      cancelScrollAnimation();
-    };
-  }, [
-    cancelScrollAnimation,
-  ]);
-
-  /* ------------------------------------------------------------------------
-     USER INTERRUPTION
-     ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    const stopOnWheel = () => {
-      cancelScrollAnimation();
-    };
-
-    const stopOnTouch = () => {
-      cancelScrollAnimation();
-    };
-
-    const stopOnPointer = () => {
-      cancelScrollAnimation();
-    };
-
-    window.addEventListener(
-      "wheel",
-      stopOnWheel,
-      { passive: true },
-    );
-
-    window.addEventListener(
-      "touchstart",
-      stopOnTouch,
-      { passive: true },
-    );
-
-    window.addEventListener(
-      "pointerdown",
-      stopOnPointer,
-      { passive: true },
-    );
-
-    return () => {
-      window.removeEventListener(
-        "wheel",
-        stopOnWheel,
-      );
-
-      window.removeEventListener(
-        "touchstart",
-        stopOnTouch,
-      );
-
-      window.removeEventListener(
-        "pointerdown",
-        stopOnPointer,
-      );
-    };
-  }, [
-    cancelScrollAnimation,
-  ]);
-
-  /* ------------------------------------------------------------------------
      GLOBAL MOTION
      ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    const handleMotion = (
-      event: Event,
-    ) => {
-      const detail =
-        (
-          event as CustomEvent<MotionDetail>
-        ).detail;
+    const handleMotion =
+      (event: Event) => {
+        const detail =
+          (
+            event as CustomEvent<MotionDetail>
+          ).detail;
 
-      let nextProgress =
-        typeof detail?.progress ===
-        "number"
-          ? detail.progress
-          : NaN;
+        const scrollY =
+          typeof detail?.scrollY ===
+          "number"
+            ? detail.scrollY
+            : window.scrollY;
 
-      if (
-        !Number.isFinite(
-          nextProgress,
-        )
-      ) {
-        const root =
-          document.documentElement;
+        const nextScrolled =
+          scrollY > 24;
 
-        const maxScroll =
-          Math.max(
-            0,
-            root.scrollHeight -
-              window.innerHeight,
-          );
-
-        nextProgress =
-          maxScroll > 0
-            ? window.scrollY /
-              maxScroll
-            : 0;
-      }
-
-      const next =
-        clamp(nextProgress);
-
-      if (
-        Math.abs(
-          progress.get() - next,
-        ) >= 0.001
-      ) {
-        progress.set(next);
-      }
-
-      const scrollY =
-        typeof detail?.scrollY ===
-        "number"
-          ? detail.scrollY
-          : window.scrollY;
-
-      setScrolled(
-        (current) => {
-          const nextScrolled =
-            scrollY > 24;
-
-          return current ===
+        setScrolled(
+          (current) =>
+            current ===
             nextScrolled
-            ? current
-            : nextScrolled;
-        },
-      );
-    };
-
-    const initialise = () => {
-      const root =
-        document.documentElement;
-
-      const maxScroll =
-        Math.max(
-          0,
-          root.scrollHeight -
-            window.innerHeight,
+              ? current
+              : nextScrolled,
         );
-
-      const initialProgress =
-        maxScroll > 0
-          ? window.scrollY /
-            maxScroll
-          : 0;
-
-      progress.set(
-        clamp(
-          initialProgress,
-        ),
-      );
-
-      setScrolled(
-        window.scrollY > 24,
-      );
-    };
+      };
 
     window.addEventListener(
       "umbra:motion",
       handleMotion,
     );
 
-    window.addEventListener(
-      "resize",
-      initialise,
-      { passive: true },
-    );
-
-    initialise();
-
     return () => {
       window.removeEventListener(
         "umbra:motion",
         handleMotion,
       );
-
-      window.removeEventListener(
-        "resize",
-        initialise,
-      );
     };
-  }, [progress]);
+  }, []);
 
   /* ------------------------------------------------------------------------
      GLOBAL SCENE SYNC
      ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    const onSceneChange = (
-      event: Event,
-    ) => {
-      const detail =
-        (
-          event as CustomEvent<SceneChangeDetail>
-        ).detail;
+    const onSceneChange =
+      (event: Event) => {
+        const detail =
+          (
+            event as CustomEvent<SceneChangeDetail>
+          ).detail;
 
-      if (!detail?.id) {
-        return;
-      }
+        if (
+          !detail?.id
+        ) {
+          return;
+        }
 
-      const pending =
-        navigationSceneRef.current;
-
-      if (
-        pending &&
-        pending !== detail.id
-      ) {
-        return;
-      }
-
-      if (
-        pending === detail.id
-      ) {
-        navigationSceneRef.current =
-          null;
-      }
-
-      setScene(
-        (current) =>
-          current === detail.id
-            ? current
-            : detail.id!,
-      );
-    };
+        setScene(
+          (current) =>
+            current ===
+            detail.id
+              ? current
+              : detail.id!,
+        );
+      };
 
     window.addEventListener(
       "umbra:scene-change",
@@ -1457,18 +1337,21 @@ export default function Header() {
      ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    setMobileOpen(false);
+    const frame =
+      window.requestAnimationFrame(
+        () => {
+          setMobileOpen(false);
+        },
+      );
 
-    navigationSceneRef.current =
-      null;
-
-    setScene("hero");
-
-    cancelScrollAnimation();
+    return () => {
+      window.cancelAnimationFrame(
+        frame,
+      );
+    };
   }, [
     pathname,
     locale,
-    cancelScrollAnimation,
   ]);
 
   /* ------------------------------------------------------------------------
@@ -1486,15 +1369,17 @@ export default function Header() {
     document.body.style.overflow =
       "hidden";
 
-    const onKeyDown = (
-      event: KeyboardEvent,
-    ) => {
-      if (
-        event.key === "Escape"
-      ) {
-        setMobileOpen(false);
-      }
-    };
+    const onKeyDown =
+      (
+        event: KeyboardEvent,
+      ) => {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          setMobileOpen(false);
+        }
+      };
 
     window.addEventListener(
       "keydown",
@@ -1518,121 +1403,22 @@ export default function Header() {
 
   const smoothScrollTo =
     useCallback(
-      (
-        targetY: number,
-        duration = SCROLL_DURATION,
-      ) => {
-        if (
-          scrollAnimationRef.current !==
-          null
-        ) {
-          window.cancelAnimationFrame(
-            scrollAnimationRef.current,
+      (targetY: number) => {
+        const safeTarget =
+          Math.max(
+            0,
+            targetY,
           );
 
-          scrollAnimationRef.current =
-            null;
-        }
-
-        const startY =
-          window.scrollY;
-
-        const distance =
-          targetY - startY;
-
-        if (
-          Math.abs(distance) < 2
-        ) {
-          window.scrollTo({
-            top: targetY,
-            behavior: "auto",
-          });
-
-          return;
-        }
-
-        if (
-          window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-          ).matches
-        ) {
-          window.scrollTo({
-            top: targetY,
-            behavior: "auto",
-          });
-
-          return;
-        }
-
-        const startTime =
-          performance.now();
-
-        const easeInOutCubic = (
-          value: number,
-        ) =>
-          value < 0.5
-            ? 4 *
-              value *
-              value *
-              value
-            : 1 -
-              Math.pow(
-                -2 * value + 2,
-                3,
-              ) /
-                2;
-
-        const animate = (
-          currentTime: number,
-        ) => {
-          const elapsed =
-            currentTime -
-            startTime;
-
-          const current =
-            Math.min(
-              elapsed /
-                duration,
-              1,
-            );
-
-          const eased =
-            easeInOutCubic(
-              current,
-            );
-
-          window.scrollTo({
-            top:
-              startY +
-              distance *
-                eased,
-            behavior: "auto",
-          });
-
-          if (
-            current < 1
-          ) {
-            scrollAnimationRef.current =
-              window.requestAnimationFrame(
-                animate,
-              );
-          } else {
-            scrollAnimationRef.current =
-              null;
-
-            window.scrollTo({
-              top: targetY,
-              behavior: "auto",
-            });
-          }
-        };
-
-        scrollAnimationRef.current =
-          window.requestAnimationFrame(
-            animate,
-          );
+        window.scrollTo({
+          top: safeTarget,
+          behavior:
+            reducedMotion
+              ? "auto"
+              : "smooth",
+        });
       },
-      [],
+      [reducedMotion],
     );
 
   /* ------------------------------------------------------------------------
@@ -1671,11 +1457,6 @@ export default function Header() {
           headerHeight -
           18;
 
-        setScene(nextScene);
-
-        navigationSceneRef.current =
-          nextScene;
-
         setMobileOpen(false);
 
         window.history.replaceState(
@@ -1691,7 +1472,10 @@ export default function Header() {
           ),
         );
       },
-      [smoothScrollTo],
+      [
+        setMobileOpen,
+        smoothScrollTo,
+      ],
     );
 
   /* ------------------------------------------------------------------------
@@ -1701,7 +1485,9 @@ export default function Header() {
   const handleNavClick =
     useCallback(
       (
-        event: MouseEvent<HTMLAnchorElement>,
+        event: MouseEvent<
+          HTMLAnchorElement
+        >,
         item: NavItem,
       ) => {
         const home =
@@ -1723,18 +1509,14 @@ export default function Header() {
           );
 
         if (
-          item.key === "home"
+          item.key ===
+          "home"
         ) {
           event.preventDefault();
 
           setMobileOpen(false);
 
           if (home) {
-            setScene("hero");
-
-            navigationSceneRef.current =
-              "hero";
-
             window.history.replaceState(
               null,
               "",
@@ -1744,7 +1526,6 @@ export default function Header() {
             );
 
             smoothScrollTo(0);
-
             return;
           }
 
@@ -1784,15 +1565,14 @@ export default function Header() {
 
         setMobileOpen(false);
 
-        router.push(
-          route,
-        );
+        router.push(route);
       },
       [
         pathname,
         locale,
         router,
         scrollToSection,
+        setMobileOpen,
         smoothScrollTo,
       ],
     );
@@ -1806,39 +1586,34 @@ export default function Header() {
       ? "/en"
       : "/";
 
-  const handleBrandClick = (
-    event: MouseEvent<HTMLAnchorElement>,
-  ) => {
-    event.preventDefault();
+  const handleBrandClick =
+    (
+      event: MouseEvent<
+        HTMLAnchorElement
+      >,
+    ) => {
+      event.preventDefault();
 
-    setMobileOpen(false);
+      setMobileOpen(false);
 
-    if (
-      isHomePath(
-        pathname,
-        locale,
-      )
-    ) {
-      setScene("hero");
+      if (
+        isHomePath(
+          pathname,
+          locale,
+        )
+      ) {
+        window.history.replaceState(
+          null,
+          "",
+          brandHref,
+        );
 
-      navigationSceneRef.current =
-        "hero";
+        smoothScrollTo(0);
+        return;
+      }
 
-      window.history.replaceState(
-        null,
-        "",
-        brandHref,
-      );
-
-      smoothScrollTo(0);
-
-      return;
-    }
-
-    router.push(
-      brandHref,
-    );
-  };
+      router.push(brandHref);
+    };
 
   /* ------------------------------------------------------------------------
      RENDER
@@ -1863,25 +1638,20 @@ export default function Header() {
                 : "bg-[#060606]/96 shadow-[0_18px_55px_rgba(0,0,0,.30)]",
             ].join(" ")}
           >
-            <ScrollProgressFrame
-              progress={
-                progress
-              }
-            />
+            <ScrollProgressFrame />
 
             <span
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-px"
               style={{
-                background:
-                  `linear-gradient(
-                    90deg,
-                    transparent,
-                    ${GOLD}42,
-                    ${GOLD_LIGHT}22,
-                    ${GOLD}42,
-                    transparent
-                  )`,
+                background: `linear-gradient(
+                  90deg,
+                  transparent,
+                  ${GOLD}42,
+                  ${GOLD_LIGHT}22,
+                  ${GOLD}42,
+                  transparent
+                )`,
               }}
             />
 
@@ -1889,15 +1659,14 @@ export default function Header() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-px"
               style={{
-                background:
-                  `linear-gradient(
-                    90deg,
-                    transparent,
-                    rgba(255,255,255,.04) 25%,
-                    ${GOLD}15 50%,
-                    rgba(255,255,255,.04) 75%,
-                    transparent
-                  )`,
+                background: `linear-gradient(
+                  90deg,
+                  transparent,
+                  rgba(255,255,255,.04) 25%,
+                  ${GOLD}15 50%,
+                  rgba(255,255,255,.04) 75%,
+                  transparent
+                )`,
               }}
             />
 
@@ -1917,7 +1686,7 @@ export default function Header() {
                       ? "Umbra Studio home"
                       : "Umbra Studio početna"
                   }
-                  className="group flex min-w-0 items-center"
+                  className="group flex min-w-0 items-center outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                 >
                   <span className="relative block h-11 w-11 shrink-0 overflow-hidden border border-white/[0.14] bg-black/55 shadow-[0_8px_24px_rgba(0,0,0,.22)] sm:h-12 sm:w-12">
                     <Image
@@ -1925,7 +1694,7 @@ export default function Header() {
                       alt="Umbra Studio"
                       fill
                       priority
-                      sizes="40px"
+                      sizes="48px"
                       className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                     />
 
@@ -1977,9 +1746,7 @@ export default function Header() {
                         key={
                           item.key
                         }
-                        item={
-                          item
-                        }
+                        item={item}
                         label={
                           locale ===
                           "en"
@@ -2078,7 +1845,7 @@ export default function Header() {
                         !value,
                     )
                   }
-                  className="flex h-10 w-10 items-center justify-center border border-white/[0.1] bg-white/[0.018] text-white/[0.65] transition-[border-color,background-color,color,transform] duration-300 hover:border-[#ead39a]/[0.25] hover:bg-white/[0.035] hover:text-[#ead39a] active:scale-[0.97] lg:hidden"
+                  className="flex h-10 w-10 items-center justify-center border border-white/[0.1] bg-white/[0.018] text-white/[0.65] transition-[border-color,background-color,color,transform] duration-300 hover:border-[#ead39a]/[0.25] hover:bg-white/[0.035] hover:text-[#ead39a] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 lg:hidden"
                 >
                   {mobileOpen ? (
                     <CloseIcon />
@@ -2094,7 +1861,9 @@ export default function Header() {
               aria-hidden={
                 !mobileOpen
               }
-              inert={!mobileOpen}
+              inert={
+                !mobileOpen
+              }
               className={[
                 "grid overflow-hidden border-t border-white/[0.06] lg:hidden",
                 "transition-[grid-template-rows,opacity] duration-300",
@@ -2107,7 +1876,8 @@ export default function Header() {
                 <div className="px-4 pb-5 pt-2 sm:px-5">
                   <nav
                     aria-label={
-                      locale === "en"
+                      locale ===
+                      "en"
                         ? "Mobile navigation"
                         : "Mobilna navigacija"
                     }
@@ -2189,14 +1959,21 @@ export default function Header() {
                   </div>
 
                   <a
-                    href="https://www.youtube.com/@umbrastud?sub_confirmation=1"
+                    href={
+                      YOUTUBE_SUBSCRIBE_URL
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group relative mt-4 flex h-11 items-center justify-center gap-2 overflow-hidden border border-[#c7a96b55] text-[9px] font-semibold uppercase tracking-[0.22em] text-white/[0.9] transition-[border-color,background-color,color] duration-300 hover:border-[#ead39a] hover:bg-[#ead39a]/[0.035] hover:text-white"
+                    aria-label={
+                      translations
+                        .navigation
+                        .follow
+                    }
+                    className="group relative mt-4 flex h-11 items-center justify-center gap-2 overflow-hidden border border-[#c7a96b55] text-[9px] font-semibold uppercase tracking-[0.22em] text-white/[0.9] transition-[border-color,background-color,color] duration-300 hover:border-[#ead39a] hover:bg-[#ead39a]/[0.035] hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute inset-y-[-50%] left-[-40%] w-[24%] skew-x-[-20deg] bg-gradient-to-r from-transparent via-[#ead39a]/[0.18] to-transparent opacity-0 blur-[2px] transition-[left,opacity] duration-700 ease-out group-hover:left-[125%] group-hover:opacity-100"
+                      className="pointer-events-none absolute inset-y-[-50%] left-0 w-[24%] -translate-x-[170%] skew-x-[-20deg] bg-gradient-to-r from-transparent via-[#ead39a]/[0.18] to-transparent opacity-0 transition-[transform,opacity] duration-700 ease-out group-hover:translate-x-[520%] group-hover:opacity-100"
                     />
 
                     <YoutubeMark />
@@ -2210,17 +1987,14 @@ export default function Header() {
                     </span>
 
                     <span className="text-[#ead39a] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                      <ArrowUpRight
-                        size={13}
-                      />
+                      <ArrowUpRight size={13} />
                     </span>
                   </a>
 
                   <div className="mt-5 border-t border-white/[0.05] pt-4">
                     <UmbraClock
-                      locale={
-                        locale
-                      }
+                      locale={locale}
+                      mobile
                     />
                   </div>
                 </div>
@@ -2230,5 +2004,87 @@ export default function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+/* ==========================================================================
+   ROUTE SCENE
+   ========================================================================== */
+
+function getRouteScene(
+  pathname: string,
+  locale: Locale,
+): SceneKey | null {
+  const projectsArchivePath =
+    locale === "en"
+      ? "/en/projects"
+      : "/serije";
+
+  const projectsDetailPrefix =
+    locale === "en"
+      ? "/en/projects/"
+      : "/serije/";
+
+  const charactersArchivePath =
+    locale === "en"
+      ? "/en/characters"
+      : "/likovi";
+
+  const characterDetailPrefix =
+    locale === "en"
+      ? "/en/characters/"
+      : "/likovi/";
+
+  if (
+    pathname ===
+    projectsArchivePath
+  ) {
+    return "projects-archive";
+  }
+
+  if (
+    pathname.startsWith(
+      projectsDetailPrefix,
+    )
+  ) {
+    return "project-detail";
+  }
+
+  if (
+    pathname ===
+    charactersArchivePath
+  ) {
+    return "characters-archive";
+  }
+
+  if (
+    pathname.startsWith(
+      characterDetailPrefix,
+    )
+  ) {
+    return "character-dossier";
+  }
+
+  if (
+    isHomePath(
+      pathname,
+      locale,
+    )
+  ) {
+    return "hero";
+  }
+
+  return null;
+}
+
+function getInitialScene(
+  pathname: string,
+  locale: Locale,
+): SceneKey {
+  return (
+    getRouteScene(
+      pathname,
+      locale,
+    ) ?? "hero"
   );
 }
