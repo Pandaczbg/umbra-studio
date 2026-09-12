@@ -57,10 +57,8 @@ export const projects: Project[] = [
       author: "Branislav Bojčić",
 
       // Fajlovi koji su trenutno u public/books/Mrzim-svog-brata/
-      coverSr:
-        "/books/Mrzim-svog-brata/cover-sr.png",
-      coverEn:
-        "/books/Mrzim-svog-brata/cover-en.jpg",
+      coverSr: "/books/Mrzim-svog-brata/cover-sr.png",
+      coverEn: "/books/Mrzim-svog-brata/cover-en.jpg",
 
       pdfSr:
         "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",
@@ -68,7 +66,7 @@ export const projects: Project[] = [
         "/books/Mrzim-svog-brata/mrzim-svog-brata-en.pdf",
 
       publicUrl:
-        "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?userstoinvite=kotiljion@gmail.com&resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
+        "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
     },
   },
 
@@ -80,7 +78,7 @@ export const projects: Project[] = [
     status: "development",
 
     shortDescription:
-      "Drugi projekat studija Umbra, zasnovan na biblijskom svetu i njegovim pričama.",
+      "Samostalan storytelling univerzum Umbra Studija, zasnovan na biblijskim pričama.",
 
     longDescription:
       "Umbra Studio razvija BIBLIJU kao zaseban storytelling univerzum zasnovan na biblijskim pričama.",

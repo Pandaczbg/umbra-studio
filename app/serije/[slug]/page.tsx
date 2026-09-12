@@ -79,6 +79,10 @@ function getProjectNumber(id: string) {
   return match?.[1]?.padStart(2, "0") ?? "00";
 }
 
+function isBiblija(projectSlug: string) {
+  return projectSlug === "biblija";
+}
+
 export default async function ProjectPage({
   params,
 }: {
@@ -94,11 +98,12 @@ export default async function ProjectPage({
   const book = project.book;
   const hasBook = Boolean(book);
   const projectNumber = getProjectNumber(project.id);
+  const showBiblijaArtwork = isBiblija(project.slug) && Boolean(project.cover);
 
   return (
     <main
       data-umbra-scene="project-detail"
-      className="min-h-screen overflow-hidden bg-[#050505] text-[#f1ede4]"
+      className="min-h-screen overflow-hidden bg-[var(--umbra-bg)] text-[#f1ede4]"
     >
       {/* HERO */}
       <section
@@ -127,7 +132,7 @@ export default async function ProjectPage({
 
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[#050505]/60"
+          className="absolute inset-0 bg-[var(--umbra-bg)]/60"
         />
         <div
           aria-hidden="true"
@@ -172,7 +177,7 @@ export default async function ProjectPage({
             </span>
           </div>
 
-          <div className="grid items-end gap-12 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_390px]">
+          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_370px]">
             <div className="max-w-[1000px]">
               <div className="mb-6 flex flex-wrap items-center gap-4 text-[7px] uppercase tracking-[0.3em] text-white/34">
                 <span>{getTypeLabel(project.type)}</span>
@@ -228,7 +233,6 @@ export default async function ProjectPage({
                 </div>
               ) : null}
 
-
               <p className="mt-6 max-w-[730px] text-sm leading-7 text-white/44 sm:text-base sm:leading-8">
                 {project.longDescription}
               </p>
@@ -242,58 +246,18 @@ export default async function ProjectPage({
             </div>
 
             {book ? (
-              <div className="relative mx-auto w-full max-w-[260px] lg:max-w-[300px]">
-                <div
-                  aria-hidden="true"
-                  className="absolute -inset-4 border border-white/[0.035]"
-                />
-                <div
-                  aria-hidden="true"
-                  className="absolute -inset-2 border border-[#b99a61]/10"
-                />
-
-                <div className="relative aspect-[0.69/1] overflow-hidden border border-white/[0.1] bg-[#070707] shadow-[0_30px_100px_rgba(0,0,0,.45)]">
-                  <Image
-                    src={book.coverSr || book.coverEn}
-                    alt={`Naslovna strana dela ${book.title}`}
-                    fill
-                    priority
-                    sizes="(min-width: 1024px) 300px, 70vw"
-                    className="object-cover"
-                  />
-
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.05),transparent_48%,rgba(0,0,0,.6))]"
-                  />
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-4 border border-white/[0.055]"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-[#d6b776]/35"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-[#b99a61]/25"
-                  />
-
-                  <div className="pointer-events-none absolute inset-x-5 bottom-5 flex items-end justify-between">
-                    <span className="text-[6px] uppercase tracking-[0.3em] text-white/38">
-                      Izvorni roman
-                    </span>
-                    <span className="font-mono text-[6px] tracking-[0.22em] text-white/28">
-                      {projectNumber}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between px-1 text-[7px] uppercase tracking-[0.25em] text-white/25">
-                  <span>{book.author}</span>
-                  <span>Roman</span>
-                </div>
-              </div>
+              <BookHeroPanel
+                src={book.coverSr || book.coverEn}
+                alt={`Naslovna strana dela ${book.title}`}
+                projectNumber={projectNumber}
+                author={book.author}
+              />
+            ) : showBiblijaArtwork ? (
+              <ProjectHeroPanel
+                src={project.cover || "/umbra-background.png"}
+                alt={`Vizuelni identitet projekta ${project.title}`}
+                projectNumber={projectNumber}
+              />
             ) : null}
           </div>
 
@@ -594,6 +558,144 @@ export default async function ProjectPage({
   );
 }
 
+function BookHeroPanel({
+  src,
+  alt,
+  projectNumber,
+  author,
+}: {
+  src: string;
+  alt: string;
+  projectNumber: string;
+  author: string;
+}) {
+  return (
+    <div className="relative mx-auto w-full max-w-[300px]">
+      <div
+        aria-hidden="true"
+        className="absolute -inset-3 border border-white/[0.035]"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -inset-1.5 border border-[#b99a61]/10"
+      />
+
+      <div className="relative aspect-[0.69/1] overflow-hidden border border-white/[0.1] bg-[#070707] shadow-[0_30px_100px_rgba(0,0,0,.45)]">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          priority
+          sizes="(min-width: 1024px) 300px, 70vw"
+          className="object-cover"
+        />
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.04),transparent_45%,rgba(0,0,0,.54))]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-4 border border-white/[0.055]"
+        />
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-[#d6b776]/35"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-[#b99a61]/25"
+        />
+
+        <div className="pointer-events-none absolute inset-x-5 bottom-5 flex items-end justify-between">
+          <span className="text-[6px] uppercase tracking-[0.3em] text-white/38">
+            Izvorni roman
+          </span>
+          <span className="font-mono text-[6px] tracking-[0.22em] text-white/28">
+            {projectNumber}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between px-1 text-[7px] uppercase tracking-[0.25em] text-white/25">
+        <span>{author}</span>
+        <span>Roman</span>
+      </div>
+    </div>
+  );
+}
+
+function ProjectHeroPanel({
+  src,
+  alt,
+  projectNumber,
+}: {
+  src: string;
+  alt: string;
+  projectNumber: string;
+}) {
+  return (
+    <div className="relative mx-auto w-full max-w-[360px]">
+      <div
+        aria-hidden="true"
+        className="absolute -inset-4 border border-white/[0.03]"
+      />
+
+      <div
+        aria-hidden="true"
+        className="absolute -inset-2 border border-[#b99a61]/10"
+      />
+
+      <div className="relative overflow-hidden border border-white/[0.095] bg-[#080808] shadow-[0_30px_100px_rgba(0,0,0,.42)]">
+        <div className="relative aspect-[1.18/1]">
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            priority
+            sizes="(min-width: 1024px) 360px, 84vw"
+            className="object-cover"
+          />
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.03),transparent_48%,rgba(0,0,0,.48))]"
+          />
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-4 border border-white/[0.05]"
+          />
+
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-[#d6b776]/32"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-[#b99a61]/24"
+          />
+
+          <div className="pointer-events-none absolute inset-x-5 bottom-5 flex items-end justify-between">
+            <span className="text-[6px] uppercase tracking-[0.3em] text-white/38">
+              Vizuelni kadar
+            </span>
+            <span className="font-mono text-[6px] tracking-[0.22em] text-white/26">
+              {projectNumber}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between px-1 text-[7px] uppercase tracking-[0.25em] text-white/25">
+        <span>BIBLIJA</span>
+        <span>Umbra projekat</span>
+      </div>
+    </div>
+  );
+}
+
 function ProjectStat({
   label,
   value,
@@ -708,9 +810,7 @@ function DownloadButton({
         <div className="text-[6px] uppercase tracking-[0.28em] text-[#b99a61]/70">
           {meta}
         </div>
-        <div className="mt-2 text-sm text-white/72">
-          {label}
-        </div>
+        <div className="mt-2 text-sm text-white/72">{label}</div>
       </div>
 
       <Download
