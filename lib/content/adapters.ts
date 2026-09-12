@@ -2,21 +2,27 @@
  * UMBRA STUDIO — V6
  * Legacy → Canonical content adapters
  *
- * This file is the migration bridge between the locked V5 data registry
+ * Migration bridge between the locked V5 data registry
  * and the V6 canonical content model.
  *
- * Important:
- * - Existing V5 data remains the source of truth during migration.
- * - No V5 file is mutated here.
- * - No UI or route logic belongs here.
- * - English fields intentionally fall back to the SR source value until
- *   the V6 translation/content migration is completed. This is a bridge,
- *   not a claim that the Serbian copy is an English translation.
+ * Rules:
+ * - V5 remains the source of truth during migration.
+ * - No V5 source file is mutated.
+ * - No routing logic.
+ * - No UI logic.
+ * - No invented content.
+ * - English values fall back to SR until real EN content exists.
  */
 
-import { characters as legacyCharacters } from "@/data/characters";
-import { episodes as legacyEpisodes } from "@/data/episodes";
-import { projects as legacyProjects } from "@/data/projects";
+import {
+  characters as legacyCharacters,
+} from "@/data/characters";
+import {
+  episodes as legacyEpisodes,
+} from "@/data/episodes";
+import {
+  projects as legacyProjects,
+} from "@/data/projects";
 
 import type {
   CharacterContent,
@@ -56,103 +62,211 @@ function toProjectSource(
   };
 }
 
+function createProjectIdBySlug(
+  projects: readonly ProjectContent[],
+) {
+  const projectIdBySlug =
+    new Map<string, string>();
+
+  for (const project of projects) {
+    if (projectIdBySlug.has(project.slug)) {
+      throw new Error(
+        `Umbra V6 adapter: duplicate project slug "${project.slug}".`,
+      );
+    }
+
+    projectIdBySlug.set(
+      project.slug,
+      project.id,
+    );
+  }
+
+  return projectIdBySlug;
+}
+
+function assertProjectId(
+  projectIdBySlug: ReadonlyMap<
+    string,
+    string
+  >,
+  entityType: string,
+  entityId: string,
+  projectSlug: string,
+): string {
+  const projectId =
+    projectIdBySlug.get(projectSlug);
+
+  if (!projectId) {
+    throw new Error(
+      `Umbra V6 adapter: ${entityType} "${entityId}" references unknown project "${projectSlug}".`,
+    );
+  }
+
+  return projectId;
+}
+
 export function adaptProjects(): ProjectContent[] {
-  return legacyProjects.map((project) => ({
-    id: project.id,
-    slug: project.slug,
-    visibility: "public",
-    title: localized(project.title),
-    shortDescription: localized(project.shortDescription),
-    description: localized(project.longDescription),
-    contentType: "project",
-    type: project.type,
-    status: project.status,
-    featured: project.featured,
-    platform: project.platform,
-    source: toProjectSource(project.book),
-  }));
+  return legacyProjects.map(
+    (project) => ({
+      id: project.id,
+      slug: project.slug,
+      visibility: "public",
+
+      title: localized(
+        project.title,
+      ),
+
+      shortDescription:
+        localized(
+          project.shortDescription,
+        ),
+
+      description:
+        localized(
+          project.longDescription,
+        ),
+
+      contentType: "project",
+
+      type: project.type,
+      status: project.status,
+      featured: project.featured,
+
+      platform:
+        project.platform,
+
+      source:
+        toProjectSource(
+          project.book,
+        ),
+    }),
+  );
 }
 
 export function adaptCharacters(
-  projects: readonly ProjectContent[] = adaptProjects(),
+  projects: readonly ProjectContent[],
 ): CharacterContent[] {
-  const projectIdBySlug = new Map(
-    projects.map((project) => [
-      project.slug,
-      project.id,
-    ]),
+  const projectIdBySlug =
+    createProjectIdBySlug(
+      projects,
+    );
+
+  return legacyCharacters.map(
+    (character) => {
+      const projectId =
+        assertProjectId(
+          projectIdBySlug,
+          "character",
+          character.id,
+          character.projectSlug,
+        );
+
+      return {
+        id: character.id,
+        slug: character.slug,
+        visibility: "public",
+
+        title: localized(
+          character.name,
+        ),
+
+        shortDescription:
+          localized(
+            character.shortDescription,
+          ),
+
+        contentType: "character",
+
+        projectId,
+
+        category:
+          character.category,
+
+        gender:
+          character.gender,
+
+        heightCm:
+          character.heightCm,
+
+        profileAvailable:
+          character.profileAvailable,
+
+        order:
+          character.order,
+      };
+    },
   );
-
-  return legacyCharacters.map((character) => {
-    const projectId =
-      projectIdBySlug.get(character.projectSlug);
-
-    if (!projectId) {
-      throw new Error(
-        `Umbra V6 adapter: character "${character.id}" references unknown project "${character.projectSlug}".`,
-      );
-    }
-
-    return {
-      id: character.id,
-      slug: character.slug,
-      visibility: "public",
-      title: localized(character.name),
-      shortDescription: localized(
-        character.shortDescription,
-      ),
-      contentType: "character",
-      projectId,
-      category: character.category,
-      gender: character.gender,
-      heightCm: character.heightCm,
-      profileAvailable: character.profileAvailable,
-      order: character.order,
-    };
-  });
 }
 
 export function adaptEpisodes(
-  projects: readonly ProjectContent[] = adaptProjects(),
+  projects: readonly ProjectContent[],
 ): EpisodeContent[] {
-  const projectIdBySlug = new Map(
-    projects.map((project) => [
-      project.slug,
-      project.id,
-    ]),
+  const projectIdBySlug =
+    createProjectIdBySlug(
+      projects,
+    );
+
+  return legacyEpisodes.map(
+    (episode) => {
+      const projectId =
+        assertProjectId(
+          projectIdBySlug,
+          "episode",
+          episode.id,
+          episode.projectSlug,
+        );
+
+      return {
+        id: episode.id,
+
+        slug: `${episode.projectSlug}-ep-${episode.episodeNumber}`,
+
+        visibility: "public",
+
+        title: localized(
+          episode.title,
+        ),
+
+        description:
+          localized(
+            episode.description,
+          ),
+
+        contentType: "episode",
+
+        projectId,
+
+        episodeNumber:
+          episode.episodeNumber,
+
+        status:
+          episode.status,
+
+        runtime:
+          episode.runtime,
+
+        chapterStart:
+          episode.chapterStart,
+
+        chapterEnd:
+          episode.chapterEnd,
+
+        logline:
+          episode.logline
+            ? localized(
+                episode.logline,
+              )
+            : undefined,
+
+        featured:
+          episode.featured,
+
+        youtubeUrl:
+          episode.youtubeUrl,
+
+        thumbnail:
+          episode.thumbnail,
+      };
+    },
   );
-
-  return legacyEpisodes.map((episode) => {
-    const projectId =
-      projectIdBySlug.get(episode.projectSlug);
-
-    if (!projectId) {
-      throw new Error(
-        `Umbra V6 adapter: episode "${episode.id}" references unknown project "${episode.projectSlug}".`,
-      );
-    }
-
-    return {
-      id: episode.id,
-      slug: `${episode.projectSlug}-ep-${episode.episodeNumber}`,
-      visibility: "public",
-      title: localized(episode.title),
-      description: localized(
-        episode.description,
-      ),
-      contentType: "episode",
-      projectId,
-      episodeNumber: episode.episodeNumber,
-      status: episode.status,
-      runtime: episode.runtime,
-      chapterStart: episode.chapterStart,
-      chapterEnd: episode.chapterEnd,
-      logline: episode.logline
-        ? localized(episode.logline)
-        : undefined,
-      featured: episode.featured,
-      youtubeUrl: episode.youtubeUrl,
-      thumbnail: episode.thumbnail,
-    };
-  });
 }
