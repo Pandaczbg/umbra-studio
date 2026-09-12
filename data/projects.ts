@@ -23,6 +23,15 @@ export type Project = {
   longDescription: string;
   platform: string;
   featured: boolean;
+
+  /**
+   * Project-level artwork for projects without a ProjectBook.
+   *
+   * All project-facing components should resolve artwork from this data
+   * model instead of hard-coding asset paths in individual components.
+   */
+  cover?: string;
+
   book?: ProjectBook;
 };
 
@@ -53,7 +62,8 @@ export const projects: Project[] = [
 
       pdfSr:
         "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",
-      pdfEn: "/books/Mrzim-svog-brata/mrzim-svog-brata-en.pdf",
+      pdfEn:
+        "/books/Mrzim-svog-brata/mrzim-svog-brata-en.pdf",
 
       publicUrl:
         "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?userstoinvite=kotiljion@gmail.com&resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
@@ -75,5 +85,8 @@ export const projects: Project[] = [
 
     platform: "Umbra Studio",
     featured: false,
+
+    // Stvarni projekat artwork: public/Biblija Cover.png
+    cover: "/Biblija Cover.png",
   },
 ];

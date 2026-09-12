@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,31 +19,151 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { characters, type Character } from "@/data/characters";
+import {
+  characters,
+  type Character,
+} from "@/data/characters";
+import { getCharacterHref } from "@/lib/characterNavigation";
 
 type ProjectFilter = "ALL" | string;
 type GenderFilter = "ALL" | "MALE" | "FEMALE";
 type CategoryFilter = "ALL" | "MAIN" | "SUPPORTING";
+type Locale = "sr" | "en";
 
 const LAST_VISITED_KEY = "umbra-last-character";
 
+const GOLD = "#c7a96b";
+const GOLD_LIGHT = "#ead39a";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const COPY = {
+  sr: {
+    archive: "ARHIVA LIKOVA",
+    title: "Ljudi iza priča.",
+    index: "INDEKS",
+    memory: "MEMORIJA",
+    allProjects: "SVI PROJEKTI",
+    genderFilters: "FILTER POLA",
+    categoryFilters: "FILTER ULOGE",
+    all: "SVI",
+    male: "MUŠKI",
+    female: "ŽENSKI",
+    main: "GLAVNI",
+    supporting: "SPOREDNI",
+    livingArchive: "ŽIVI ARHIV",
+    selectCharacter: "Izaberi lik",
+    castIndex: "INDEKS GLUMAČKE POSTAVE",
+    navigate: "NAVIGACIJA",
+    orbit: "ORBITA",
+    openDossier: "OTVORI DOSIJE",
+    dossierPreparing: "DOSIJE U PRIPREMI",
+    fullArchive: "CELA ARHIVA",
+    previous: "Prethodni lik",
+    next: "Sledeći lik",
+    noMatch: "Nema likova koji odgovaraju filteru.",
+    spatialIndex: "LIK / PROSTORNI INDEKS",
+    archiveSignal: "UMBRA STUDIO / ŽIVI ARHIV LIKOVA",
+    explore: "Istraži",
+    portraitPending: "PORTRET / U RAZVOJU",
+  },
+
+  en: {
+    archive: "CHARACTER ARCHIVE",
+    title: "People behind the stories.",
+    index: "INDEX",
+    memory: "MEMORY",
+    allProjects: "ALL PROJECTS",
+    genderFilters: "GENDER FILTER",
+    categoryFilters: "ROLE FILTER",
+    all: "ALL",
+    male: "MALE",
+    female: "FEMALE",
+    main: "MAIN",
+    supporting: "SUPPORTING",
+    livingArchive: "LIVING ARCHIVE",
+    selectCharacter: "Select character",
+    castIndex: "CAST INDEX",
+    navigate: "NAVIGATE",
+    orbit: "ORBIT",
+    openDossier: "OPEN DOSSIER",
+    dossierPreparing: "DOSSIER IN PREPARATION",
+    fullArchive: "FULL ARCHIVE",
+    previous: "Previous character",
+    next: "Next character",
+    noMatch: "No characters match this filter.",
+    spatialIndex: "CHARACTER / SPATIAL INDEX",
+    archiveSignal: "UMBRA STUDIO / LIVING CHARACTER ARCHIVE",
+    explore: "Explore",
+    portraitPending: "PORTRAIT / IN DEVELOPMENT",
+  },
+} as const;
+
+function getRoleLabel(
+  category: Character["category"],
+  locale: Locale,
+) {
+  return category === "MAIN"
+    ? locale === "en"
+      ? "Main"
+      : "Glavni"
+    : locale === "en"
+      ? "Supporting"
+      : "Sporedni";
+}
+
+function getProjectHref(
+  projectSlug: string,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? `/en/projects/${projectSlug}`
+    : `/serije/${projectSlug}`;
+}
+
 export default function CharactersPreview() {
-  const [projectFilter, setProjectFilter] =
-    useState<ProjectFilter>("ALL");
+  const pathname = usePathname();
 
-  const [genderFilter, setGenderFilter] =
-    useState<GenderFilter>("ALL");
+  const locale: Locale =
+    pathname === "/en" ||
+    pathname?.startsWith("/en/")
+      ? "en"
+      : "sr";
 
-  const [categoryFilter, setCategoryFilter] =
-    useState<CategoryFilter>("ALL");
+  const copy = COPY[locale];
+  const reducedMotion = useReducedMotion() ?? false;
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [lastVisited, setLastVisited] =
-    useState<string | null>(null);
+  const [
+    projectFilter,
+    setProjectFilter,
+  ] = useState<ProjectFilter>("ALL");
 
-  const reducedMotion = useReducedMotion();
+  const [
+    genderFilter,
+    setGenderFilter,
+  ] = useState<GenderFilter>("ALL");
+
+  const [
+    categoryFilter,
+    setCategoryFilter,
+  ] = useState<CategoryFilter>("ALL");
+
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
+
+  const [
+    lastVisited,
+    setLastVisited,
+  ] = useState<string | null>(null);
 
   const sectionRef = useRef<HTMLElement | null>(null);
 
@@ -89,62 +211,74 @@ export default function CharactersPreview() {
     reducedMotion ? [0, 0] : [-12, 12],
   );
 
-  const charactersByProject = useMemo(() => {
-    return Array.from(
-      new Map(
-        characters.map((character) => [
-          character.projectSlug,
-          character.projectTitle,
-        ]),
+  const charactersByProject = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          characters.map((character) => [
+            character.projectSlug,
+            character.projectTitle,
+          ]),
+        ),
       ),
-    );
-  }, []);
+    [],
+  );
 
-  const filteredCharacters = useMemo(() => {
-    return characters.filter((character) => {
-      const matchesProject =
-        projectFilter === "ALL" ||
-        character.projectSlug === projectFilter;
+  const filteredCharacters = useMemo(
+    () =>
+      characters.filter((character) => {
+        const matchesProject =
+          projectFilter === "ALL" ||
+          character.projectSlug === projectFilter;
 
-      const matchesGender =
-        genderFilter === "ALL" ||
-        character.gender === genderFilter;
+        const matchesGender =
+          genderFilter === "ALL" ||
+          character.gender === genderFilter;
 
-      const matchesCategory =
-        categoryFilter === "ALL" ||
-        character.category === categoryFilter;
+        const matchesCategory =
+          categoryFilter === "ALL" ||
+          character.category === categoryFilter;
 
-      return (
-        matchesProject &&
-        matchesGender &&
-        matchesCategory
-      );
-    });
-  }, [
-    categoryFilter,
-    genderFilter,
-    projectFilter,
-  ]);
+        return (
+          matchesProject &&
+          matchesGender &&
+          matchesCategory
+        );
+      }),
+    [
+      categoryFilter,
+      genderFilter,
+      projectFilter,
+    ],
+  );
+
+  const safeActiveIndex =
+    filteredCharacters.length === 0
+      ? -1
+      : Math.min(
+          activeIndex,
+          filteredCharacters.length - 1,
+        );
 
   const activeCharacter =
-    filteredCharacters[activeIndex] ??
-    filteredCharacters[0] ??
-    null;
+    safeActiveIndex >= 0
+      ? filteredCharacters[safeActiveIndex]
+      : null;
 
   const relatedCharacters = useMemo(() => {
     if (!activeCharacter) {
       return [];
     }
 
-    const sameProject = characters.filter(
-      (character) =>
-        character.projectSlug ===
-          activeCharacter.projectSlug &&
-        character.id !== activeCharacter.id,
-    );
-
-    return sameProject.slice(0, 4);
-  }, [activeCharacter]);
+    return filteredCharacters
+      .filter(
+        (character) =>
+          character.projectSlug ===
+            activeCharacter.projectSlug &&
+          character.id !== activeCharacter.id,
+      )
+      .slice(0, 3);
+  }, [activeCharacter, filteredCharacters]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -156,10 +290,9 @@ export default function CharactersPreview() {
 
   useEffect(() => {
     try {
-      const stored =
-        window.localStorage.getItem(
-          LAST_VISITED_KEY,
-        );
+      const stored = window.localStorage.getItem(
+        LAST_VISITED_KEY,
+      );
 
       if (stored) {
         setLastVisited(stored);
@@ -169,28 +302,31 @@ export default function CharactersPreview() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!activeCharacter) {
-      return;
-    }
-
+  const rememberCharacter = (
+    character: Character,
+  ) => {
     try {
       window.localStorage.setItem(
         LAST_VISITED_KEY,
-        activeCharacter.slug,
+        character.slug,
       );
+
+      setLastVisited(character.slug);
     } catch {
       // Storage may be unavailable.
     }
-  }, [activeCharacter]);
+  };
 
-  const selectCharacter = (character: Character) => {
+  const selectCharacter = (
+    character: Character,
+  ) => {
     const index = filteredCharacters.findIndex(
       (item) => item.id === character.id,
     );
 
     if (index >= 0) {
       setActiveIndex(index);
+      rememberCharacter(character);
     }
   };
 
@@ -199,11 +335,21 @@ export default function CharactersPreview() {
       return;
     }
 
-    setActiveIndex((current) =>
-      current === filteredCharacters.length - 1
+    const currentIndex =
+      safeActiveIndex < 0 ? 0 : safeActiveIndex;
+
+    const nextIndex =
+      currentIndex === filteredCharacters.length - 1
         ? 0
-        : current + 1,
-    );
+        : currentIndex + 1;
+
+      const next = filteredCharacters[nextIndex];
+
+    setActiveIndex(nextIndex);
+
+    if (next) {
+      rememberCharacter(next);
+    }
   };
 
   const previousCharacter = () => {
@@ -211,78 +357,123 @@ export default function CharactersPreview() {
       return;
     }
 
-    setActiveIndex((current) =>
-      current === 0
+    const currentIndex =
+      safeActiveIndex < 0 ? 0 : safeActiveIndex;
+
+    const previousIndex =
+      currentIndex === 0
         ? filteredCharacters.length - 1
-        : current - 1,
-    );
+        : currentIndex - 1;
+
+    const previous =
+      filteredCharacters[previousIndex];
+
+    setActiveIndex(previousIndex);
+
+    if (previous) {
+      rememberCharacter(previous);
+    }
   };
 
   const handlePointerMove = (
-    event: React.PointerEvent<HTMLElement>,
+    event: React.PointerEvent<HTMLDivElement>,
   ) => {
-    if (reducedMotion) {
-      return;
-    }
-
-    if (event.pointerType === "touch") {
+    if (
+      reducedMotion ||
+      event.pointerType === "touch"
+    ) {
       return;
     }
 
     const rect =
       event.currentTarget.getBoundingClientRect();
 
-    const x =
-      (event.clientX - rect.left) / rect.width;
+    if (
+      rect.width <= 0 ||
+      rect.height <= 0
+    ) {
+      return;
+    }
 
-    const y =
-      (event.clientY - rect.top) / rect.height;
+    pointerX.set(
+      ((event.clientX - rect.left) /
+        rect.width) *
+        2 -
+        1,
+    );
 
-    pointerX.set(x * 2 - 1);
-    pointerY.set(y * 2 - 1);
+    pointerY.set(
+      ((event.clientY - rect.top) /
+        rect.height) *
+        2 -
+        1,
+    );
   };
 
-  const handlePointerLeave = () => {
+  const resetPointer = () => {
     pointerX.set(0);
     pointerY.set(0);
   };
 
+  const lastVisitedCharacter = lastVisited
+    ? characters.find(
+        (character) =>
+          character.slug === lastVisited,
+      )
+    : null;
+
+  const filterButtons = [
+    {
+      key: "ALL",
+      label: copy.all,
+      active: projectFilter === "ALL",
+      onClick: () =>
+        setProjectFilter("ALL"),
+    },
+    ...charactersByProject.map(
+      ([slug, title]) => ({
+        key: slug,
+        label: title,
+        active: projectFilter === slug,
+        onClick: () =>
+          setProjectFilter(slug),
+      }),
+    ),
+  ];
+
   return (
     <section
-      id="likovi"
+      id="likovi-preview"
       ref={sectionRef}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
+      aria-labelledby="characters-preview-title"
       className="relative overflow-hidden border-b border-white/[0.065] bg-[#030303] py-28 sm:py-36 lg:py-44"
     >
-      {/* =====================================================
-          ATMOSPHERE
-      ===================================================== */}
-
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
       >
-        <div className="absolute left-[18%] top-[30%] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(198,154,69,0.035),transparent_70%)] blur-3xl" />
+        <div className="absolute left-[18%] top-[30%] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(199,169,107,0.035),transparent_70%)] blur-3xl" />
 
         <div className="absolute right-[8%] top-[15%] h-[380px] w-[380px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.018),transparent_72%)] blur-3xl" />
 
-        <div className="absolute inset-0 umbra-grid opacity-[0.022]" />
+        <div className="absolute inset-0 opacity-[0.022] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] [background-size:110px_110px]" />
 
-        <div className="absolute inset-0 umbra-noise opacity-[0.08]" />
+        <div className="absolute inset-0 opacity-[0.012] [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.16)_0px,rgba(255,255,255,.16)_1px,transparent_1px,transparent_5px)]" />
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C69A45]/22 to-transparent" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${GOLD}24, transparent)`,
+        }}
+      />
 
       <div className="relative mx-auto max-w-[1500px] px-6 sm:px-10 lg:px-16">
-        {/* ===================================================
-            HEADER
-        =================================================== */}
-
         <motion.div
           initial={{
             opacity: 0,
-            y: 20,
+            y: reducedMotion ? 0 : 20,
           }}
           animate={
             inView
@@ -293,36 +484,54 @@ export default function CharactersPreview() {
               : undefined
           }
           transition={{
-            duration: 0.8,
-            ease: [0.22, 1, 0.36, 1],
+            duration: reducedMotion ? 0 : 0.8,
+            ease: EASE,
           }}
           className="mb-12 flex flex-col gap-8 border-b border-white/[0.07] pb-8 lg:flex-row lg:items-end lg:justify-between"
         >
           <div>
-            <div className="mb-5 flex items-center gap-4 select-none">
-              <span className="font-mono text-[8px] font-medium uppercase tracking-[0.42em] text-[#C69A45]">
-                CHARACTER ARCHIVE
+            <div className="mb-5 flex select-none items-center gap-4">
+              <span
+                className="font-mono text-[8px] font-medium uppercase tracking-[0.42em]"
+                style={{
+                  color: `${GOLD_LIGHT}cc`,
+                }}
+              >
+                {copy.archive}
               </span>
 
-              <span className="h-px w-10 bg-[#C69A45]/30" />
+              <span
+                aria-hidden="true"
+                className="h-px w-10"
+                style={{
+                  background: `${GOLD}45`,
+                }}
+              />
             </div>
 
-            <h2 className="select-none max-w-4xl text-[clamp(3rem,6vw,6.5rem)] font-[430] leading-[0.84] tracking-[-0.067em] text-[#F1EDE4]">
-              Ljudi iza priča.
+            <h2
+              id="characters-preview-title"
+              className="select-none max-w-4xl text-[clamp(3rem,6vw,6.5rem)] font-[430] leading-[0.84] tracking-[-0.067em] text-[#f4f0e8]"
+            >
+              {copy.title}
             </h2>
           </div>
 
           <div className="flex items-end justify-between gap-8 lg:min-w-[330px]">
             <div>
-              <p className="font-mono text-[8px] uppercase tracking-[0.26em] text-white/20">
-                INDEX
+              <p className="font-mono text-[8px] uppercase tracking-[0.26em] text-white/[0.22]">
+                {copy.index}
               </p>
 
-              <p className="mt-3 font-mono text-[10px] tracking-[0.16em] text-white/42">
-                {String(filteredCharacters.length).padStart(
-                  2,
-                  "0",
-                )}{" "}
+              <p
+                className="mt-3 font-mono text-[10px] tracking-[0.16em]"
+                style={{
+                  color: `${GOLD_LIGHT}74`,
+                }}
+              >
+                {String(
+                  filteredCharacters.length,
+                ).padStart(2, "0")}{" "}
                 /{" "}
                 {String(characters.length).padStart(
                   2,
@@ -331,26 +540,30 @@ export default function CharactersPreview() {
               </p>
             </div>
 
-            {lastVisited ? (
-              <div className="text-right">
-                <p className="font-mono text-[7px] uppercase tracking-[0.25em] text-[#C69A45]/70">
-                  MEMORY
+            {lastVisitedCharacter ? (
+              <Link
+                href={getCharacterHref(
+                  lastVisitedCharacter,
+                  locale,
+                )}
+                className="group text-right outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+              >
+                <p
+                  className="font-mono text-[7px] uppercase tracking-[0.25em]"
+                  style={{
+                    color: `${GOLD_LIGHT}70`,
+                  }}
+                >
+                  {copy.memory}
                 </p>
 
-                <p className="mt-2 max-w-[140px] truncate text-[10px] uppercase tracking-[0.04em] text-white/32">
-                  {characters.find(
-                    (character) =>
-                      character.slug === lastVisited,
-                  )?.name ?? "—"}
+                <p className="mt-2 max-w-[140px] truncate text-[10px] uppercase tracking-[0.04em] text-white/34 transition-colors duration-300 group-hover:text-white/68">
+                  {lastVisitedCharacter.name}
                 </p>
-              </div>
+              </Link>
             ) : null}
           </div>
         </motion.div>
-
-        {/* ===================================================
-            FILTER SYSTEM
-        =================================================== */}
 
         <motion.div
           initial={{
@@ -364,73 +577,92 @@ export default function CharactersPreview() {
               : undefined
           }
           transition={{
-            delay: 0.12,
-            duration: 0.7,
+            delay: reducedMotion ? 0 : 0.12,
+            duration: reducedMotion ? 0 : 0.7,
           }}
           className="mb-8 flex flex-col gap-5 border-b border-white/[0.055] pb-6 xl:flex-row xl:items-center xl:justify-between"
         >
-          <div className="flex flex-wrap gap-2">
-            <FilterButton
-              active={projectFilter === "ALL"}
-              onClick={() => setProjectFilter("ALL")}
-            >
-              ALL PROJECTS
-            </FilterButton>
-
-            {charactersByProject.map(
-              ([slug, title]) => (
-                <FilterButton
-                  key={slug}
-                  active={projectFilter === slug}
-                  onClick={() => setProjectFilter(slug)}
-                >
-                  {title}
-                </FilterButton>
-              ),
-            )}
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label={copy.allProjects}
+          >
+            {filterButtons.map((filter) => (
+              <FilterButton
+                key={filter.key}
+                active={filter.active}
+                onClick={filter.onClick}
+              >
+                {filter.label}
+              </FilterButton>
+            ))}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {(
-              ["ALL", "MALE", "FEMALE"] as const
-            ).map((value) => (
-              <FilterButton
-                key={value}
-                active={genderFilter === value}
-                onClick={() =>
-                  setGenderFilter(value)
-                }
-              >
-                {value}
-              </FilterButton>
-            ))}
+          <div className="flex flex-wrap gap-4">
+            <div
+              role="group"
+              aria-label={copy.genderFilters}
+              className="flex flex-wrap gap-2"
+            >
+              {(
+                ["ALL", "MALE", "FEMALE"] as const
+              ).map((value) => (
+                <FilterButton
+                  key={value}
+                  active={
+                    genderFilter === value
+                  }
+                  onClick={() =>
+                    setGenderFilter(value)
+                  }
+                >
+                  {value === "ALL"
+                    ? copy.all
+                    : value === "MALE"
+                      ? copy.male
+                      : copy.female}
+                </FilterButton>
+              ))}
+            </div>
 
-            {(
-              ["ALL", "MAIN", "SUPPORTING"] as const
-            ).map((value) => (
-              <FilterButton
-                key={value}
-                active={categoryFilter === value}
-                onClick={() =>
-                  setCategoryFilter(value)
-                }
-              >
-                {value}
-              </FilterButton>
-            ))}
+            <div
+              role="group"
+              aria-label={copy.categoryFilters}
+              className="flex flex-wrap gap-2"
+            >
+              {(
+                [
+                  "ALL",
+                  "MAIN",
+                  "SUPPORTING",
+                ] as const
+              ).map((value) => (
+                <FilterButton
+                  key={value}
+                  active={
+                    categoryFilter === value
+                  }
+                  onClick={() =>
+                    setCategoryFilter(value)
+                  }
+                >
+                  {value === "ALL"
+                    ? copy.all
+                    : value === "MAIN"
+                      ? copy.main
+                      : copy.supporting}
+                </FilterButton>
+              ))}
+            </div>
           </div>
         </motion.div>
 
-        {/* ===================================================
-            ORBIT EXPERIENCE
-        =================================================== */}
-
         {activeCharacter ? (
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
             <motion.div
               initial={{
                 opacity: 0,
-                y: 30,
+                y: reducedMotion ? 0 : 30,
               }}
               animate={
                 inView
@@ -441,254 +673,303 @@ export default function CharactersPreview() {
                   : undefined
               }
               transition={{
-                delay: 0.15,
-                duration: 0.95,
-                ease: [0.22, 1, 0.36, 1],
+                delay: reducedMotion ? 0 : 0.15,
+                duration: reducedMotion ? 0 : 0.95,
+                ease: EASE,
               }}
               className="relative min-h-[670px] overflow-hidden border border-white/[0.08] bg-[#060606]"
-              style={{
-                perspective: 1300,
-              }}
             >
-              {/* PORTRAIT */}
-
-              <motion.div
-                style={{
-                  x: portraitX,
-                  y: portraitY,
-                  scale: reducedMotion ? 1 : 1.025,
-                }}
-                className="absolute inset-[-28px]"
+              <div
+                onPointerMove={handlePointerMove}
+                onPointerLeave={resetPointer}
+                className="absolute inset-0"
               >
-                <motion.img
-                  key={activeCharacter.id}
-                  initial={{
-                    opacity: 0,
-                    scale: 1.035,
-                  }}
-                  animate={{
-                    opacity: 0.76,
-                    scale: 1,
-                  }}
-                  transition={{
-                    duration: reducedMotion ? 0 : 0.8,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  src={activeCharacter.image}
-                  alt={activeCharacter.name}
-                  className="h-full w-full object-cover object-center grayscale-[0.12]"
-                />
-              </motion.div>
-
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.87)_0%,rgba(0,0,0,0.25)_52%,rgba(0,0,0,0.48)_100%)]" />
-
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.02)_38%,rgba(0,0,0,0.88)_100%)]" />
-
-              <div className="absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.82)]" />
-
-              {/* ORBIT */}
-
-              <motion.div
-                aria-hidden="true"
-                style={{
-                  x: orbitX,
-                  y: orbitY,
-                }}
-                className="pointer-events-none absolute inset-0"
-              >
-                <div className="absolute left-[52%] top-[46%] h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06] lg:h-[510px] lg:w-[510px]" />
-
-                <div className="absolute left-[52%] top-[46%] h-[320px] w-[510px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C69A45]/[0.10] rotate-[-18deg]" />
-
-                <div className="absolute left-[52%] top-[46%] h-px w-[520px] -translate-x-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
-
-                <div className="absolute left-[52%] top-[46%] h-[510px] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.055] to-transparent" />
-              </motion.div>
-
-              {/* CORNERS */}
-
-              <div className="pointer-events-none absolute inset-5 border border-white/[0.055] sm:inset-7">
-                <span className="absolute left-[-1px] top-[-1px] h-10 w-10 border-l border-t border-[#C69A45]/40" />
-
-                <span className="absolute right-[-1px] top-[-1px] h-10 w-10 border-r border-t border-white/[0.07]" />
-
-                <span className="absolute bottom-[-1px] left-[-1px] h-10 w-10 border-b border-l border-white/[0.055]" />
-
-                <span className="absolute bottom-[-1px] right-[-1px] h-10 w-10 border-b border-r border-[#C69A45]/20" />
-              </div>
-
-              {/* TOP DATA */}
-
-              <div className="absolute inset-x-7 top-7 flex items-center justify-between sm:inset-x-10 sm:top-10">
-                <div className="flex items-center gap-3 select-none">
-                  <Orbit
-                    size={14}
-                    strokeWidth={1.2}
-                    className="text-[#C69A45]"
-                  />
-
-                  <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-[#C69A45]">
-                    LIVING ARCHIVE
-                  </span>
-                </div>
-
-                <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-white/20">
-                  {String(activeIndex + 1).padStart(2, "0")} /{" "}
-                  {String(filteredCharacters.length).padStart(
-                    2,
-                    "0",
+                <Link
+                  href={getCharacterHref(
+                    activeCharacter,
+                    locale,
                   )}
-                </span>
-              </div>
-
-              {/* MAIN CONTENT */}
-
-              <motion.div
-                key={activeCharacter.id}
-                initial={{
-                  opacity: 0,
-                  y: 24,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  duration: 0.64,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="absolute inset-x-7 bottom-10 z-10 sm:inset-x-10 sm:bottom-10"
-              >
-                <div className="mb-5 flex items-center gap-4 select-none">
-                  <span className="font-mono text-[7px] uppercase tracking-[0.3em] text-[#C69A45]">
-                    {activeCharacter.projectTitle}
-                  </span>
-
-                  <span className="h-px w-7 bg-white/15" />
-
-                  <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-white/28">
-                    {activeCharacter.category}
-                  </span>
-                </div>
-
-                <h3 className="select-none max-w-4xl text-[clamp(3.8rem,7.6vw,8rem)] font-[430] leading-[0.79] tracking-[-0.075em] text-white">
-                  {activeCharacter.name}
-                </h3>
-
-                <div className="mt-7 flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
-                  <p className="max-w-xl text-[13px] leading-7 text-white/42 sm:text-[14px]">
-                    {activeCharacter.shortDescription}
-                  </p>
-
-                  <Link
-                    href={`/likovi/${activeCharacter.slug}`}
-                    onClick={() => {
-                      try {
-                        window.localStorage.setItem(
-                          LAST_VISITED_KEY,
-                          activeCharacter.slug,
-                        );
-                      } catch {
-                        // Storage may be unavailable.
-                      }
+                  aria-label={`${copy.openDossier}: ${activeCharacter.name}`}
+                  className="group/portrait absolute inset-0 z-[5] block outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/65"
+                >
+                  <motion.div
+                    style={{
+                      x: portraitX,
+                      y: portraitY,
+                      scale: reducedMotion ? 1 : 1.025,
                     }}
-                    className="group inline-flex h-11 shrink-0 items-center gap-3 border border-[#C69A45]/45 bg-black/25 px-5 text-[8px] font-semibold uppercase tracking-[0.26em] text-[#E2BE72] backdrop-blur-md transition-all duration-300 hover:border-[#C69A45] hover:bg-[#C69A45]/[0.08]"
+                    className="absolute inset-[-28px]"
                   >
-                    Open dossier
+                    {activeCharacter.image ? (
+                      <motion.div
+                        key={activeCharacter.id}
+                        initial={{
+                          opacity: 0,
+                          scale: 1.035,
+                        }}
+                        animate={{
+                          opacity: 0.76,
+                          scale: 1,
+                        }}
+                        transition={{
+                          duration: reducedMotion ? 0 : 0.8,
+                          ease: EASE,
+                        }}
+                        className="absolute inset-0"
+                      >
+                        <Image
+                          src={activeCharacter.image}
+                          alt=""
+                          fill
+                          sizes="(min-width: 1024px) 65vw, 100vw"
+                          className="object-cover object-center grayscale-[0.12]"
+                        />
+                      </motion.div>
+                    ) : (
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-[radial-gradient(circle_at_68%_42%,rgba(234,211,154,.085),transparent_30%),linear-gradient(135deg,#090909_0%,#040404_52%,#0b0b0a_100%)]"
+                      >
+                        <div className="absolute inset-0 opacity-[0.24] [background-image:linear-gradient(rgba(255,255,255,.09)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] [background-size:120px_120px]" />
+                        <div className="absolute left-1/2 top-[42%] h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.055]" />
+                        <div className="absolute left-1/2 top-[42%] h-[210px] w-[210px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c7a96b]/[0.10]" />
+                      </div>
+                    )}
+                  </motion.div>
 
-                    <ArrowUpRight
-                      size={14}
-                      strokeWidth={1.2}
-                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.87)_0%,rgba(0,0,0,0.25)_52%,rgba(0,0,0,0.48)_100%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.02)_38%,rgba(0,0,0,0.88)_100%)]" />
+                  <div className="absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.82)]" />
+
+                  <motion.div
+                    aria-hidden="true"
+                    style={{
+                      x: orbitX,
+                      y: orbitY,
+                    }}
+                    className="pointer-events-none absolute inset-0"
+                  >
+                    <div className="absolute left-[52%] top-[46%] h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06] lg:h-[510px] lg:w-[510px]" />
+                    <div className="absolute left-[52%] top-[46%] h-[320px] w-[510px] -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] rounded-[50%] border border-[#c7a96b]/[0.10]" />
+                    <div className="absolute left-[52%] top-[46%] h-px w-[520px] -translate-x-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+                    <div className="absolute left-[52%] top-[46%] h-[510px] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.055] to-transparent" />
+                  </motion.div>
+
+                  <div className="pointer-events-none absolute inset-5 border border-white/[0.055] sm:inset-7">
+                    <span
+                      className="absolute left-[-1px] top-[-1px] h-10 w-10 border-l border-t"
+                      style={{ borderColor: `${GOLD}55` }}
                     />
-                  </Link>
-                </div>
-              </motion.div>
-
-              {/* RELATED NODES */}
-
-              {relatedCharacters.length > 0 ? (
-                <div className="pointer-events-none absolute inset-0 hidden lg:block">
-                  {relatedCharacters
-                    .slice(0, 3)
-                    .map((related, index) => {
-                      const positions = [
-                        "right-[9%] top-[30%]",
-                        "right-[17%] top-[54%]",
-                        "left-[46%] top-[17%]",
-                      ];
-
-                      return (
-                        <motion.div
-                          key={related.id}
-                          initial={{
-                            opacity: 0,
-                          }}
-                          animate={{
-                            opacity: 1,
-                          }}
-                          transition={{
-                            delay: 0.2 + index * 0.08,
-                            duration: 0.5,
-                          }}
-                          className={`pointer-events-auto absolute ${positions[index]}`}
-                        >
-                          <button
-                            type="button"
-                            onClick={() =>
-                              selectCharacter(related)
-                            }
-                            className="group flex items-center gap-3"
-                          >
-                            <span className="relative flex h-2.5 w-2.5 items-center justify-center">
-                              <span className="absolute h-4 w-4 rounded-full border border-[#C69A45]/25 transition-transform duration-300 group-hover:scale-125" />
-
-                              <span className="h-1.5 w-1.5 rounded-full bg-[#C69A45]/70 transition-transform duration-300 group-hover:scale-125" />
-                            </span>
-
-                            <span className="whitespace-nowrap border-b border-white/[0.08] pb-1 text-[8px] uppercase tracking-[0.2em] text-white/30 transition-colors duration-300 group-hover:border-[#C69A45]/35 group-hover:text-white/72">
-                              {related.name}
-                            </span>
-                          </button>
-                        </motion.div>
-                      );
-                    })}
-                </div>
-              ) : null}
-
-              {/* BOTTOM SYSTEM */}
-
-              <div className="absolute inset-x-7 bottom-4 sm:inset-x-10">
-                <div className="umbra-system-line" />
-
-                <div className="mt-3 flex items-center justify-between select-none">
-                  <div className="flex items-center gap-3">
-                    <ScanLine
-                      size={13}
-                      strokeWidth={1.2}
-                      className="text-[#C69A45]/35"
+                    <span className="absolute right-[-1px] top-[-1px] h-10 w-10 border-r border-t border-white/[0.07]" />
+                    <span className="absolute bottom-[-1px] left-[-1px] h-10 w-10 border-b border-l border-white/[0.055]" />
+                    <span
+                      className="absolute bottom-[-1px] right-[-1px] h-10 w-10 border-b border-r"
+                      style={{ borderColor: `${GOLD}28` }}
                     />
+                  </div>
 
-                    <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/18">
-                      CHARACTER / SPATIAL INDEX
+                  <div className="absolute inset-x-7 top-7 flex items-center justify-between sm:inset-x-10 sm:top-10">
+                    <div className="flex select-none items-center gap-3">
+                      <Orbit
+                        aria-hidden="true"
+                        size={14}
+                        strokeWidth={1.2}
+                        style={{ color: GOLD }}
+                      />
+                      <span
+                        className="font-mono text-[8px] uppercase tracking-[0.3em]"
+                        style={{ color: `${GOLD_LIGHT}cc` }}
+                      >
+                        {copy.livingArchive}
+                      </span>
+                    </div>
+                    <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-white/22">
+                      {String(safeActiveIndex + 1).padStart(2, "0")} / {String(filteredCharacters.length).padStart(2, "0")}
                     </span>
                   </div>
 
-                  <span className="font-mono text-[7px] tracking-[0.2em] text-white/16">
-                    UMBRA
-                  </span>
-                </div>
+                  {activeCharacter.image ? null : (
+                    <span
+                      className="pointer-events-none absolute bottom-[8.7rem] right-7 z-10 font-mono text-[6px] uppercase tracking-[0.28em]"
+                      style={{ color: `${GOLD_LIGHT}46` }}
+                    >
+                      {copy.portraitPending}
+                    </span>
+                  )}
+
+                  <div className="absolute inset-x-7 bottom-4 sm:inset-x-10">
+                    <div
+                      className="h-px w-full"
+                      style={{
+                        background: `linear-gradient(90deg, ${GOLD}28, rgba(255,255,255,.07), transparent)`,
+                      }}
+                    />
+                    <div className="mt-3 flex select-none items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <ScanLine
+                          aria-hidden="true"
+                          size={13}
+                          strokeWidth={1.2}
+                          style={{ color: `${GOLD}72` }}
+                        />
+                        <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/18">
+                          {copy.spatialIndex}
+                        </span>
+                      </div>
+                      <span
+                        className="font-mono text-[7px] tracking-[0.2em]"
+                        style={{ color: `${GOLD_LIGHT}40` }}
+                      >
+                        UMBRA
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+
+                <motion.div
+                  key={activeCharacter.id}
+                  initial={{
+                    opacity: 0,
+                    y: reducedMotion ? 0 : 24,
+                  }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: reducedMotion ? 0 : 0.64,
+                    ease: EASE,
+                  }}
+                  className="pointer-events-none absolute inset-x-7 bottom-10 z-10 sm:inset-x-10 sm:bottom-10"
+                >
+                  <div className="mb-5 flex select-none items-center gap-4">
+                    <Link
+                      href={getProjectHref(
+                        activeCharacter.projectSlug,
+                        locale,
+                      )}
+                      className="pointer-events-auto font-mono text-[7px] uppercase tracking-[0.3em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                      style={{ color: `${GOLD_LIGHT}c4` }}
+                    >
+                      {activeCharacter.projectTitle}
+                    </Link>
+                    <span
+                      aria-hidden="true"
+                      className="h-px w-7 bg-white/15"
+                    />
+                    <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-white/30">
+                      {getRoleLabel(activeCharacter.category, locale)}
+                    </span>
+                  </div>
+
+                  <Link
+                    href={getCharacterHref(activeCharacter, locale)}
+                    aria-label={`${copy.openDossier}: ${activeCharacter.name}`}
+                    className="pointer-events-auto group/name block w-fit max-w-4xl outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                  >
+                    <h3 className="select-none text-[clamp(3.8rem,7.6vw,8rem)] font-[430] leading-[0.79] tracking-[-0.075em] text-white transition-transform duration-500 group-hover/portrait:-translate-y-1 group-hover/name:text-white/92">
+                      {activeCharacter.name}
+                    </h3>
+                  </Link>
+
+                  <div className="mt-7 flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
+                    <p className="max-w-xl text-[13px] leading-7 text-white/44 sm:text-[14px]">
+                      {activeCharacter.shortDescription}
+                    </p>
+
+                    <Link
+                      href={getCharacterHref(activeCharacter, locale)}
+                      className="pointer-events-auto group/cta inline-flex h-11 shrink-0 items-center gap-3 border px-5 text-[8px] font-semibold uppercase tracking-[0.26em] outline-none transition-colors duration-300 hover:bg-white/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                      style={{
+                        borderColor: `${GOLD}58`,
+                        color: GOLD_LIGHT,
+                      }}
+                    >
+                      {activeCharacter.profileAvailable
+                        ? copy.openDossier
+                        : copy.dossierPreparing}
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        size={14}
+                        strokeWidth={1.2}
+                        className="transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5"
+                      />
+                    </Link>
+                  </div>
+                </motion.div>
+
+                {relatedCharacters.length > 0 ? (
+                  <div className="pointer-events-none absolute inset-0 hidden lg:block">
+                    {relatedCharacters.map(
+                      (related, index) => {
+                        const positions = [
+                          "right-[9%] top-[30%]",
+                          "right-[17%] top-[54%]",
+                          "left-[46%] top-[17%]",
+                        ];
+
+                        return (
+                          <motion.div
+                            key={related.id}
+                            initial={{
+                              opacity: 0,
+                            }}
+                            animate={{
+                              opacity: 1,
+                            }}
+                            transition={{
+                              delay: reducedMotion
+                                ? 0
+                                : 0.2 +
+                                  index * 0.08,
+                              duration: reducedMotion
+                                ? 0
+                                : 0.5,
+                            }}
+                            className={`pointer-events-auto absolute ${positions[index]}`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                selectCharacter(
+                                  related,
+                                )
+                              }
+                              aria-label={`${copy.selectCharacter}: ${related.name}`}
+                              className="group flex items-center gap-3 outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                            >
+                              <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                                <span
+                                  aria-hidden="true"
+                                  className="absolute h-4 w-4 rounded-full border"
+                                  style={{
+                                    borderColor: `${GOLD}40`,
+                                  }}
+                                />
+
+                                <span
+                                  aria-hidden="true"
+                                  className="h-1.5 w-1.5 rounded-full transition-transform duration-300 group-hover:scale-125"
+                                  style={{
+                                    background: `${GOLD}b0`,
+                                  }}
+                                />
+                              </span>
+
+                              <span className="whitespace-nowrap border-b border-white/[0.08] pb-1 text-[8px] uppercase tracking-[0.2em] text-white/30 transition-colors duration-300 group-hover:text-white/72">
+                                {related.name}
+                              </span>
+                            </button>
+                          </motion.div>
+                        );
+                      },
+                    )}
+                  </div>
+                ) : null}
               </div>
             </motion.div>
-
-            {/* =================================================
-                CHARACTER INDEX
-            ================================================= */}
 
             <motion.aside
               initial={{
                 opacity: 0,
-                x: 20,
+                x: reducedMotion ? 0 : 20,
               }}
               animate={
                 inView
@@ -699,27 +980,34 @@ export default function CharactersPreview() {
                   : undefined
               }
               transition={{
-                delay: 0.24,
-                duration: 0.82,
-                ease: [0.22, 1, 0.36, 1],
+                delay: reducedMotion ? 0 : 0.24,
+                duration: reducedMotion ? 0 : 0.82,
+                ease: EASE,
               }}
               className="flex flex-col border border-white/[0.07] bg-black/20 p-5 backdrop-blur-xl"
+              aria-label={copy.castIndex}
             >
-              <div className="mb-7 flex items-center justify-between select-none">
+              <div className="mb-7 flex select-none items-center justify-between">
                 <div>
-                  <div className="font-mono text-[7px] uppercase tracking-[0.34em] text-[#C69A45]">
-                    CAST INDEX
+                  <div
+                    className="font-mono text-[7px] uppercase tracking-[0.34em]"
+                    style={{
+                      color: `${GOLD_LIGHT}c4`,
+                    }}
+                  >
+                    {copy.castIndex}
                   </div>
 
-                  <div className="mt-2 text-[9px] uppercase tracking-[0.18em] text-white/18">
-                    Select character
+                  <div className="mt-2 text-[9px] uppercase tracking-[0.18em] text-white/20">
+                    {copy.selectCharacter}
                   </div>
                 </div>
 
                 <Database
+                  aria-hidden="true"
                   size={15}
                   strokeWidth={1.2}
-                  className="text-white/15"
+                  className="text-white/16"
                 />
               </div>
 
@@ -727,7 +1015,8 @@ export default function CharactersPreview() {
                 {filteredCharacters.map(
                   (character, index) => {
                     const active =
-                      character.id === activeCharacter.id;
+                      character.id ===
+                      activeCharacter.id;
 
                     return (
                       <button
@@ -736,27 +1025,27 @@ export default function CharactersPreview() {
                         onClick={() =>
                           selectCharacter(character)
                         }
+                        aria-pressed={active}
                         className={[
-                          "group relative w-full overflow-hidden border px-4 py-4 text-left transition-all duration-400",
+                          "group relative w-full overflow-hidden border px-4 py-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
                           active
-                            ? "border-[#C69A45]/30 bg-[#C69A45]/[0.055]"
+                            ? "border-[#c7a96b]/30 bg-[#c7a96b]/[0.055]"
                             : "border-white/[0.05] hover:border-white/[0.12] hover:bg-white/[0.018]",
                         ].join(" ")}
                       >
-                        <div className="flex items-center justify-between gap-4 select-none">
+                        <div className="flex select-none items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
                             <span
                               className={[
                                 "font-mono text-[7px]",
                                 active
-                                  ? "text-[#C69A45]"
+                                  ? "text-[#ead39a]"
                                   : "text-white/15",
                               ].join(" ")}
                             >
-                              {String(index + 1).padStart(
-                                2,
-                                "0",
-                              )}
+                              {String(
+                                index + 1,
+                              ).padStart(2, "0")}
                             </span>
 
                             <span
@@ -772,12 +1061,13 @@ export default function CharactersPreview() {
                           </div>
 
                           <ArrowRight
+                            aria-hidden="true"
                             size={14}
                             strokeWidth={1.2}
                             className={[
                               "transition-all duration-300",
                               active
-                                ? "text-[#C69A45]"
+                                ? "text-[#ead39a]"
                                 : "text-white/10 group-hover:translate-x-0.5 group-hover:text-white/32",
                             ].join(" ")}
                           />
@@ -788,12 +1078,16 @@ export default function CharactersPreview() {
                         </div>
 
                         <span
+                          aria-hidden="true"
                           className={[
-                            "absolute bottom-0 left-0 h-px bg-[#C69A45] transition-all duration-500",
+                            "absolute bottom-0 left-0 h-px transition-all duration-500",
                             active
                               ? "w-full opacity-70"
                               : "w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-50",
                           ].join(" ")}
+                          style={{
+                            background: `linear-gradient(90deg, ${GOLD}, ${GOLD_LIGHT}, transparent)`,
+                          }}
                         />
                       </button>
                     );
@@ -802,13 +1096,18 @@ export default function CharactersPreview() {
               </div>
 
               <div className="mt-auto pt-8">
-                <div className="mb-4 flex items-center justify-between select-none">
+                <div className="mb-4 flex select-none items-center justify-between">
                   <span className="font-mono text-[7px] uppercase tracking-[0.27em] text-white/18">
-                    Navigate
+                    {copy.navigate}
                   </span>
 
-                  <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-white/12">
-                    Orbit
+                  <span
+                    className="font-mono text-[7px] uppercase tracking-[0.2em]"
+                    style={{
+                      color: `${GOLD_LIGHT}42`,
+                    }}
+                  >
+                    {copy.orbit}
                   </span>
                 </div>
 
@@ -816,10 +1115,11 @@ export default function CharactersPreview() {
                   <button
                     type="button"
                     onClick={previousCharacter}
-                    aria-label="Prethodni lik"
-                    className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#C69A45]/30 hover:text-[#C69A45]"
+                    aria-label={copy.previous}
+                    className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#c7a96b]/30 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <ArrowLeft
+                      aria-hidden="true"
                       size={15}
                       strokeWidth={1.2}
                       className="transition-transform duration-300 group-hover:-translate-x-0.5"
@@ -829,10 +1129,11 @@ export default function CharactersPreview() {
                   <button
                     type="button"
                     onClick={nextCharacter}
-                    aria-label="Sledeći lik"
-                    className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#C69A45]/30 hover:text-[#C69A45]"
+                    aria-label={copy.next}
+                    className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#c7a96b]/30 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <ArrowRight
+                      aria-hidden="true"
                       size={15}
                       strokeWidth={1.2}
                       className="transition-transform duration-300 group-hover:translate-x-0.5"
@@ -841,15 +1142,20 @@ export default function CharactersPreview() {
                 </div>
 
                 <Link
-                  href="/likovi"
-                  className="group mt-3 flex h-11 items-center justify-between border border-white/[0.07] px-4 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/28 transition-all duration-300 hover:border-white/[0.15] hover:text-white/68"
+                  href={
+                    locale === "en"
+                      ? "/en/characters"
+                      : "/likovi"
+                  }
+                  className="group mt-3 flex h-11 items-center justify-between border border-white/[0.07] px-4 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/28 transition-all duration-300 hover:border-white/[0.15] hover:text-white/68 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                 >
-                  <span>Full archive</span>
+                  <span>{copy.fullArchive}</span>
 
                   <ArrowUpRight
+                    aria-hidden="true"
                     size={15}
                     strokeWidth={1.2}
-                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#C69A45]"
+                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#ead39a]"
                   />
                 </Link>
               </div>
@@ -858,14 +1164,10 @@ export default function CharactersPreview() {
         ) : (
           <div className="border border-white/[0.07] px-6 py-20 text-center">
             <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/25">
-              No characters match this filter.
+              {copy.noMatch}
             </p>
           </div>
         )}
-
-        {/* ===================================================
-            LOWER SIGNAL
-        =================================================== */}
 
         <motion.div
           initial={{
@@ -879,22 +1181,35 @@ export default function CharactersPreview() {
               : undefined
           }
           transition={{
-            delay: 0.55,
-            duration: 0.75,
+            delay: reducedMotion ? 0 : 0.55,
+            duration: reducedMotion ? 0 : 0.75,
           }}
-          className="mt-14 flex items-center justify-between border-t border-white/[0.055] pt-5 select-none"
+          className="mt-14 flex select-none items-center justify-between border-t border-white/[0.055] pt-5"
         >
           <div className="flex items-center gap-3">
             <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.15]">
-              UMBRA STUDIO / LIVING CHARACTER ARCHIVE
+              {copy.archiveSignal}
             </span>
           </div>
 
-          <span className="hidden items-center gap-3 font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.14] sm:flex">
-            <span>Explore</span>
+          <Link
+            href={
+              locale === "en"
+                ? "/en/characters"
+                : "/likovi"
+            }
+            className="group hidden items-center gap-3 font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.14] transition-colors duration-300 hover:text-white/55 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 sm:flex"
+          >
+            <span>{copy.explore}</span>
 
-            <span className="h-px w-8 bg-[#C69A45]/25" />
-          </span>
+            <span
+              aria-hidden="true"
+              className="h-px w-8 transition-[width] duration-300 group-hover:w-12"
+              style={{
+                background: `${GOLD}32`,
+              }}
+            />
+          </Link>
         </motion.div>
       </div>
     </section>
@@ -914,11 +1229,12 @@ function FilterButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={[
-        "border px-3 py-2 font-mono text-[7px] uppercase tracking-[0.2em] transition-all duration-300",
+        "min-h-9 border px-3 py-2 font-mono text-[7px] uppercase tracking-[0.2em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
         active
-          ? "border-[#C69A45]/35 bg-[#C69A45]/[0.07] text-[#E7C57D]"
-          : "border-white/[0.06] text-white/25 hover:border-white/[0.13] hover:text-white/55",
+          ? "border-[#c7a96b]/40 bg-[#c7a96b]/[0.07] text-[#ead39a]"
+          : "border-white/[0.06] text-white/25 hover:border-white/[0.13] hover:bg-white/[0.015] hover:text-white/55",
       ].join(" ")}
     >
       {children}

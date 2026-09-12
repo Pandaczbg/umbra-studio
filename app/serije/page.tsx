@@ -1,135 +1,324 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+} from "lucide-react";
 
 import { projects } from "@/data/projects";
 
+const GOLD = "#c7a96b";
+const GOLD_LIGHT = "#ead39a";
+const FALLBACK_IMAGE = "/umbra-background.png";
+
+function getStatusLabel(
+  status: (typeof projects)[number]["status"],
+) {
+  switch (status) {
+    case "in-production":
+      return "U produkciji";
+    case "development":
+      return "U razvoju";
+    case "upcoming":
+      return "Uskoro";
+    default:
+      return status;
+  }
+}
+
+function getTypeLabel(
+  type: (typeof projects)[number]["type"],
+) {
+  switch (type) {
+    case "Serija":
+      return "Serija";
+    case "Film":
+      return "Film";
+    default:
+      return "Projekat";
+  }
+}
+
+function getProjectImage(
+  project: (typeof projects)[number],
+) {
+  return (
+    project.book?.coverSr ||
+    project.book?.coverEn ||
+    project.cover ||
+    FALLBACK_IMAGE
+  );
+}
+
+function getProjectNumber(id: string) {
+  const match = id.match(/(\d+)$/);
+
+  return match?.[1]?.padStart(2, "0") ?? "00";
+}
+
 export default function ProjectsPage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#050505] text-white">
-      {/* HERO */}
-      <section className="relative px-5 pb-24 pt-36 sm:px-8 sm:pb-32 lg:px-12 lg:pb-40">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-[8%] top-[15%] h-[360px] w-[360px] rounded-full bg-[#b99a61]/[0.035] blur-[120px]" />
-          <div className="absolute right-[-5%] top-[28%] h-[500px] w-[500px] rounded-full bg-white/[0.018] blur-[140px]" />
-          <div className="absolute inset-x-0 top-0 h-px bg-white/[0.08]" />
-        </div>
+    <main className="min-h-screen overflow-hidden bg-[#030303] text-[#f1ede4]">
+      {/* INTRO */}
+      <section className="relative border-b border-white/[0.055] px-6 pb-20 pt-36 sm:px-9 sm:pb-24 lg:px-12 lg:pb-28 lg:pt-44 xl:px-16">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 72% 26%, rgba(199,169,107,.055), transparent 30%)",
+          }}
+        />
 
-        <div className="relative mx-auto max-w-[1440px]">
-          <div className="flex items-center gap-3 text-[8px] uppercase tracking-[0.38em] text-white/35">
-            <span className="h-px w-10 bg-[#b99a61]" />
-            Umbra Studio / Projekti
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.07]"
+        />
+
+        <div className="relative mx-auto max-w-[1480px]">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="h-px w-8"
+                style={{
+                  background: `${GOLD}70`,
+                }}
+              />
+
+              <span
+                className="text-[7px] font-semibold uppercase tracking-[0.32em]"
+                style={{
+                  color: `${GOLD_LIGHT}78`,
+                }}
+              >
+                Umbra Studio / Projekti
+              </span>
+            </div>
+
+            <span className="hidden font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.15] sm:block">
+              Archive
+            </span>
           </div>
 
-          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_320px] lg:items-end">
+          <div className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] lg:items-end lg:gap-20">
             <div>
-              <h1 className="max-w-[1050px] text-[clamp(3.7rem,8vw,8.6rem)] font-medium leading-[0.84] tracking-[-0.075em]">
-                Svetovi koje
+              <h1 className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.80] tracking-[-0.075em] text-white">
+                Svetovi
                 <br />
-                <span className="font-serif italic font-normal text-white/70">
-                  gradimo.
+                <span className="font-serif italic normal-case text-white/[0.58]">
+                  koje stvaramo
                 </span>
               </h1>
             </div>
 
-            <div className="max-w-[320px] border-l border-white/[0.12] pl-6 pb-2">
-              <p className="text-[11px] uppercase leading-6 tracking-[0.18em] text-white/35">
-                Originalne priče.
-                <br />
-                Filmski svetovi.
-                <br />
-                Likovi koji ostaju.
+            <div className="max-w-[430px] lg:pb-2">
+              <p className="text-sm leading-7 text-white/[0.38] sm:text-[15px] sm:leading-8">
+                Projekti Umbra Studija okupljeni na jednom mestu — priče, svetovi i produkcije u nastajanju.
               </p>
-            </div>
-          </div>
 
-          <div className="mt-16 flex items-center justify-between border-t border-white/[0.09] pt-5 text-[8px] uppercase tracking-[0.28em] text-white/30">
-            <span>Projects Archive</span>
-            <span>
-              {String(projects.length).padStart(2, "0")} Works
-            </span>
+              <div className="mt-7 flex items-center gap-4 border-t border-white/[0.065] pt-4">
+                <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.17]">
+                  {projects.length} {projects.length === 1 ? "projekat" : "projekta"}
+                </span>
+
+                <span
+                  aria-hidden="true"
+                  className="h-px w-5 bg-white/[0.12]"
+                />
+
+                <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.20]">
+                  Istraži
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* PROJECT ARCHIVE */}
-      <section className="px-5 pb-32 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-[1440px]">
-          <div className="grid gap-5 lg:grid-cols-2">
+      <section className="px-6 py-20 sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16">
+        <div className="mx-auto max-w-[1480px]">
+          <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
             {projects.map((project, index) => (
               <Link
                 key={project.id}
                 href={`/serije/${project.slug}`}
+                aria-label={`Otvori projekat ${project.title}`}
                 data-cursor-interactive
-                className="group relative block overflow-hidden border border-white/[0.09] bg-[#080808] outline-none transition-colors duration-500 hover:border-[#b99a61]/35 focus-visible:border-[#b99a61]/60"
+                className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
               >
-                <div
-                  data-cursor-media
-                  data-transition-image
-                  className="relative aspect-[16/10] overflow-hidden"
-                >
+                {/* VISUAL */}
+                <div className="relative aspect-[16/10] overflow-hidden">
                   <Image
-                    src="/umbra-background.png"
+                    src={getProjectImage(project)}
                     alt={project.title}
                     fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover opacity-[0.42] transition duration-[1400ms] ease-out group-hover:scale-[1.055] group-hover:opacity-[0.58]"
+                    priority={index === 0}
+                    sizes="(min-width: 1024px) 47vw, 94vw"
+                    className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
                   />
 
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,.08)_0%,rgba(5,5,5,.18)_38%,rgba(5,5,5,.94)_100%)]" />
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-black/[0.20]"
+                  />
 
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(0,0,0,.38)_100%)] opacity-70" />
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.08) 42%, rgba(0,0,0,.76) 100%)",
+                    }}
+                  />
 
-                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 sm:p-7">
-                    <span className="text-[8px] uppercase tracking-[0.28em] text-white/45">
-                      {String(index + 1).padStart(2, "0")}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-4 border border-white/[0.05] sm:inset-5"
+                  />
+
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
+                    style={{
+                      borderColor: `${GOLD_LIGHT}38`,
+                    }}
+                  />
+
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
+                    style={{
+                      borderColor: `${GOLD}2b`,
+                    }}
+                  />
+
+                  <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
+                    <span
+                      className="text-[6px] font-semibold uppercase tracking-[0.28em]"
+                      style={{
+                        color: `${GOLD_LIGHT}72`,
+                      }}
+                    >
+                      Project
                     </span>
 
-                    <span className="border border-white/[0.12] bg-black/20 px-3 py-1.5 text-[7px] uppercase tracking-[0.25em] text-white/45 backdrop-blur-md">
-                      {project.type}
+                    <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
+                      {getProjectNumber(project.id)}
                     </span>
                   </div>
 
-                  <div className="pointer-events-none absolute inset-5 border border-white/[0.07] transition-all duration-700 group-hover:inset-4 group-hover:border-[#b99a61]/30 sm:inset-7 sm:group-hover:inset-6" />
+                  <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+                    <div className="flex items-end justify-between gap-6">
+                      <div className="min-w-0">
+                        <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
+                          <span
+                            style={{
+                              color: `${GOLD_LIGHT}82`,
+                            }}
+                          >
+                            {getTypeLabel(project.type)}
+                          </span>
 
-                  <div className="pointer-events-none absolute left-5 top-5 h-5 w-5 border-l border-t border-[#b99a61]/45 opacity-50 transition-all duration-700 group-hover:left-4 group-hover:top-4 group-hover:opacity-100 sm:left-7 sm:top-7 sm:group-hover:left-6 sm:group-hover:top-6" />
+                          <span
+                            aria-hidden="true"
+                            className="h-px w-4 bg-white/[0.16]"
+                          />
 
-                  <div className="pointer-events-none absolute bottom-5 right-5 h-5 w-5 border-b border-r border-[#b99a61]/45 opacity-50 transition-all duration-700 group-hover:bottom-4 group-hover:right-4 group-hover:opacity-100 sm:bottom-7 sm:right-7 sm:group-hover:bottom-6 sm:group-hover:right-6" />
+                          <span className="text-white/[0.34]">
+                            {getStatusLabel(project.status)}
+                          </span>
+                        </div>
 
-                  <div className="pointer-events-none absolute inset-y-0 -left-[25%] w-[22%] skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/[0.07] to-transparent opacity-0 transition-all duration-[1100ms] group-hover:left-[115%] group-hover:opacity-100" />
-                </div>
-
-                <div className="relative border-t border-white/[0.07] px-6 py-7 sm:px-8 sm:py-8">
-                  <div className="flex items-start justify-between gap-8">
-                    <div className="max-w-[700px]">
-                      <div className="text-[clamp(2rem,4vw,4rem)] leading-[0.92] tracking-[-0.055em] text-white transition-colors duration-500 group-hover:text-[#e3d2af]">
-                        {project.title}
+                        <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
+                          {project.title}
+                        </h2>
                       </div>
 
-                      <p className="mt-5 max-w-[600px] text-sm leading-7 text-white/40 transition-colors duration-500 group-hover:text-white/52">
-                        {project.shortDescription}
-                      </p>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
+                        <ArrowUpRight
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5"
+                        />
+                      </span>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="mt-1 hidden h-11 w-11 shrink-0 items-center justify-center border border-white/[0.11] text-white/45 transition-all duration-500 group-hover:border-[#b99a61]/50 group-hover:bg-[#b99a61]/[0.08] group-hover:text-[#d4bc8b] sm:flex">
-                      <ArrowUpRight
-                        size={15}
-                        strokeWidth={1.25}
-                        className="transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      />
+                {/* INFORMATION */}
+                <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
+                  <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                    <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
+                      {project.shortDescription}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
+                      <div>
+                        <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                          Status
+                        </div>
+
+                        <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                          {getStatusLabel(project.status)}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                          Platform
+                        </div>
+
+                        <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                          {project.platform}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 flex items-center justify-between border-t border-white/[0.07] pt-5">
-                    <span className="text-[8px] uppercase tracking-[0.28em] text-white/25">
-                      Umbra / {project.id.slice(-2)}
+                  {project.book ? (
+                    <div className="mt-5 flex items-center gap-3">
+                      <span
+                        className="text-[7px] font-semibold uppercase tracking-[0.21em]"
+                        style={{
+                          color: `${GOLD_LIGHT}78`,
+                        }}
+                      >
+                        Roman
+                      </span>
+
+                      <span
+                        aria-hidden="true"
+                        className="h-px w-6 bg-white/[0.10]"
+                      />
+
+                      <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
+                        {project.book.author}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
+                      Umbra Original
+                    </div>
+                  )}
+
+                  <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
+                    <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
+                      Umbra Studio
                     </span>
 
-                    <span className="inline-flex items-center gap-3 text-[8px] uppercase tracking-[0.25em] text-white/45 transition-colors duration-500 group-hover:text-[#b99a61]">
+                    <span
+                      className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
+                      style={{
+                        color: `${GOLD_LIGHT}82`,
+                      }}
+                    >
                       Otvori projekat
-                      <span className="text-sm leading-none">
-                        →
-                      </span>
+
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      />
                     </span>
                   </div>
                 </div>
@@ -139,33 +328,50 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* CLOSING FRAME */}
-      <section className="px-5 pb-32 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-[1440px] border-t border-white/[0.08] pt-10">
-          <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="text-[8px] uppercase tracking-[0.32em] text-white/25">
-                Umbra Studio
-              </div>
-
-              <div className="mt-4 text-2xl tracking-[-0.04em] text-white/75 sm:text-3xl">
-                Priča prvo.
-                <span className="font-serif italic text-white/45">
-                  {" "}
-                  Sve ostalo dolazi posle.
-                </span>
-              </div>
-            </div>
-
+      {/* LOWER NAVIGATION */}
+      <section className="px-6 pb-24 pt-2 sm:px-9 sm:pb-32 lg:px-12 xl:px-16">
+        <div className="mx-auto max-w-[1480px] border-t border-white/[0.065] pt-8">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Link
               href="/"
               data-cursor-interactive
-              className="group inline-flex w-fit items-center gap-4 border-b border-white/[0.18] pb-2 text-[8px] uppercase tracking-[0.26em] text-white/45 transition-colors duration-500 hover:border-[#b99a61]/50 hover:text-[#b99a61]"
+              className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
-              Nazad na početnu
-              <span className="transition-transform duration-500 group-hover:-translate-x-1">
-                ←
-              </span>
+              <div>
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                  Umbra Studio
+                </div>
+
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
+                  Početna
+                </div>
+              </div>
+
+              <ArrowLeft
+                aria-hidden="true"
+                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-x-1 group-hover:text-[#d6b776]"
+              />
+            </Link>
+
+            <Link
+              href="/likovi"
+              data-cursor-interactive
+              className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
+            >
+              <div>
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                  Arhiva
+                </div>
+
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
+                  Istraži likove
+                </div>
+              </div>
+
+              <ArrowUpRight
+                aria-hidden="true"
+                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#d6b776]"
+              />
             </Link>
           </div>
         </div>

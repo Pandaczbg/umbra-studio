@@ -20,41 +20,43 @@ type StudioManifestoProps = {
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const GOLD_DARK = "#8f7142";
+const STUDIO_YEAR = "2026";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const COPY = {
   sr: {
     label: "UMBRA STUDIO",
-    eyebrow: "ZAVRŠNI KADAR",
-    description: "Priče koje ostavljaju senku.",
-    archive: "Pogledaj projekte",
-    back: "Na početak",
-    mark: "STORY / IMAGE / MOTION",
-    closing: "Svaka priča ima svoj trag.",
-    projectsAria: "Pogledaj Umbra projekte",
+    eyebrow: "MANIFESTO",
+    titleA: "Priče koje",
+    titleB: "ostavljaju senku.",
+    body:
+      "Gradimo priče kroz kadar, karakter i pokret — od prve ideje do sveta koji može da se vidi, čuje i nastavi.",
+    archive: "Istraži projekte",
+    home: "Na početak",
+    archiveAria: "Istraži Umbra projekte",
     homeAria: "Vrati se na početak stranice",
+    mark: "STORY / IMAGE / MOTION",
+    signal: "UMBRA / CLOSING FRAME",
+    index: "END / 2026",
   },
 
   en: {
     label: "UMBRA STUDIO",
-    eyebrow: "FINAL FRAME",
-    description: "Stories that leave a shadow.",
+    eyebrow: "MANIFESTO",
+    titleA: "Stories that",
+    titleB: "leave a shadow.",
+    body:
+      "We build stories through frame, character and motion — from the first idea to a world that can be seen, heard and continued.",
     archive: "Explore projects",
-    back: "Back to beginning",
-    mark: "STORY / IMAGE / MOTION",
-    closing: "Every story leaves a trace.",
-    projectsAria: "Explore Umbra projects",
+    home: "Back to beginning",
+    archiveAria: "Explore Umbra projects",
     homeAria: "Return to the beginning of the page",
+    mark: "STORY / IMAGE / MOTION",
+    signal: "UMBRA / CLOSING FRAME",
+    index: "END / 2026",
   },
 } as const;
-
-/* ==========================================================================
-   FINAL FRAME
-
-   Intentionally NOT a numbered scene.
-   It closes the homepage narrative and hands the visitor into the footer.
-   ========================================================================== */
 
 export default function StudioManifesto({
   locale = "sr",
@@ -63,74 +65,62 @@ export default function StudioManifesto({
   const copy = COPY[locale];
 
   const projectsHref =
-    locale === "en"
-      ? "/en/projects"
-      : "/serije";
-
+    locale === "en" ? "/en/projects" : "/serije";
   const homeHref =
-    locale === "en"
-      ? "/en"
-      : "/";
+    locale === "en" ? "/en" : "/";
 
   const studioName =
-    studioProfile.name || copy.label;
+    studioProfile.name?.trim() || copy.label;
 
   return (
     <section
+      id="manifesto"
+      data-umbra-scene="manifesto"
       data-umbra-prefooter
-      aria-label={
-        locale === "en"
-          ? "Umbra closing statement"
-          : "Umbra završni kadar"
-      }
-      className="relative overflow-hidden border-b border-white/[0.045] bg-[#030303]"
+      aria-labelledby="manifesto-title"
+      className="relative overflow-hidden border-b border-white/[0.05] bg-[#030303]"
     >
-      {/* ========================================================================
-         ATMOSPHERE
-         ======================================================================== */}
-
+      {/* ATMOSPHERE */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <div
-          className="absolute left-1/2 top-1/2 h-[760px] w-[760px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          className="absolute left-1/2 top-[46%] h-[780px] w-[780px] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             background: `
               radial-gradient(
                 circle,
-                ${GOLD}04 0%,
-                ${GOLD}018 28%,
-                transparent 69%
+                ${GOLD}05 0%,
+                ${GOLD_LIGHT}012 28%,
+                transparent 70%
               )
             `,
-            filter: "blur(90px)",
+            filter: "blur(92px)",
           }}
         />
 
         <div
-          className="absolute -left-[28%] top-[10%] h-[700px] w-[700px] rounded-full"
+          className="absolute -left-[24%] top-[8%] h-[640px] w-[640px] rounded-full"
           style={{
             background:
-              "radial-gradient(circle, rgba(255,255,255,.007), transparent 71%)",
-            filter: "blur(94px)",
+              "radial-gradient(circle, rgba(255,255,255,.008), transparent 72%)",
+            filter: "blur(96px)",
           }}
         />
 
         <div
-          className="absolute -right-[18%] bottom-[-26%] h-[680px] w-[680px] rounded-full"
+          className="absolute -right-[22%] bottom-[-24%] h-[720px] w-[720px] rounded-full"
           style={{
-            background:
-              `radial-gradient(circle, ${GOLD_DARK}020, transparent 72%)`,
-            filter: "blur(94px)",
+            background: `radial-gradient(circle, ${GOLD_DARK}018, transparent 72%)`,
+            filter: "blur(96px)",
           }}
         />
 
         <span
-          className="absolute left-1/2 top-1/2 h-px w-[72vw] max-w-[1120px] -translate-x-1/2 -translate-y-1/2"
+          className="absolute left-1/2 top-1/2 h-px w-[74vw] max-w-[1160px] -translate-x-1/2 -translate-y-1/2"
           style={{
-            background:
-              `linear-gradient(90deg, transparent, ${GOLD}08 24%, ${GOLD_LIGHT}16 50%, ${GOLD}08 76%, transparent)`,
+            background: `linear-gradient(90deg, transparent, ${GOLD}07 22%, ${GOLD_LIGHT}15 50%, ${GOLD}07 78%, transparent)`,
           }}
         />
 
@@ -143,52 +133,25 @@ export default function StudioManifesto({
         />
       </div>
 
-      {/* ========================================================================
-         OUTER FRAME
-         ======================================================================== */}
-
+      {/* FRAME */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-5 border border-white/[0.024] sm:inset-7 lg:inset-9 xl:inset-10"
+        className="pointer-events-none absolute inset-5 border border-white/[0.023] sm:inset-7 lg:inset-9 xl:inset-10"
       >
         <span
           className="absolute -left-px -top-px h-12 w-12 border-l border-t"
-          style={{
-            borderColor: `${GOLD}2e`,
-          }}
+          style={{ borderColor: `${GOLD}30` }}
         />
-
-        <span
-          className="absolute -right-px -top-px h-10 w-10 border-r border-t"
-          style={{
-            borderColor: "rgba(255,255,255,.026)",
-          }}
-        />
-
-        <span
-          className="absolute -bottom-px -left-px h-10 w-10 border-b border-l"
-          style={{
-            borderColor: "rgba(255,255,255,.02)",
-          }}
-        />
-
+        <span className="absolute -right-px -top-px h-10 w-10 border-r border-t border-white/[0.026]" />
+        <span className="absolute -bottom-px -left-px h-10 w-10 border-b border-l border-white/[0.02]" />
         <span
           className="absolute -bottom-px -right-px h-12 w-12 border-b border-r"
-          style={{
-            borderColor: `${GOLD_DARK}2d`,
-          }}
+          style={{ borderColor: `${GOLD_DARK}2f` }}
         />
       </div>
 
-      {/* ========================================================================
-         CONTENT
-         ======================================================================== */}
-
-      <div className="relative z-10 mx-auto flex min-h-[68svh] max-w-[1540px] flex-col justify-center px-6 py-24 sm:px-9 sm:py-28 lg:min-h-[72svh] lg:px-12 lg:py-32 xl:px-16">
-        {/* ======================================================================
-           TOP MARK
-           ====================================================================== */}
-
+      {/* CONTENT */}
+      <div className="relative z-10 mx-auto flex min-h-[70svh] max-w-[1540px] flex-col justify-center px-6 py-24 sm:px-9 sm:py-28 lg:min-h-[76svh] lg:px-12 lg:py-32 xl:px-16">
         <motion.div
           initial={{
             opacity: 0,
@@ -206,42 +169,41 @@ export default function StudioManifesto({
             duration: reducedMotion ? 0 : 0.5,
             ease: EASE,
           }}
-          className="flex items-center gap-3"
+          className="flex items-center justify-between gap-6 border-b border-white/[0.05] pb-5"
         >
-          <span
-            aria-hidden="true"
-            className="h-px w-10"
-            style={{
-              background:
-                `linear-gradient(90deg, transparent, ${GOLD})`,
-            }}
-          />
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-px w-10"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${GOLD})`,
+              }}
+            />
 
-          <span
-            className="font-mono text-[6px] uppercase tracking-[0.36em]"
-            style={{
-              color: `${GOLD_LIGHT}6e`,
-            }}
-          >
-            {copy.eyebrow}
-          </span>
+            <span
+              className="font-mono text-[6px] uppercase tracking-[0.36em]"
+              style={{ color: `${GOLD_LIGHT}6f` }}
+            >
+              {copy.eyebrow}
+            </span>
 
-          <span className="hidden h-px w-7 bg-white/[0.05] sm:block" />
+            <span className="hidden h-px w-7 bg-white/[0.05] sm:block" />
 
-          <span className="hidden font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.11] sm:block">
-            {copy.mark}
+            <span className="hidden font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.11] sm:block">
+              {copy.mark}
+            </span>
+          </div>
+
+          <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.11] sm:block">
+            {copy.index}
           </span>
         </motion.div>
 
-        {/* ======================================================================
-           STATEMENT
-           ====================================================================== */}
-
-        <div className="mt-16 lg:mt-20">
+        <div className="mt-14 lg:mt-18">
           <motion.div
             initial={{
               opacity: 0,
-              y: reducedMotion ? 0 : 24,
+              y: reducedMotion ? 0 : 18,
             }}
             whileInView={{
               opacity: 1,
@@ -249,45 +211,77 @@ export default function StudioManifesto({
             }}
             viewport={{
               once: true,
-              amount: 0.16,
+              amount: 0.14,
             }}
             transition={{
-              duration: reducedMotion ? 0 : 0.82,
+              duration: reducedMotion ? 0 : 0.76,
               ease: EASE,
             }}
           >
-            <div className="relative">
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-[24%] left-[-2%] select-none text-[clamp(7rem,19vw,18rem)] font-[500] uppercase leading-none tracking-[-0.1em] text-white/[0.011]"
-              >
-                UMBRA
-              </span>
+            <Link
+              href={projectsHref}
+              aria-label={copy.archiveAria}
+              className="group block max-w-[1310px] rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
+            >
+              <div className="relative">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -left-[2%] -top-[15%] select-none text-[clamp(7rem,20vw,19rem)] font-[500] uppercase leading-none tracking-[-0.1em] text-white/[0.012]"
+                >
+                  UMBRA
+                </span>
 
-              <h2 className="relative max-w-[1280px] text-[clamp(3.8rem,8.3vw,9.8rem)] font-[420] uppercase leading-[0.77] tracking-[-0.088em] text-white">
-                <span className="block text-white/[0.72]">
+                <p
+                  className="relative text-[8px] font-semibold uppercase tracking-[0.34em]"
+                  style={{ color: `${GOLD_LIGHT}88` }}
+                >
                   {studioName}
-                </span>
+                </p>
 
-                <span className="mt-2 block font-serif font-normal italic text-white/[0.56] sm:mt-3">
-                  {copy.description}
+                <h2
+                  id="manifesto-title"
+                  className="relative mt-7 text-[clamp(4.2rem,9.2vw,10.8rem)] font-[420] uppercase leading-[0.76] tracking-[-0.09em] text-white transition-[color,transform] duration-500 group-hover:-translate-y-[2px] group-hover:text-[#fffdf7]"
+                >
+                  <span className="block">
+                    {copy.titleA}
+                  </span>
+
+                  <span className="mt-2 block font-serif font-normal italic text-white/[0.57] transition-colors duration-500 group-hover:text-white/[0.76] sm:mt-3">
+                    {copy.titleB}
+                  </span>
+                </h2>
+
+                <span
+                  aria-hidden="true"
+                  className="mt-7 block h-px w-12 origin-left transition-[width] duration-500 group-hover:w-24"
+                  style={{
+                    background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+                  }}
+                />
+
+                <span className="mt-5 inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.3em] opacity-0 transition-[opacity,transform] duration-300 group-hover:translate-x-1 group-hover:opacity-100">
+                  <span style={{ color: `${GOLD_LIGHT}b0` }}>
+                    {copy.archive}
+                  </span>
+
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5"
+                    style={{ color: `${GOLD_LIGHT}78` }}
+                  />
                 </span>
-              </h2>
-            </div>
+              </div>
+            </Link>
           </motion.div>
-
-          {/* ====================================================================
-             SIGNATURE LINE
-             ==================================================================== */}
 
           <motion.div
             initial={{
-              scaleX: 0,
               opacity: 0,
+              y: reducedMotion ? 0 : 8,
             }}
             whileInView={{
-              scaleX: 1,
               opacity: 1,
+              y: 0,
             }}
             viewport={{
               once: true,
@@ -295,103 +289,38 @@ export default function StudioManifesto({
             }}
             transition={{
               delay: reducedMotion ? 0 : 0.12,
-              duration: reducedMotion ? 0 : 0.8,
+              duration: reducedMotion ? 0 : 0.56,
               ease: EASE,
             }}
-            className="mt-10 h-px w-full max-w-[760px] origin-left"
-            style={{
-              background:
-                `linear-gradient(90deg, ${GOLD}64, ${GOLD_LIGHT}18 46%, transparent)`,
-            }}
-          />
+            className="mt-9 grid gap-9 lg:grid-cols-[minmax(0,560px)_auto] lg:items-end lg:justify-between"
+          >
+            <p className="max-w-[560px] text-[12px] leading-7 text-white/[0.31] sm:text-[13px] sm:leading-8">
+              {copy.body}
+            </p>
 
-          {/* ====================================================================
-             CLOSING + ACTIONS
-             ==================================================================== */}
-
-          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
-            <motion.p
-              initial={{
-                opacity: 0,
-                y: reducedMotion ? 0 : 9,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.1,
-              }}
-              transition={{
-                delay: reducedMotion ? 0 : 0.18,
-                duration: reducedMotion ? 0 : 0.55,
-                ease: EASE,
-              }}
-              className="max-w-[540px] text-[12px] leading-7 text-white/[0.27] sm:text-[13px] sm:leading-7"
+            <Link
+              href={homeHref}
+              aria-label={copy.homeAria}
+              className="group inline-flex w-fit items-center gap-3 rounded-sm text-[7px] font-semibold uppercase tracking-[0.28em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-white/35"
+              style={{ color: `${GOLD_LIGHT}4f` }}
             >
-              {copy.closing}
-            </motion.p>
+              <ArrowUp
+                aria-hidden="true"
+                size={12}
+                strokeWidth={1.1}
+                className="transition-transform duration-300 group-hover:-translate-y-0.5"
+              />
 
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: reducedMotion ? 0 : 9,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.1,
-              }}
-              transition={{
-                delay: reducedMotion ? 0 : 0.22,
-                duration: reducedMotion ? 0 : 0.55,
-                ease: EASE,
-              }}
-              className="flex flex-wrap items-center gap-3"
-            >
-              <Link
-                href={projectsHref}
-                aria-label={copy.projectsAria}
-                className="group inline-flex h-11 items-center gap-3 border border-[#c7a96b52] px-5 text-[8px] font-semibold uppercase tracking-[0.24em] transition-[transform,border-color,background-color] duration-300 hover:-translate-y-px hover:border-[#ead39a] hover:bg-[#c7a96b08] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-                style={{
-                  color: GOLD_LIGHT,
-                }}
-              >
-                <span>{copy.archive}</span>
+              <span>{copy.home}</span>
 
-                <ArrowUpRight
-                  aria-hidden="true"
-                  size={12}
-                  strokeWidth={1.15}
-                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                />
-              </Link>
-
-              <Link
-                href={homeHref}
-                aria-label={copy.homeAria}
-                className="group inline-flex h-11 items-center gap-3 border border-white/[0.08] px-5 text-[8px] font-semibold uppercase tracking-[0.24em] text-white/[0.3] transition-[transform,border-color,color] duration-300 hover:-translate-y-px hover:border-white/[0.16] hover:text-white/[0.56] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
-              >
-                <ArrowUp
-                  aria-hidden="true"
-                  size={12}
-                  strokeWidth={1.15}
-                  className="transition-transform duration-300 group-hover:-translate-y-0.5"
-                />
-
-                <span>{copy.back}</span>
-              </Link>
-            </motion.div>
-          </div>
+              <span
+                aria-hidden="true"
+                className="h-px w-7 transition-[width] duration-300 group-hover:w-12"
+                style={{ background: `${GOLD_LIGHT}38` }}
+              />
+            </Link>
+          </motion.div>
         </div>
-
-        {/* ======================================================================
-           FINAL SIGNATURE
-           ====================================================================== */}
 
         <motion.div
           initial={{
@@ -405,50 +334,56 @@ export default function StudioManifesto({
             amount: 0.06,
           }}
           transition={{
-            delay: reducedMotion ? 0 : 0.28,
+            delay: reducedMotion ? 0 : 0.24,
             duration: reducedMotion ? 0 : 0.5,
           }}
-          className="mt-20 flex items-center justify-between border-t border-white/[0.045] pt-5"
+          className="mt-16 flex items-center justify-between border-t border-white/[0.045] pt-5 lg:mt-20"
         >
-          <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.1]">
-            {copy.label}
-          </span>
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-px w-8"
+              style={{ background: `${GOLD}38` }}
+            />
 
-          <span
-            className="font-mono text-[6px] uppercase tracking-[0.27em]"
-            style={{
-              color: `${GOLD_LIGHT}30`,
-            }}
+            <span
+              className="font-mono text-[6px] uppercase tracking-[0.3em]"
+              style={{ color: `${GOLD_LIGHT}4e` }}
+            >
+              {copy.signal}
+            </span>
+          </div>
+
+          <Link
+            href={projectsHref}
+            aria-label={copy.archiveAria}
+            className="group flex items-center gap-3 font-mono text-[6px] uppercase tracking-[0.25em] outline-none transition-colors duration-300 hover:text-[#ead39a]/75 focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+            style={{ color: `${GOLD_LIGHT}30` }}
           >
-            EST. / UMBRA
-          </span>
+            <span>{studioName}</span>
+
+            <ArrowUpRight
+              aria-hidden="true"
+              size={11}
+              strokeWidth={1}
+              className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </Link>
         </motion.div>
       </div>
 
-      {/* ========================================================================
-         BOTTOM SIGNAL
-         ======================================================================== */}
-
       <motion.div
         aria-hidden="true"
-        initial={{
-          scaleX: 0,
-        }}
-        whileInView={{
-          scaleX: 1,
-        }}
-        viewport={{
-          once: true,
-          amount: 0.05,
-        }}
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        viewport={{ once: true, amount: 0.05 }}
         transition={{
           duration: reducedMotion ? 0 : 0.9,
           ease: EASE,
         }}
         className="pointer-events-none absolute bottom-0 left-0 h-px w-[42%] origin-left"
         style={{
-          background:
-            `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD}, ${GOLD_LIGHT}20, transparent)`,
+          background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD}, ${GOLD_LIGHT}20, transparent)`,
         }}
       />
     </section>

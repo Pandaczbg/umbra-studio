@@ -1,9 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Download, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Clapperboard,
+  Download,
+  ExternalLink,
+  UsersRound,
+} from "lucide-react";
 
+import { characters } from "@/data/characters";
 import { projects } from "@/data/projects";
+
+const GOLD = "#c7a96b";
+const GOLD_LIGHT = "#ead39a";
+const FALLBACK_IMAGE = "/umbra-background.png";
+const AUTHOR_URL = "https://branislavbojcic.com/";
+
+type ProjectPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
 
 export function generateStaticParams() {
   return projects.map((project) => ({
@@ -13,305 +32,545 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+}: ProjectPageProps) {
   const { slug } = await params;
-  const project = projects.find((item) => item.slug === slug);
+
+  const project = projects.find(
+    (item) => item.slug === slug,
+  );
 
   if (!project) {
     return {
-      title: "Projekat nije pronađen",
+      title:
+        "Projekat nije pronađen | Umbra Studio",
     };
   }
 
+  const image =
+    project.book?.coverSr ||
+    project.book?.coverEn ||
+    project.cover ||
+    FALLBACK_IMAGE;
+
   return {
-    title: project.title,
+    title: `${project.title} | Umbra Studio`,
     description: project.longDescription,
+    openGraph: {
+      title: `${project.title} | Umbra Studio`,
+      description: project.longDescription,
+      images: [image],
+    },
   };
 }
 
-function getStatusLabel(status: typeof projects[number]["status"]) {
+function getStatusLabel(
+  status: (typeof projects)[number]["status"],
+) {
   switch (status) {
     case "in-production":
       return "U produkciji";
     case "development":
       return "U razvoju";
     case "upcoming":
-      return "U pripremi";
+      return "Uskoro";
     default:
       return status;
   }
 }
 
-function getTypeLabel(type: ProjectType) {
-  return type === "Serija" ? "Serija" : type;
+function getTypeLabel(
+  type: (typeof projects)[number]["type"],
+) {
+  switch (type) {
+    case "Serija":
+      return "Serija";
+    case "Film":
+      return "Film";
+    default:
+      return "Projekat";
+  }
 }
 
-type ProjectType = (typeof projects)[number]["type"];
+function getProjectImage(
+  project: (typeof projects)[number],
+) {
+  return (
+    project.book?.coverSr ||
+    project.book?.coverEn ||
+    project.cover ||
+    FALLBACK_IMAGE
+  );
+}
+
+function getProjectNumber(id: string) {
+  const match = id.match(/(\d+)$/);
+
+  return (
+    match?.[1]?.padStart(2, "0") ?? "00"
+  );
+}
 
 export default async function ProjectPage({
   params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+}: ProjectPageProps) {
   const { slug } = await params;
-  const project = projects.find((item) => item.slug === slug);
+
+  const project = projects.find(
+    (item) => item.slug === slug,
+  );
 
   if (!project) {
     notFound();
   }
 
+  const projectImage =
+    getProjectImage(project);
+
+  const statusLabel = getStatusLabel(
+    project.status,
+  );
+
+  const typeLabel = getTypeLabel(
+    project.type,
+  );
+
+  const projectNumber = getProjectNumber(
+    project.id,
+  );
+
+  const projectCharacters = characters
+    .filter(
+      (character) =>
+        character.projectSlug === project.slug,
+    )
+    .sort(
+      (a, b) => a.order - b.order,
+    );
+
+  const otherProjects = projects.filter(
+    (item) => item.slug !== project.slug,
+  );
+
   const book = project.book;
-  const hasBook = Boolean(book);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#050505] text-[#f1ede4]">
-      {/* ================================================================== */}
-      {/* HERO                                                               */}
-      {/* ================================================================== */}
-      <section className="relative min-h-[100svh] overflow-hidden">
-        {book ? (
-          <Image
-            src={book.coverSr}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover scale-[1.045] opacity-[0.38] blur-[1px]"
-          />
-        ) : (
-          <Image
-            src="/umbra-background.png"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover scale-[1.03] opacity-[0.54]"
-          />
-        )}
+    <main className="min-h-screen overflow-hidden bg-[#030303] text-[#f1ede4]">
+      {/* HERO */}
+      <section className="relative min-h-[92svh] overflow-hidden border-b border-white/[0.055]">
+        <Image
+          src={projectImage}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="scale-[1.04] object-cover opacity-[0.34]"
+        />
 
-        <div className="absolute inset-0 bg-[#050505]/60" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,5,.98)_0%,rgba(5,5,5,.92)_28%,rgba(5,5,5,.55)_62%,rgba(5,5,5,.86)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(5,5,5,.99)_0%,rgba(5,5,5,.16)_44%,rgba(5,5,5,.55)_100%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_38%,rgba(185,154,97,.11),transparent_33%)]" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-black/[0.50]"
+        />
 
-        <div className="pointer-events-none absolute inset-5 border border-white/[0.07] sm:inset-7 lg:inset-10" />
-        <div className="pointer-events-none absolute left-5 top-5 h-14 w-14 border-l border-t border-[#b99a61]/45 sm:left-7 sm:top-7 lg:left-10 lg:top-10" />
-        <div className="pointer-events-none absolute bottom-5 right-5 h-14 w-14 border-b border-r border-[#b99a61]/30 sm:bottom-7 sm:right-7 lg:bottom-10 lg:right-10" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(3,3,3,.97) 0%, rgba(3,3,3,.88) 34%, rgba(3,3,3,.48) 68%, rgba(3,3,3,.76) 100%)",
+          }}
+        />
 
-        <div className="relative mx-auto flex min-h-[100svh] max-w-[1440px] flex-col justify-between px-5 pb-12 pt-36 sm:px-8 sm:pb-16 lg:px-12 lg:pt-44">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="h-px w-9 bg-[#b99a61]/70" />
-              <span className="text-[8px] uppercase tracking-[0.36em] text-white/45">
-                Umbra Studio / Projekat
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(0deg, rgba(3,3,3,.98) 0%, rgba(3,3,3,.13) 52%, rgba(3,3,3,.58) 100%)",
+          }}
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 74% 38%, rgba(199,169,107,.09), transparent 34%)",
+          }}
+        />
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-5 border border-white/[0.055] sm:inset-7 lg:inset-10"
+        />
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-5 top-5 h-14 w-14 border-l border-t sm:left-7 sm:top-7 lg:left-10 lg:top-10"
+          style={{
+            borderColor: `${GOLD_LIGHT}42`,
+          }}
+        />
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-5 right-5 h-14 w-14 border-b border-r sm:bottom-7 sm:right-7 lg:bottom-10 lg:right-10"
+          style={{
+            borderColor: `${GOLD}2b`,
+          }}
+        />
+
+        <div className="relative mx-auto flex min-h-[92svh] max-w-[1480px] flex-col justify-between px-6 pb-10 pt-32 sm:px-9 sm:pb-14 lg:px-12 lg:pt-40 xl:px-16">
+          <div className="flex items-center justify-between gap-6">
+            <Link
+              href="/serije"
+              className="group inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.28em] text-white/[0.32] outline-none transition-[color,transform] duration-300 hover:-translate-x-0.5 hover:text-white/[0.62] focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
+            >
+              <ArrowLeft
+                aria-hidden="true"
+                className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5"
+              />
+
+              Svi projekti
+            </Link>
+
+            <div className="hidden items-center gap-4 sm:flex">
+              <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.16]">
+                Project / {projectNumber}
+              </span>
+
+              <span
+                aria-hidden="true"
+                className="h-px w-5 bg-white/[0.11]"
+              />
+
+              <span className="text-[6px] uppercase tracking-[0.24em] text-white/[0.18]">
+                {statusLabel}
               </span>
             </div>
-
-            <span className="font-mono text-[7px] tracking-[0.24em] text-white/[0.22]">
-              PROJECT / {project.id.slice(-2)}
-            </span>
           </div>
 
-          <div className="grid items-end gap-12 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_390px]">
-            <div className="max-w-[1000px]">
-              <div className="mb-6 flex flex-wrap items-center gap-4 text-[7px] uppercase tracking-[0.3em] text-white/34">
-                <span>{getTypeLabel(project.type)}</span>
-                <span className="h-px w-6 bg-white/[0.12]" />
-                <span>{getStatusLabel(project.status)}</span>
+          <div className="grid items-end gap-14 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="max-w-[1050px]">
+              <div className="mb-6 flex flex-wrap items-center gap-4 text-[7px] font-semibold uppercase tracking-[0.30em]">
+                <span
+                  style={{
+                    color: `${GOLD_LIGHT}88`,
+                  }}
+                >
+                  {typeLabel}
+                </span>
+
+                <span
+                  aria-hidden="true"
+                  className="h-px w-6 bg-white/[0.13]"
+                />
+
+                <span className="text-white/[0.34]">
+                  {statusLabel}
+                </span>
               </div>
 
-              <h1 className="max-w-[1050px] text-[clamp(4rem,9.5vw,10rem)] font-[440] leading-[0.8] tracking-[-0.075em]">
+              <h1 className="max-w-[1100px] text-[clamp(3.5rem,8.5vw,9.5rem)] font-[430] uppercase leading-[0.80] tracking-[-0.075em] text-white">
                 {project.title}
               </h1>
 
-              <div className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-white/62 sm:text-base">
-                <span>Filmska adaptacija romana</span>
-                <a
-                  href="https://branislavbojcic.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#d6b776] underline decoration-[#b99a61]/70 underline-offset-4 transition-colors hover:text-[#f0d08a] hover:decoration-[#d6b776]"
-                >
-                  Branislava Bojčića
-                </a>
-              </div>
+              <div
+                aria-hidden="true"
+                className="mt-7 h-px w-20"
+                style={{
+                  background:
+                    `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+                }}
+              />
 
-              <p className="mt-6 max-w-[730px] text-sm leading-7 text-white/44 sm:text-base sm:leading-8">
+              <p className="mt-8 max-w-[780px] text-sm leading-7 text-white/[0.42] sm:text-[15px] sm:leading-8">
                 {project.longDescription}
               </p>
 
-              <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-white/[0.09] pt-5 text-[7px] uppercase tracking-[0.27em] text-white/28">
-                <span>Platform · {project.platform}</span>
-                <span>Status · {getStatusLabel(project.status)}</span>
-                <span>Format · {getTypeLabel(project.type)}</span>
-                {book ? <span>Izvor · Roman</span> : null}
-              </div>
-            </div>
+              {book ? (
+                <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-white/[0.54]">
+                  <span>
+                    Filmska adaptacija romana
+                  </span>
 
-            {book ? (
-              <div className="relative mx-auto w-full max-w-[260px] lg:max-w-[300px]">
-                <div className="absolute -inset-4 border border-white/[0.035]" />
-                <div className="absolute -inset-2 border border-[#b99a61]/10" />
-
-                <div className="relative aspect-[0.69/1] overflow-hidden border border-white/[0.1] bg-[#070707] shadow-[0_30px_100px_rgba(0,0,0,.45)]">
-                  <Image
-                    src={book.coverSr}
-                    alt={`Naslovna strana romana ${book.title}`}
-                    fill
-                    priority
-                    sizes="(min-width: 1024px) 300px, 70vw"
-                    className="object-cover"
+                  <span
+                    aria-hidden="true"
+                    className="h-px w-5 bg-white/[0.12]"
                   />
 
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.05),transparent_48%,rgba(0,0,0,.6))]" />
-
-                  <div className="pointer-events-none absolute inset-4 border border-white/[0.055]" />
-                  <span className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-[#d6b776]/35" />
-                  <span className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-[#b99a61]/25" />
-
-                  <div className="pointer-events-none absolute inset-x-5 bottom-5 flex items-end justify-between">
-                    <span className="text-[6px] uppercase tracking-[0.3em] text-white/38">
-                      Izvorni roman
-                    </span>
-                    <span className="font-mono text-[6px] tracking-[0.22em] text-white/28">
-                      001
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between px-1 text-[7px] uppercase tracking-[0.25em] text-white/25">
                   <a
-                    href="https://branislavbojcic.com/"
+                    href={AUTHOR_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="transition-colors hover:text-[#d6b776]"
+                    className="inline-flex items-center gap-2 text-[#d6b776] underline decoration-[#c7a96b]/40 underline-offset-4 transition-colors hover:text-[#f0d08a]"
                   >
                     {book.author}
+
+                    <ArrowUpRight
+                      aria-hidden="true"
+                      className="h-3 w-3"
+                    />
                   </a>
-                  <span>Roman</span>
                 </div>
+              ) : (
+                <div className="mt-7 inline-flex items-center gap-2 text-[7px] font-semibold uppercase tracking-[0.24em]">
+                  <Clapperboard
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5"
+                    style={{
+                      color: `${GOLD}62`,
+                    }}
+                  />
+
+                  <span
+                    style={{
+                      color: `${GOLD_LIGHT}72`,
+                    }}
+                  >
+                    UMBRA ORIGINAL
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 border-t border-white/[0.075] pt-5 text-[7px] uppercase tracking-[0.25em] text-white/[0.24]">
+                <span>
+                  Platform · {project.platform}
+                </span>
+
+                <span>
+                  Status · {statusLabel}
+                </span>
+
+                <span>
+                  Format · {typeLabel}
+                </span>
+
+                <span>
+                  {book
+                    ? "Source · Novel"
+                    : "Source · Umbra Studio"}
+                </span>
               </div>
-            ) : null}
+            </div>
+
+            {/* VISUAL */}
+            <div className="mx-auto w-full max-w-[300px] lg:max-w-[320px]">
+              <Link
+                href={`/serije/${project.slug}`}
+                aria-label={`Otvori projekat ${project.title}`}
+                className="group block outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+              >
+                <div className="relative">
+                  <div
+                    aria-hidden="true"
+                    className="absolute -inset-4 border border-white/[0.035]"
+                  />
+
+                  <div
+                    aria-hidden="true"
+                    className="absolute -inset-2 border"
+                    style={{
+                      borderColor: `${GOLD}18`,
+                    }}
+                  />
+
+                  <div className="relative aspect-[0.76/1] overflow-hidden border border-white/[0.10] bg-[#060606] shadow-[0_28px_90px_rgba(0,0,0,.48)]">
+                    <Image
+                      src={projectImage}
+                      alt={`${project.title} artwork`}
+                      fill
+                      sizes="(min-width: 1024px) 320px, 72vw"
+                      className="object-cover transition-transform duration-[1100ms] group-hover:scale-[1.025]"
+                    />
+
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, rgba(0,0,0,.02), transparent 44%, rgba(0,0,0,.58))",
+                      }}
+                    />
+
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-4 border border-white/[0.045]"
+                    />
+
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-4 top-4 h-8 w-8 border-l border-t"
+                      style={{
+                        borderColor: `${GOLD_LIGHT}42`,
+                      }}
+                    />
+
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-4 right-4 h-8 w-8 border-b border-r"
+                      style={{
+                        borderColor: `${GOLD}30`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </Link>
+
+              <div className="mt-4 flex items-center justify-between gap-4 px-1 text-[6px] uppercase tracking-[0.24em] text-white/[0.22]">
+                <span>{project.platform}</span>
+
+                <span>
+                  Project / {projectNumber}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-6">
             <div className="hidden sm:block">
-              <div className="font-mono text-[6px] uppercase tracking-[0.24em] text-white/[0.18]">
-                STORY / FRAME / MOTION
-              </div>
-              <div className="mt-3 h-px w-24 bg-gradient-to-r from-[#b99a61]/50 to-transparent" />
+              <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.15]">
+                Story / Frame / Motion
+              </span>
+
+              <div
+                aria-hidden="true"
+                className="mt-3 h-px w-24"
+                style={{
+                  background:
+                    `linear-gradient(90deg, ${GOLD}55, transparent)`,
+                }}
+              />
             </div>
 
-            <div className="ml-auto flex items-center gap-3 text-[7px] uppercase tracking-[0.28em] text-white/28">
-              <span className="h-5 w-px bg-white/[0.12]" />
-              Scroll to enter
+            <span className="ml-auto text-[7px] uppercase tracking-[0.27em] text-white/[0.23]">
+              Scroll to explore
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* PROJECT CONTEXT */}
+      <section className="px-6 py-24 sm:px-9 sm:py-32 lg:px-12 lg:py-36 xl:px-16">
+        <div className="mx-auto max-w-[1480px]">
+          <div className="max-w-[920px]">
+            <div
+              className="text-[7px] font-semibold uppercase tracking-[0.30em]"
+              style={{
+                color: `${GOLD_LIGHT}82`,
+              }}
+            >
+              {book
+                ? "Izvorno delo"
+                : "Projektni svet"}
+            </div>
+
+            <h2 className="mt-5 text-[clamp(2.6rem,5.2vw,5.6rem)] font-[430] leading-[0.88] tracking-[-0.06em]">
+              {book ? (
+                <>
+                  Roman koji
+                  <br />
+                  <span className="font-serif italic text-white/[0.58]">
+                    postaje filmski svet
+                  </span>
+                </>
+              ) : (
+                <>
+                  Ideja koja
+                  <br />
+                  <span className="font-serif italic text-white/[0.58]">
+                    postaje filmski svet
+                  </span>
+                </>
+              )}
+            </h2>
+
+            <p className="mt-9 max-w-[780px] text-[14px] leading-8 text-white/[0.36] sm:text-[15px]">
+              {book
+                ? `„${book.title}“ ${book.author} predstavlja izvorni književni materijal ovog projekta Umbra Studija. Ekranizacija razvija priču kroz karaktere, atmosferu i filmsko pripovedanje.`
+                : project.longDescription}
+            </p>
+
+            <div className="mt-12 grid border-y border-white/[0.065] sm:grid-cols-4">
+              <ProjectStat
+                label="Format"
+                value={typeLabel}
+              />
+
+              <ProjectStat
+                label="Platforma"
+                value={project.platform}
+              />
+
+              <ProjectStat
+                label="Status"
+                value={statusLabel}
+              />
+
+              <ProjectStat
+                label={
+                  book ? "Autor" : "Izvor"
+                }
+                value={
+                  book
+                    ? book.author
+                    : "Umbra Studio"
+                }
+                last
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================================================================== */}
-      {/* PROJECT DOSSIER                                                    */}
-      {/* ================================================================== */}
-      <section className="px-5 py-28 sm:px-8 sm:py-36 lg:px-12">
-        <div className="mx-auto max-w-[1440px]">
-          <div className="grid gap-16 lg:grid-cols-[200px_1fr]">
-            <div className="lg:border-r lg:border-white/[0.07] lg:pr-10">
-              <div className="flex items-center gap-3">
-                <span className="h-px w-8 bg-[#b99a61]/60" />
-                <span className="text-[7px] uppercase tracking-[0.3em] text-white/25">
-                  01 / Projekat
-                </span>
-              </div>
-
-              <div className="mt-8 hidden font-mono text-[8px] uppercase leading-7 tracking-[0.22em] text-white/[0.16] lg:block">
-                UMBRA
-                <br />
-                PROJECT
-                <br />
-                001
-              </div>
-            </div>
-
-            <div className="max-w-[950px]">
-              <div className="text-[7px] uppercase tracking-[0.3em] text-[#d6b776]">
-                Izvorno delo
-              </div>
-
-              <h2 className="mt-5 text-[clamp(2.7rem,5vw,5.8rem)] font-[430] leading-[0.9] tracking-[-0.06em]">
-                Roman koji
-                <br />
-                <span className="font-serif italic text-white/62">
-                  postaje filmski svet
-                </span>
-              </h2>
-
-              <p className="mt-9 max-w-[780px] text-[15px] leading-8 text-white/42">
-                „MRZIM SVOG BRATA“ Branislava Bojčića predstavlja izvorni
-                književni materijal prve serije Umbra Studija. Ekranizacija
-                razvija priču kroz karaktere, atmosferu i filmsko pripovedanje,
-                uz poštovanje temelja izvornog dela.
-              </p>
-
-              <div className="mt-12 grid border-y border-white/[0.07] sm:grid-cols-4">
-                <ProjectStat label="FORMAT" value={getTypeLabel(project.type)} />
-                <ProjectStat label="PLATFORMA" value={project.platform} />
-                <ProjectStat label="STATUS" value={getStatusLabel(project.status)} />
-                <ProjectStat label="AUTOR" value={book?.author ?? "—"} last />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================== */}
-      {/* BOOK SOURCE / DOWNLOAD                                             */}
-      {/* ================================================================== */}
-      {hasBook && book ? (
-        <section className="border-y border-white/[0.07] bg-[#080808] px-5 py-24 sm:px-8 sm:py-32 lg:px-12">
-          <div className="mx-auto max-w-[1440px]">
-            <div className="grid gap-14 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-20">
+      {/* BOOK SOURCE */}
+      {book ? (
+        <section className="border-y border-white/[0.065] bg-[#070707] px-6 py-24 sm:px-9 sm:py-32 lg:px-12 xl:px-16">
+          <div className="mx-auto max-w-[1480px]">
+            <div className="grid gap-14 lg:grid-cols-[minmax(0,.68fr)_minmax(0,1.32fr)] lg:items-center lg:gap-20">
               <div className="grid grid-cols-2 gap-4 sm:gap-6">
                 <BookCover
                   href={book.pdfSr}
-                  downloadName="mrzim-svog-brata-sr.pdf"
                   src={book.coverSr}
                   alt="Naslovna strana srpskog izdanja"
-                  label="SR / IZDANJE · KLIK ZA PREUZIMANJE"
+                  label="SR / IZDANJE"
                   downloadLabel="Preuzmi srpski PDF"
+                  downloadName="mrzim-svog-brata-sr.pdf"
                 />
+
                 <BookCover
                   href={book.pdfEn}
-                  downloadName="mrzim-svog-brata-en.pdf"
                   src={book.coverEn}
                   alt="Naslovna strana engleskog izdanja"
-                  label="EN / IZDANJE · KLIK ZA PREUZIMANJE"
+                  label="EN / IZDANJE"
                   downloadLabel="Preuzmi engleski PDF"
+                  downloadName="mrzim-svog-brata-en.pdf"
                 />
               </div>
 
               <div className="max-w-[760px]">
-                <div className="flex items-center gap-3">
-                  <span className="h-px w-8 bg-[#b99a61]/70" />
-                  <span className="text-[7px] uppercase tracking-[0.32em] text-[#d6b776]">
-                    Izvorni materijal
-                  </span>
+                <div
+                  className="text-[7px] font-semibold uppercase tracking-[0.32em]"
+                  style={{
+                    color: `${GOLD_LIGHT}82`,
+                  }}
+                >
+                  Izvorni materijal
                 </div>
 
-                <h2 className="mt-5 text-[clamp(2.5rem,5vw,5.2rem)] font-[430] leading-[0.9] tracking-[-0.06em]">
+                <h2 className="mt-5 text-[clamp(2.5rem,5vw,5.2rem)] font-[430] leading-[0.90] tracking-[-0.06em]">
                   Pročitaj
                   <br />
-                  <span className="font-serif italic text-white/62">
+                  <span className="font-serif italic text-white/[0.58]">
                     roman
                   </span>
                 </h2>
 
-                <p className="mt-7 max-w-[680px] text-sm leading-7 text-white/40 sm:text-base sm:leading-8">
-                  Roman „{book.title}“ Branislava Bojčića je književna osnova
-                  prve Umbra serije. Ovde su dostupne srpska i engleska verzija
-                  knjige u PDF formatu.
+                <p className="mt-7 max-w-[680px] text-[14px] leading-8 text-white/[0.36] sm:text-[15px]">
+                  „{book.title}“ autora{" "}
+                  {book.author} predstavlja
+                  književnu osnovu ovog projekta.
+                  Srpsko i englesko izdanje dostupni
+                  su u PDF formatu.
                 </p>
 
                 <div className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -324,7 +583,7 @@ export default async function ProjectPage({
 
                   <DownloadButton
                     href={book.pdfEn}
-                    label="Download English PDF"
+                    label="Preuzmi engleski PDF"
                     meta="EN / PDF"
                     downloadName="mrzim-svog-brata-en.pdf"
                   />
@@ -335,109 +594,251 @@ export default async function ProjectPage({
                     href={book.publicUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    data-cursor-interactive
-                    className="group mt-4 inline-flex items-center gap-3 text-[7px] uppercase tracking-[0.28em] text-white/28 transition-colors hover:text-[#d6b776]"
+                    className="group mt-5 inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.27] outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 hover:text-[#d6b776] focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
                   >
-                    <ExternalLink size={13} strokeWidth={1.15} />
-                    Otvori javni izvor knjige
+                    <ExternalLink
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5"
+                    />
+
+                    Otvori javni izvor
+
                     <ArrowUpRight
-                      size={13}
-                      strokeWidth={1.15}
-                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     />
                   </a>
                 ) : null}
-
-                <div className="mt-9 border-t border-white/[0.07] pt-4 text-[7px] uppercase tracking-[0.24em] text-white/[0.2]">
-                  {book.author} / {book.title}
-                </div>
               </div>
             </div>
           </div>
         </section>
       ) : null}
 
-      {/* ================================================================== */}
-      {/* CHARACTERS                                                         */}
-      {/* ================================================================== */}
-      {project.slug === "mrzim-svog-brata" ? (
-        <section className="px-5 py-28 sm:px-8 sm:py-36 lg:px-12">
-          <div className="mx-auto max-w-[1440px] border-t border-white/[0.07] pt-8">
-            <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-              <div>
-                <div className="text-[7px] uppercase tracking-[0.3em] text-[#d6b776]">
-                  Cast / Dossier
+      {/* CHARACTERS */}
+      {projectCharacters.length > 0 ? (
+        <section className="px-6 py-24 sm:px-9 sm:py-32 lg:px-12 lg:py-36 xl:px-16">
+          <div className="mx-auto max-w-[1480px]">
+            <div className="border-t border-white/[0.065] pt-8">
+              <div className="flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div
+                    className="text-[7px] font-semibold uppercase tracking-[0.30em]"
+                    style={{
+                      color: `${GOLD_LIGHT}82`,
+                    }}
+                  >
+                    Likovi / Dosijei
+                  </div>
+
+                  <h2 className="mt-4 text-[clamp(2.3rem,4.5vw,4.8rem)] font-[430] tracking-[-0.055em]">
+                    Ljudi unutar priče
+                  </h2>
+
+                  <p className="mt-4 max-w-[650px] text-[11px] leading-6 text-white/[0.30] sm:text-[12px] sm:leading-7">
+                    Istraži likove koji oblikuju
+                    ovaj projekat i otvori njihove
+                    pojedinačne dosijee.
+                  </p>
                 </div>
-                <h2 className="mt-4 text-4xl font-[430] tracking-[-0.045em] sm:text-5xl">
-                  Likovi projekta
+
+                <Link
+                  href="/likovi"
+                  data-cursor-interactive
+                  className="group inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.30] outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 hover:text-[#d6b776] focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
+                >
+                  Otvori arhivu likova
+
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </Link>
+              </div>
+
+              <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {projectCharacters.map(
+                  (character) => (
+                    <Link
+                      key={character.id}
+                      href={`/likovi/${character.slug}`}
+                      data-cursor-interactive
+                      className="group flex min-h-[92px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-5 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-6"
+                    >
+                      <div className="min-w-0">
+                        <div
+                          className="text-[7px] font-semibold uppercase tracking-[0.24em]"
+                          style={{
+                            color: `${GOLD_LIGHT}72`,
+                          }}
+                        >
+                          Lik
+                        </div>
+
+                        <div className="mt-2 truncate text-base tracking-[-0.03em] text-white/[0.72]">
+                          {character.name}
+                        </div>
+                      </div>
+
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0 text-white/[0.25] transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#d6b776]"
+                      />
+                    </Link>
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* OTHER PROJECTS */}
+      {otherProjects.length > 0 ? (
+        <section className="border-t border-white/[0.065] bg-[#050505] px-6 py-24 sm:px-9 sm:py-32 lg:px-12 lg:py-36 xl:px-16">
+          <div className="mx-auto max-w-[1480px]">
+            <div className="flex items-end justify-between gap-6">
+              <div>
+                <div
+                  className="text-[7px] font-semibold uppercase tracking-[0.30em]"
+                  style={{
+                    color: `${GOLD_LIGHT}7b`,
+                  }}
+                >
+                  Nastavi istraživanje
+                </div>
+
+                <h2 className="mt-4 text-[clamp(2.3rem,4.5vw,4.8rem)] font-[430] leading-[0.88] tracking-[-0.06em]">
+                  Drugi svetovi
                 </h2>
-                <p className="mt-4 max-w-[640px] text-sm leading-7 text-white/38">
-                  Istraži javni arhiv likova i njihove dosijee.
-                </p>
               </div>
 
               <Link
-                href="/likovi"
-                data-cursor-interactive
-                className="group inline-flex items-center gap-3 text-[7px] uppercase tracking-[0.28em] text-white/32 transition-colors hover:text-[#d6b776]"
+                href="/serije"
+                className="group hidden items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.26em] text-white/[0.28] outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 hover:text-white/[0.55] focus-visible:ring-1 focus-visible:ring-[#ead39a]/60 sm:inline-flex"
               >
-                Otvori arhivu likova
+                Svi projekti
+
                 <ArrowUpRight
-                  size={14}
-                  strokeWidth={1.15}
-                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                 />
               </Link>
+            </div>
+
+            <div className="mt-9 grid gap-5 sm:grid-cols-2">
+              {otherProjects.map(
+                (otherProject) => (
+                  <Link
+                    key={otherProject.id}
+                    href={`/serije/${otherProject.slug}`}
+                    data-cursor-interactive
+                    className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                  >
+                    <div className="relative aspect-[16/9] overflow-hidden">
+                      <Image
+                        src={getProjectImage(
+                          otherProject,
+                        )}
+                        alt={`${otherProject.title} artwork`}
+                        fill
+                        sizes="(min-width: 640px) 50vw, 94vw"
+                        className="object-cover transition-transform duration-[1100ms] group-hover:scale-[1.035]"
+                      />
+
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.84))",
+                        }}
+                      />
+
+                      <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+                        <div className="flex items-end justify-between gap-5">
+                          <div>
+                            <div
+                              className="mb-2 text-[7px] font-semibold uppercase tracking-[0.25em]"
+                              style={{
+                                color: `${GOLD_LIGHT}7b`,
+                              }}
+                            >
+                              {getTypeLabel(
+                                otherProject.type,
+                              )}
+                            </div>
+
+                            <h3 className="text-[clamp(1.8rem,3.5vw,3.3rem)] font-[430] uppercase leading-[0.84] tracking-[-0.06em] text-white">
+                              {otherProject.title}
+                            </h3>
+                          </div>
+
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.13] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a]">
+                            <ArrowUpRight
+                              aria-hidden="true"
+                              className="h-3.5 w-3.5"
+                            />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ),
+              )}
             </div>
           </div>
         </section>
       ) : null}
 
-      {/* ================================================================== */}
-      {/* NAVIGATION                                                         */}
-      {/* ================================================================== */}
-      <section className="px-5 pb-28 sm:px-8 sm:pb-36 lg:px-12">
-        <div className="mx-auto max-w-[1440px] border-t border-white/[0.08] pt-8">
-          <div className="grid gap-5 sm:grid-cols-2">
+      {/* NAVIGATION */}
+      <section className="px-6 pb-24 sm:px-9 sm:pb-32 lg:px-12 xl:px-16">
+        <div className="mx-auto max-w-[1480px] border-t border-white/[0.065] pt-8">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Link
               href="/serije"
               data-cursor-interactive
-              className="group flex min-h-[100px] items-center justify-between border border-white/[0.08] bg-white/[0.015] px-6 transition-all duration-500 hover:border-[#b99a61]/35 hover:bg-[#b99a61]/[0.025] sm:px-8"
+              className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
               <div>
-                <div className="text-[7px] uppercase tracking-[0.28em] text-white/22">
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
                   Arhiva
                 </div>
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/72">
+
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
                   Svi projekti
                 </div>
               </div>
 
               <ArrowLeft
-                size={17}
-                strokeWidth={1.15}
-                className="text-white/28 transition-transform duration-500 group-hover:-translate-x-1 group-hover:text-[#d6b776]"
+                aria-hidden="true"
+                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-x-1 group-hover:text-[#d6b776]"
               />
             </Link>
 
             <Link
               href="/likovi"
               data-cursor-interactive
-              className="group flex min-h-[100px] items-center justify-between border border-white/[0.08] bg-white/[0.015] px-6 transition-all duration-500 hover:border-[#b99a61]/35 hover:bg-[#b99a61]/[0.025] sm:px-8"
+              className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
               <div>
-                <div className="text-[7px] uppercase tracking-[0.28em] text-white/22">
-                  Character Archive
+                <div className="flex items-center gap-2 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                  <UsersRound
+                    aria-hidden="true"
+                    className="h-3 w-3"
+                  />
+
+                  Likovi
                 </div>
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/72">
+
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
                   Istraži likove
                 </div>
               </div>
 
               <ArrowUpRight
-                size={17}
-                strokeWidth={1.15}
-                className="text-white/28 transition-all duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#d6b776]"
+                aria-hidden="true"
+                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#d6b776]"
               />
             </Link>
           </div>
@@ -461,14 +862,15 @@ function ProjectStat({
       className={[
         "py-6",
         !last
-          ? "border-b border-white/[0.07] sm:border-b-0 sm:border-r sm:border-white/[0.07]"
+          ? "border-b border-white/[0.065] sm:border-b-0 sm:border-r sm:border-white/[0.065]"
           : "",
       ].join(" ")}
     >
-      <div className="text-[7px] uppercase tracking-[0.28em] text-white/20">
+      <div className="text-[7px] font-semibold uppercase tracking-[0.28em] text-white/[0.20]">
         {label}
       </div>
-      <div className="mt-3 text-sm uppercase tracking-[0.08em] text-white/62">
+
+      <div className="mt-3 text-sm uppercase tracking-[0.08em] text-white/[0.62]">
         {value}
       </div>
     </div>
@@ -477,53 +879,66 @@ function ProjectStat({
 
 function BookCover({
   href,
-  downloadName,
   src,
   alt,
   label,
   downloadLabel,
+  downloadName,
 }: {
   href: string;
-  downloadName: string;
   src: string;
   alt: string;
   label: string;
   downloadLabel: string;
+  downloadName: string;
 }) {
   return (
     <div>
       <a
         href={href}
         download={downloadName}
-        data-cursor-interactive
         aria-label={downloadLabel}
-        className="group block outline-none"
+        data-cursor-interactive
+        className="group block outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
       >
-        <div className="relative aspect-[0.69/1] overflow-hidden border border-white/[0.08] bg-[#060606] shadow-[0_22px_70px_rgba(0,0,0,.3)] transition-[border-color,box-shadow] duration-500 group-hover:border-[#b99a61]/45 group-hover:shadow-[0_28px_90px_rgba(0,0,0,.42)]">
+        <div className="relative aspect-[0.69/1] overflow-hidden border border-white/[0.08] bg-[#060606] shadow-[0_22px_70px_rgba(0,0,0,.30)] transition-[border-color,box-shadow] duration-500 group-hover:border-[#c7a96b]/45 group-hover:shadow-[0_28px_90px_rgba(0,0,0,.42)]">
           <Image
             src={src}
             alt={alt}
             fill
             sizes="(min-width: 1024px) 220px, 45vw"
-            className="object-cover transition-transform duration-[1200ms] group-hover:scale-[1.025]"
+            className="object-cover transition-transform duration-[1100ms] group-hover:scale-[1.025]"
           />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.03),transparent_42%,rgba(0,0,0,.52))]" />
-          <div className="pointer-events-none absolute inset-3 border border-white/[0.045]" />
-          <div className="pointer-events-none absolute inset-x-4 bottom-4 flex items-center justify-between">
-            <span className="text-[6px] uppercase tracking-[0.24em] text-white/38">
+
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,.02), transparent 42%, rgba(0,0,0,.52))",
+            }}
+          />
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-3 border border-white/[0.045]"
+          />
+
+          <div className="absolute inset-x-4 bottom-4 flex items-center justify-between">
+            <span className="text-[6px] font-semibold uppercase tracking-[0.24em] text-white/[0.38]">
               PDF
             </span>
+
             <Download
-              size={14}
-              strokeWidth={1.1}
-              className="text-[#d6b776]/80 transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-[#f0d08a]"
+              aria-hidden="true"
+              className="h-3.5 w-3.5 text-[#d6b776]/80 transition-transform duration-300 group-hover:translate-y-0.5"
             />
           </div>
         </div>
       </a>
 
-      <div className="mt-3 text-[6px] uppercase tracking-[0.24em] text-white/24">
-        {label}
+      <div className="mt-3 text-[6px] font-semibold uppercase tracking-[0.24em] text-white/[0.23]">
+        {label} · klikni za preuzimanje
       </div>
     </div>
   );
@@ -545,21 +960,26 @@ function DownloadButton({
       href={href}
       download={downloadName}
       data-cursor-interactive
-      className="group flex min-h-[76px] items-center justify-between border border-[#b99a61]/30 bg-[#0b0a08] px-5 transition-all duration-400 hover:border-[#d6b776]/70 hover:bg-[#b99a61]/[0.045]"
+      className="group flex min-h-[76px] items-center justify-between border border-[#c7a96b]/28 bg-[#0a0907] px-5 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#ead39a]/65 hover:bg-[#c7a96b]/[0.045] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
     >
       <div>
-        <div className="text-[6px] uppercase tracking-[0.28em] text-[#b99a61]/70">
+        <div
+          className="text-[6px] font-semibold uppercase tracking-[0.28em]"
+          style={{
+            color: `${GOLD}78`,
+          }}
+        >
           {meta}
         </div>
-        <div className="mt-2 text-sm text-white/72">
+
+        <div className="mt-2 text-sm text-white/[0.70]">
           {label}
         </div>
       </div>
 
       <Download
-        size={17}
-        strokeWidth={1.15}
-        className="text-[#d6b776] transition-transform duration-300 group-hover:translate-y-0.5"
+        aria-hidden="true"
+        className="h-[18px] w-[18px] text-[#d6b776] transition-transform duration-300 group-hover:translate-y-0.5"
       />
     </a>
   );

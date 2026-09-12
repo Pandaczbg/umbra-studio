@@ -1,28 +1,78 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import CharacterDossier from "@/components/CharacterDossier";
+import {
+  getCharacterBySlug,
+  getCharactersForProject,
+} from "@/lib/characterNavigation";
 import { characters } from "@/data/characters";
+import { projects } from "@/data/projects";
 
 export function generateStaticParams() {
-  return characters.map((character) => ({ slug: character.slug }));
+  return characters.map((character) => ({
+    slug: character.slug,
+  }));
 }
 
-export default async function EnglishCharacterPage({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
-  const character = characters.find((item) => item.slug === slug);
-  if (!character) notFound();
+  const character = getCharacterBySlug(slug);
+
+  if (!character) {
+    return {};
+  }
+
+  const project = projects.find(
+    (item) => item.slug === character.projectSlug,
+  );
+
+  const description =
+    character.shortDescription.trim() ||
+    `Character dossier for ${character.name} within ${
+      project?.title ??
+      character.projectTitle ??
+      "Umbra Studio"
+    }.`;
+
+  return {
+    title: `${character.name} — Character Dossier`,
+    description,
+    openGraph: {
+      title: `${character.name} — Character Dossier`,
+      description,
+      type: "website",
+    },
+  };
+}
+
+export default async function EnglishCharacterPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const character = getCharacterBySlug(slug);
+
+  if (!character) {
+    notFound();
+  }
+
+  const relatedCharacters =
+    getCharactersForProject(
+      character.projectSlug,
+    ).filter(
+      (item) => item.slug !== character.slug,
+    );
 
   return (
-    <main className="min-h-screen bg-[#050505]">
-      <section className="relative min-h-[100svh] overflow-hidden">
-        <img src={character.image} alt={character.name} className="absolute inset-0 h-full w-full object-cover opacity-70" />
-        <div className="absolute inset-0 bg-black/55" />
-        <div className="relative mx-auto flex min-h-[100svh] max-w-[1500px] items-end px-5 pb-20 sm:px-8 lg:px-12 lg:pb-28">
-          <div>
-            <div className="text-[8px] uppercase tracking-[.34em] text-white/35">{character.projectTitle} · {character.category}</div>
-            <h1 className="mt-6 text-[clamp(4.5rem,11vw,11rem)] font-medium leading-[.8] tracking-[-.08em]">{character.name}</h1>
-            <p className="mt-8 max-w-2xl text-base leading-8 text-white/48">{character.shortDescription}</p>
-          </div>
-        </div>
-      </section>
-    </main>
+    <CharacterDossier
+      character={character}
+      relatedCharacters={relatedCharacters}
+    />
   );
 }

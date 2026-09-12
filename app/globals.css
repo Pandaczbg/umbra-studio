@@ -31,16 +31,16 @@
   --color-umbra-surface: #070707;
   --color-umbra-surface-elevated: #0b0b0a;
 
-  --color-umbra-text-primary: #f1ede4;
-  --color-umbra-text-secondary: rgba(241, 237, 228, 0.58);
-  --color-umbra-text-muted: rgba(241, 237, 228, 0.36);
-  --color-umbra-text-faint: rgba(241, 237, 228, 0.16);
+  --color-umbra-text-primary: #f4f0e8;
+  --color-umbra-text-secondary: rgba(244, 240, 232, 0.62);
+  --color-umbra-text-muted: rgba(244, 240, 232, 0.40);
+  --color-umbra-text-faint: rgba(244, 240, 232, 0.18);
 
   --color-umbra-gold: #c7a96b;
   --color-umbra-gold-light: #ead39a;
   --color-umbra-gold-dark: #8f7142;
 
-  --color-umbra-platinum: #f8f4ec;
+  --color-umbra-platinum: #fbf8f1;
 
   --font-umbra-sans:
     var(--font-geist-sans),
@@ -98,19 +98,19 @@
     #0b0b0a;
 
   --umbra-ink:
-    #f1ede4;
+    #f4f0e8;
 
   --umbra-ink-soft:
-    rgba(241, 237, 228, 0.58);
+    rgba(244, 240, 232, 0.62);
 
   --umbra-ink-muted:
-    rgba(241, 237, 228, 0.36);
+    rgba(244, 240, 232, 0.40);
 
   --umbra-ink-faint:
-    rgba(241, 237, 228, 0.16);
+    rgba(244, 240, 232, 0.18);
 
   --umbra-platinum:
-    #f8f4ec;
+    #fbf8f1;
 
   --umbra-gold:
     #c7a96b;
@@ -125,16 +125,16 @@
   /* Borders */
 
   --umbra-line:
-    rgba(255, 255, 255, 0.07);
+    rgba(255, 255, 255, 0.085);
 
   --umbra-line-strong:
-    rgba(255, 255, 255, 0.11);
+    rgba(255, 255, 255, 0.13);
 
   --umbra-line-soft:
-    rgba(255, 255, 255, 0.04);
+    rgba(255, 255, 255, 0.048);
 
   --umbra-line-faint:
-    rgba(255, 255, 255, 0.022);
+    rgba(255, 255, 255, 0.026);
 
   --umbra-line-gold:
     rgba(199, 169, 107, 0.34);
@@ -152,7 +152,7 @@
     24px;
 
   --umbra-section-space:
-    clamp(96px, 12vw, 176px);
+    clamp(104px, 12vw, 176px);
 
 
   /* Motion */
@@ -253,8 +253,11 @@
 
 @layer base {
   html {
-    min-height: 100%;
-    margin: 0;
+    min-height:
+      100%;
+
+    margin:
+      0;
 
     background:
       var(--umbra-bg-deep);
@@ -282,14 +285,22 @@
   }
 
   html::-webkit-scrollbar {
-    width: 0;
-    height: 0;
+    width:
+      0;
+
+    height:
+      0;
   }
 
   body {
-    min-width: 320px;
-    min-height: 100vh;
-    margin: 0;
+    min-width:
+      320px;
+
+    min-height:
+      100vh;
+
+    margin:
+      0;
 
     overflow-x:
       clip;
@@ -300,8 +311,13 @@
     background:
       radial-gradient(
         circle at 50% -18%,
-        rgba(199, 169, 107, 0.022),
+        rgba(199, 169, 107, 0.028),
         transparent 34%
+      ),
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(255, 255, 255, 0.014),
+        transparent 26%
       ),
       linear-gradient(
         180deg,
@@ -348,6 +364,12 @@
   button {
     border:
       0;
+
+    background:
+      none;
+
+    color:
+      inherit;
   }
 
   img,
@@ -376,7 +398,7 @@
 
   ::selection {
     background:
-      rgba(234, 211, 154, 0.18);
+      rgba(234, 211, 154, 0.20);
 
     color:
       #ffffff;
@@ -385,7 +407,7 @@
   :focus-visible {
     outline:
       1px solid
-      rgba(234, 211, 154, 0.74);
+      rgba(234, 211, 154, 0.78);
 
     outline-offset:
       4px;
@@ -443,19 +465,19 @@
 
   .umbra-atmosphere__aurora {
     opacity:
-      0.68;
+      0.72;
 
     background:
       radial-gradient(
         620px circle at
           var(--umbra-pointer-x)
           var(--umbra-pointer-y),
-        rgba(234, 211, 154, 0.042),
+        rgba(234, 211, 154, 0.046),
         transparent 44%
       ),
       radial-gradient(
         52vw 38vw at 84% 12%,
-        rgba(199, 169, 107, 0.024),
+        rgba(199, 169, 107, 0.026),
         transparent 72%
       );
 
@@ -495,7 +517,7 @@
    */
   .umbra-atmosphere__grid {
     opacity:
-      0.035;
+      0.032;
 
     background-image:
       linear-gradient(
@@ -624,10 +646,10 @@
       uppercase;
 
     letter-spacing:
-      0.28em;
+      0.26em;
 
     color:
-      rgba(234, 211, 154, 0.58);
+      rgba(234, 211, 154, 0.64);
   }
 
   .umbra-code {
@@ -647,7 +669,7 @@
       0.24em;
 
     color:
-      rgba(255, 255, 255, 0.20);
+      rgba(255, 255, 255, 0.23);
   }
 
   .umbra-display {
@@ -757,7 +779,7 @@
       linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.10),
+        rgba(255, 255, 255, 0.12),
         transparent
       );
   }
@@ -898,11 +920,11 @@
 
     border-left:
       1px solid
-      rgba(199, 169, 107, 0.22);
+      rgba(199, 169, 107, 0.24);
 
     border-top:
       1px solid
-      rgba(199, 169, 107, 0.22);
+      rgba(199, 169, 107, 0.24);
   }
 
   .umbra-focus-frame::after {
@@ -914,11 +936,11 @@
 
     border-right:
       1px solid
-      rgba(199, 169, 107, 0.16);
+      rgba(199, 169, 107, 0.18);
 
     border-bottom:
       1px solid
-      rgba(199, 169, 107, 0.16);
+      rgba(199, 169, 107, 0.18);
   }
 
 
@@ -932,7 +954,7 @@
       var(--umbra-line-soft);
 
     background:
-      rgba(255, 255, 255, 0.010);
+      rgba(255, 255, 255, 0.012);
   }
 
   .umbra-surface-hover {
@@ -945,15 +967,22 @@
       var(--ease-umbra-out),
       transform
       350ms
+      var(--ease-umbra-out),
+      box-shadow
+      350ms
       var(--ease-umbra-out);
   }
 
   .umbra-surface-hover:hover {
     border-color:
-      rgba(234, 211, 154, 0.13);
+      rgba(234, 211, 154, 0.15);
 
     background:
-      rgba(255, 255, 255, 0.014);
+      rgba(255, 255, 255, 0.016);
+
+    box-shadow:
+      0 18px 48px
+      rgba(0, 0, 0, 0.16);
 
     transform:
       translateY(-2px);
@@ -1043,7 +1072,7 @@
 
     border-bottom:
       1px solid
-      rgba(255, 255, 255, 0.05);
+      rgba(255, 255, 255, 0.055);
   }
 
 
@@ -1083,11 +1112,11 @@
 
     border-left:
       1px solid
-      rgba(199, 169, 107, 0.18);
+      rgba(199, 169, 107, 0.19);
 
     border-top:
       1px solid
-      rgba(199, 169, 107, 0.18);
+      rgba(199, 169, 107, 0.19);
   }
 
   .umbra-transition-corner.top-right {
@@ -1099,11 +1128,11 @@
 
     border-right:
       1px solid
-      rgba(255, 255, 255, 0.04);
+      rgba(255, 255, 255, 0.045);
 
     border-top:
       1px solid
-      rgba(255, 255, 255, 0.04);
+      rgba(255, 255, 255, 0.045);
   }
 
   .umbra-transition-corner.bottom-left {
@@ -1115,11 +1144,11 @@
 
     border-left:
       1px solid
-      rgba(255, 255, 255, 0.03);
+      rgba(255, 255, 255, 0.032);
 
     border-bottom:
       1px solid
-      rgba(255, 255, 255, 0.03);
+      rgba(255, 255, 255, 0.032);
   }
 
   .umbra-transition-corner.bottom-right {
@@ -1131,11 +1160,11 @@
 
     border-right:
       1px solid
-      rgba(199, 169, 107, 0.14);
+      rgba(199, 169, 107, 0.15);
 
     border-bottom:
       1px solid
-      rgba(199, 169, 107, 0.14);
+      rgba(199, 169, 107, 0.15);
   }
 
 
@@ -1202,7 +1231,7 @@
 
     .umbra-atmosphere__grid {
       opacity:
-        0.022;
+        0.020;
 
       background-size:
         72px 72px;

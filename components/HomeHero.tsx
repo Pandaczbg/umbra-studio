@@ -7,10 +7,13 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  Pause,
+  ExternalLink,
   Play,
 } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 import {
   useCallback,
   useEffect,
@@ -20,16 +23,35 @@ import {
 } from "react";
 
 import type { Locale } from "@/data/translations";
+import { projects } from "@/data/projects";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const GOLD_DARK = "#8f7142";
-const HERO_IMAGE = "/umbra-background.png";
-const AUTO_ROTATE_MS = 30_000;
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+const BACKGROUND_IMAGE =
+  "/umbra-background.png";
 
-interface HeroItem {
+const FALLBACK_IMAGE = "/umbra-background.png";
+
+const YOUTUBE_CHANNEL =
+  "https://www.youtube.com/@umbrastud";
+
+const AUTO_ROTATE_MS = 9000;
+
+const EASE = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
+
+type WindowType =
+  | "image"
+  | "youtube"
+  | "page";
+
+type HeroPanel = {
   id: string;
   number: string;
   tab: string;
@@ -37,723 +59,1463 @@ interface HeroItem {
   category: string;
   title: string;
   description: string;
-  image: string;
   href: string;
   cta: string;
-  meta: string;
+  mediaLabel: string;
+  type: WindowType;
+  image?: string;
+  youtubeUrl?: string;
   external?: boolean;
-}
+};
 
-const ITEMS_SR: HeroItem[] = [
-  {
-    id: "aktuelno",
-    number: "01",
-    tab: "AKTUELNO",
-    eyebrow: "SERIJA U PRODUKCIJI",
-    category: "U FOKUSU",
-    title: "MRZIM SVOG BRATA",
-    description:
-      "Priča o porodici, odnosima i onome što ostaje među ljudima kada se stare rane ponovo otvore.",
-    image: HERO_IMAGE,
-    href: "/serije/mrzim-svog-brata",
-    cta: "Uđi u priču",
-    meta: "SER / 01",
-  },
-  {
-    id: "novo",
-    number: "02",
-    tab: "NOVO",
-    eyebrow: "NOVA EPIZODA",
-    category: "NAJNOVIJE",
-    title: "NOVA EPIZODA",
-    description:
-      "Nastavak priče. Nova epizoda otvara sledeći trenutak i vodi priču korak dalje.",
-    image: HERO_IMAGE,
-    href: "/serije/mrzim-svog-brata",
-    cta: "Pogledaj više",
-    meta: "EP / 02",
-  },
-  {
-    id: "likovi",
-    number: "03",
-    tab: "LIKOVI",
-    eyebrow: "KARAKTERI I ODNOSI",
-    category: "LJUDI U PRIČI",
-    title: "LIKOVI",
-    description:
-      "Upoznaj ljude oko kojih se grade odnosi, sukobi i trenuci koji menjaju tok priče.",
-    image: HERO_IMAGE,
-    href: "/likovi",
-    cta: "Upoznaj likove",
-    meta: "CHR / 03",
-  },
-  {
-    id: "arhiva",
-    number: "04",
-    tab: "IZ ARHIVE",
-    eyebrow: "ODABRANI PROJEKTI",
-    category: "PRIČE KOJE OSTAJU",
-    title: "ARHIVA",
-    description:
-      "Projekti i priče koje ostaju dostupni i onda kada više nisu novi.",
-    image: HERO_IMAGE,
-    href: "/serije",
-    cta: "Otvori arhivu",
-    meta: "ARC / 04",
-  },
-  {
-    id: "gledaj",
-    number: "05",
-    tab: "GLEDAJ",
-    eyebrow: "VIDEO",
-    category: "UMBRA NA YOUTUBE-U",
-    title: "GLEDAJ UMBRU",
-    description:
-      "Epizode, kratki kadrovi i novi sadržaj objavljen na Umbra kanalu.",
-    image: HERO_IMAGE,
-    href: "https://www.youtube.com/@umbrastud",
-    cta: "Otvori kanal",
-    meta: "YT / 05",
-    external: true,
-  },
-];
+function getYouTubeId(
+  url?: string,
+) {
+  if (!url) {
+    return null;
+  }
 
-const ITEMS_EN: HeroItem[] = [
-  {
-    id: "featured",
-    number: "01",
-    tab: "FEATURED",
-    eyebrow: "SERIES IN PRODUCTION",
-    category: "IN FOCUS",
-    title: "MRZIM SVOG BRATA",
-    description:
-      "A story about family, relationships and what remains between people when old wounds open again.",
-    image: HERO_IMAGE,
-    href: "/en/projects/mrzim-svog-brata",
-    cta: "Enter the story",
-    meta: "SER / 01",
-  },
-  {
-    id: "new",
-    number: "02",
-    tab: "NEW",
-    eyebrow: "NEW EPISODE",
-    category: "LATEST",
-    title: "NEW EPISODE",
-    description:
-      "The story continues. A new episode opens the next moment and moves the story forward.",
-    image: HERO_IMAGE,
-    href: "/en/projects/mrzim-svog-brata",
-    cta: "View more",
-    meta: "EP / 02",
-  },
-  {
-    id: "characters",
-    number: "03",
-    tab: "CHARACTERS",
-    eyebrow: "CHARACTER & RELATIONSHIPS",
-    category: "PEOPLE IN THE STORY",
-    title: "CHARACTERS",
-    description:
-      "Meet the people around whom relationships, conflicts and turning points are built.",
-    image: HERO_IMAGE,
-    href: "/en/characters",
-    cta: "Meet the characters",
-    meta: "CHR / 03",
-  },
-  {
-    id: "archive",
-    number: "04",
-    tab: "ARCHIVE",
-    eyebrow: "SELECTED PROJECTS",
-    category: "STORIES THAT REMAIN",
-    title: "ARCHIVE",
-    description:
-      "Projects and stories that remain available long after they stop being new.",
-    image: HERO_IMAGE,
-    href: "/en/projects",
-    cta: "Open archive",
-    meta: "ARC / 04",
-  },
-  {
-    id: "watch",
-    number: "05",
-    tab: "WATCH",
-    eyebrow: "VIDEO",
-    category: "UMBRA ON YOUTUBE",
-    title: "WATCH UMBRA",
-    description:
-      "Episodes, short scenes and new content published on the Umbra channel.",
-    image: HERO_IMAGE,
-    href: "https://www.youtube.com/@umbrastud",
-    cta: "Open channel",
-    meta: "YT / 05",
-    external: true,
-  },
-];
+  const patterns = [
+    /youtu.be\/([^?&/]+)/i,
+    /youtube.com\/watch\?v=([^?&/]+)/i,
+    /youtube.com\/embed\/([^?&/]+)/i,
+    /youtube.com\/shorts\/([^?&/]+)/i,
+  ];
 
-function getTitleLines(title: string): [string, string | null] {
-  const words = title.trim().split(/\s+/);
+  for (const pattern of patterns) {
+    const match =
+      url.match(pattern);
 
-  if (words.length <= 1) return [title, null];
-  if (words.length === 2) return [words[0], words[1]];
-  if (words.length === 3) return [words[0], words.slice(1).join(" ")];
-
-  const split = Math.ceil(words.length / 2);
-  return [words.slice(0, split).join(" "), words.slice(split).join(" ")];
-}
-
-export default function HomeHero({ locale = "sr" }: { locale?: Locale }) {
-  const reducedMotion = useReducedMotion() ?? false;
-  const items = useMemo(() => (locale === "en" ? ITEMS_EN : ITEMS_SR), [locale]);
-
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(!reducedMotion);
-  const [isHovering, setIsHovering] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [imageLayer, setImageLayer] = useState(0);
-  const [imageA, setImageA] = useState(HERO_IMAGE);
-  const [imageB, setImageB] = useState(HERO_IMAGE);
-
-  const activeIndexRef = useRef(activeIndex);
-  const imageLayerRef = useRef(imageLayer);
-  const timerRef = useRef<number | null>(null);
-  const startedAtRef = useRef(0);
-  const remainingRef = useRef(AUTO_ROTATE_MS);
-
-  const activeItem = items[activeIndex];
-  const [titleLineOne, titleLineTwo] = getTitleLines(activeItem.title);
-
-  useEffect(() => {
-    activeIndexRef.current = activeIndex;
-  }, [activeIndex]);
-
-  useEffect(() => {
-    imageLayerRef.current = imageLayer;
-  }, [imageLayer]);
-
-  const clearTimer = useCallback(() => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
+    if (match?.[1]) {
+      return match[1];
     }
-  }, []);
+  }
 
-  const changeItem = useCallback(
-    (nextIndex: number, resetTimer = true) => {
-      const normalized = (nextIndex + items.length) % items.length;
-      if (normalized === activeIndexRef.current) return;
+  return null;
+}
 
-      const nextItem = items[normalized];
-
-      if (imageLayerRef.current === 0) {
-        setImageB(nextItem.image);
-        imageLayerRef.current = 1;
-        setImageLayer(1);
-      } else {
-        setImageA(nextItem.image);
-        imageLayerRef.current = 0;
-        setImageLayer(0);
-      }
-
-      activeIndexRef.current = normalized;
-      setActiveIndex(normalized);
-
-      if (resetTimer) {
-        remainingRef.current = AUTO_ROTATE_MS;
-        startedAtRef.current = Date.now();
-      }
-    },
-    [items],
+function getCurrentProductionProject() {
+  return (
+    projects.find(
+      (project) => project.status === "in-production",
+    ) ??
+    projects.find((project) => project.featured) ??
+    projects[0] ??
+    null
   );
+}
 
-  const next = useCallback(() => changeItem(activeIndexRef.current + 1), [changeItem]);
-  const previous = useCallback(() => changeItem(activeIndexRef.current - 1), [changeItem]);
-  const togglePlayback = useCallback(() => setIsPlaying((value) => !value), []);
+function resolveProjectImage(
+  project: (typeof projects)[number] | null,
+  locale: Locale,
+) {
+  if (!project) {
+    return FALLBACK_IMAGE;
+  }
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setReady(true), reducedMotion ? 20 : 120);
-    return () => window.clearTimeout(timer);
-  }, [reducedMotion]);
+  if (locale === "en") {
+    return (
+      project.book?.coverEn ||
+      project.book?.coverSr ||
+      project.cover ||
+      FALLBACK_IMAGE
+    );
+  }
 
-  useEffect(() => {
-    const urls = Array.from(new Set(items.map((item) => item.image).filter(Boolean)));
-    urls.forEach((url) => {
-      const image = new window.Image();
-      image.decoding = "async";
-      image.src = url;
-    });
-  }, [items]);
+  return (
+    project.book?.coverSr ||
+    project.book?.coverEn ||
+    project.cover ||
+    FALLBACK_IMAGE
+  );
+}
 
-  useEffect(() => {
-    if (reducedMotion) return;
+function buildPanels(
+  locale: Locale,
+  currentProject: (typeof projects)[number] | null,
+): HeroPanel[] {
+  if (locale === "en") {
+    return [
+      {
+        id: "featured",
+        number: "01",
+        tab: "FEATURED",
+        eyebrow: "CURRENT PRODUCTION",
+        category: "IN FOCUS",
+        title: currentProject?.title ?? "MRZIM SVOG BRATA",
+        description:
+          currentProject?.shortDescription ??
+          "Umbra Studio's current production.",
+        href: currentProject
+          ? `/en/projects/${currentProject.slug}`
+          : "/en/projects",
+        cta: "Enter project",
+        mediaLabel: "PROJECT WINDOW",
+        type: "image",
+        image: resolveProjectImage(currentProject, locale),
+      },
+      {
+        id: "series",
+        number: "02",
+        tab: "SERIES",
+        eyebrow: "SERIES ARCHIVE",
+        category: "THE STORY WORLD",
+        title: "SERIES",
+        description:
+          "Explore the productions and worlds being developed inside Umbra Studio.",
+        href: "/en/projects",
+        cta: "Explore projects",
+        mediaLabel: "SERIES INDEX",
+        type: "page",
+        image: BACKGROUND_IMAGE,
+      },
+      {
+        id: "characters",
+        number: "03",
+        tab: "CHARACTERS",
+        eyebrow: "CHARACTER & RELATIONSHIPS",
+        category: "PEOPLE IN THE STORY",
+        title: "CHARACTERS",
+        description:
+          "Meet the people and relationships that shape the stories behind the images.",
+        href: "/en/characters",
+        cta: "Meet characters",
+        mediaLabel: "CHARACTER WINDOW",
+        type: "page",
+        image: BACKGROUND_IMAGE,
+      },
+      {
+        id: "archive",
+        number: "04",
+        tab: "ARCHIVE",
+        eyebrow: "SELECTED WORK",
+        category: "STORIES THAT REMAIN",
+        title: "ARCHIVE",
+        description:
+          "A quieter space for projects, notes and stories that remain part of the Umbra world.",
+        href: "/en/projects",
+        cta: "Open archive",
+        mediaLabel: "ARCHIVE WINDOW",
+        type: "page",
+        image: BACKGROUND_IMAGE,
+      },
+      {
+        id: "watch",
+        number: "05",
+        tab: "WATCH",
+        eyebrow: "UMBRA ON YOUTUBE",
+        category: "VIDEO",
+        title: "WATCH UMBRA",
+        description:
+          "When a concrete episode or film is selected, its YouTube player lives here. The channel remains one click away.",
+        href: YOUTUBE_CHANNEL,
+        cta: "Open YouTube",
+        mediaLabel: "YOUTUBE WINDOW",
+        type: "youtube",
+        external: true,
+      },
+    ];
+  }
 
-    clearTimer();
-    if (!isPlaying || isHovering) return;
+  return [
+    {
+      id: "aktuelno",
+      number: "01",
+      tab: "AKTUELNO",
+      eyebrow: "SERIJA U PRODUKCIJI",
+      category: "U FOKUSU",
+      title: currentProject?.title ?? "MRZIM SVOG BRATA",
+      description:
+        currentProject?.shortDescription ??
+        "Trenutna produkcija Umbra Studija.",
+      href: currentProject
+        ? `/serije/${currentProject.slug}`
+        : "/serije",
+      cta: "Uđi u projekat",
+      mediaLabel: "PROZOR PROJEKTA",
+      type: "image",
+      image: resolveProjectImage(currentProject, locale),
+    },
+    {
+      id: "serije",
+      number: "02",
+      tab: "SERIJE",
+      eyebrow: "ARHIVA SERIJA",
+      category: "SVETOVI PRIČA",
+      title: "SERIJE",
+      description:
+        "Istraži serije i produkcije koje Umbra razvija, jednu priču po jednu.",
+      href: "/serije",
+      cta: "Pogledaj serije",
+      mediaLabel: "INDEKS SERIJA",
+      type: "page",
+      image: BACKGROUND_IMAGE,
+    },
+    {
+      id: "likovi",
+      number: "03",
+      tab: "LIKOVI",
+      eyebrow: "KARAKTERI I ODNOSI",
+      category: "LJUDI U PRIČI",
+      title: "LIKOVI",
+      description:
+        "Upoznaj ljude i odnose koji nose težinu priča koje Umbra gradi.",
+      href: "/likovi",
+      cta: "Upoznaj likove",
+      mediaLabel: "PROZOR LIKOVA",
+      type: "page",
+      image: BACKGROUND_IMAGE,
+    },
+    {
+      id: "arhiva",
+      number: "04",
+      tab: "ARHIVA",
+      eyebrow: "ODABRANI SADRŽAJ",
+      category: "PRIČE KOJE OSTAJU",
+      title: "ARHIVA",
+      description:
+        "Mirniji sloj Umbra sveta — projekti, zapisi i priče koje ostaju dostupni.",
+      href: "/serije",
+      cta: "Otvori arhivu",
+      mediaLabel: "PROZOR ARHIVE",
+      type: "page",
+      image: BACKGROUND_IMAGE,
+    },
+    {
+      id: "gledaj",
+      number: "05",
+      tab: "GLEDAJ",
+      eyebrow: "UMBRA NA YOUTUBE-U",
+      category: "VIDEO",
+      title: "GLEDAJ UMBRU",
+      description:
+        "Kada je konkretan video aktuelan, njegov YouTube player preuzima ovaj prozor.",
+      href: YOUTUBE_CHANNEL,
+      cta: "Otvori kanal",
+      mediaLabel: "YOUTUBE PROZOR",
+      type: "youtube",
+      external: true,
+    },
+  ];
+}
 
-    const schedule = () => {
-      const remaining = Math.max(300, remainingRef.current);
-      startedAtRef.current = Date.now();
+function MediaWindow({
+  panel,
+  locale,
+}: {
+  panel: HeroPanel;
+  locale: Locale;
+}) {
+  const youtubeId =
+    getYouTubeId(
+      panel.youtubeUrl,
+    );
 
-      timerRef.current = window.setTimeout(() => {
-        timerRef.current = null;
-        changeItem(activeIndexRef.current + 1, true);
-        schedule();
-      }, remaining);
-    };
+  const mediaIsClickable =
+    !youtubeId;
 
-    schedule();
-    return () => clearTimer();
-  }, [changeItem, clearTimer, isHovering, isPlaying, reducedMotion]);
+  const mediaLinkLabel =
+    panel.type === "youtube"
+      ? locale === "en"
+        ? "Open YouTube"
+        : "Otvori YouTube"
+      : locale === "en"
+        ? "Open section"
+        : "Otvori sekciju";
 
-  useEffect(() => {
-    if (reducedMotion && isPlaying) setIsPlaying(false);
-  }, [isPlaying, reducedMotion]);
+  return (
+    <div className="group/window relative overflow-hidden border border-white/[0.085] bg-[#070707] shadow-[0_32px_96px_rgba(0,0,0,.36)]">
+      <div className="relative aspect-[1.14/0.93] overflow-hidden">
+        {panel.type === "youtube" &&
+        youtubeId ? (
+          <iframe
+            title={`${panel.title} YouTube video`}
+            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
+            className="absolute inset-0 h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : (
+          <>
+            <Image
+              src={
+                panel.image ??
+                BACKGROUND_IMAGE
+              }
+              alt={panel.title}
+              fill
+              sizes="(min-width: 1280px) 38vw, (min-width: 1024px) 44vw, 94vw"
+              className="object-cover transition-transform duration-[950ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/window:scale-[1.018]"
+              priority={
+                panel.id ===
+                  "aktuelno" ||
+                panel.id === "featured"
+              }
+            />
 
-  useEffect(() => () => clearTimer(), [clearTimer]);
+            <div
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,.05), transparent 34%, rgba(0,0,0,.84) 100%)",
+              }}
+            />
 
-  const handlePointerEnter = useCallback(() => {
-    if (!reducedMotion && isPlaying) {
-      const elapsed = Date.now() - startedAtRef.current;
-      remainingRef.current = Math.max(300, remainingRef.current - elapsed);
-    }
-    clearTimer();
-    setIsHovering(true);
-  }, [clearTimer, isPlaying, reducedMotion]);
+            <div
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(0,0,0,.48), transparent 58%, rgba(0,0,0,.24) 100%)",
+              }}
+            />
 
-  const handlePointerLeave = useCallback(() => {
-    if (!reducedMotion && isPlaying) startedAtRef.current = Date.now();
-    setIsHovering(false);
-  }, [isPlaying, reducedMotion]);
+            {panel.type ===
+            "youtube" ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/[0.14] px-8 text-center">
+                <span
+                  className="flex h-[68px] w-[68px] items-center justify-center rounded-full border bg-black/[0.30]"
+                  style={{
+                    borderColor:
+                      `${GOLD_LIGHT}38`,
+                  }}
+                >
+                  <Play
+                    size={18}
+                    strokeWidth={1}
+                    fill="currentColor"
+                    style={{
+                      color:
+                        `${GOLD_LIGHT}b0`,
+                    }}
+                  />
+                </span>
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const typing =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.tagName === "SELECT" ||
-        target?.isContentEditable;
+                <span
+                  className="mt-6 text-[8px] font-semibold uppercase tracking-[0.30em]"
+                  style={{
+                    color:
+                      `${GOLD_LIGHT}82`,
+                  }}
+                >
+                  YOUTUBE PLAYER
+                </span>
 
-      if (typing) return;
+                <span className="mt-3 max-w-[300px] text-[10px] leading-6 text-white/[0.34]">
+                  {locale === "en"
+                    ? "Add the current episode URL to turn this window into the active video player."
+                    : "Dodaj URL aktuelne epizode i ovaj prozor postaje aktivni YouTube plejer."}
+                </span>
+              </div>
+            ) : null}
+          </>
+        )}
 
-      const hero = target?.closest('[data-umbra-scene="hero"]');
-      if (!hero) return;
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-5 border border-white/[0.055] sm:inset-6 lg:inset-7"
+        />
 
-      switch (event.key) {
-        case "ArrowRight":
-          event.preventDefault();
-          next();
-          break;
-        case "ArrowLeft":
-          event.preventDefault();
-          previous();
-          break;
-        case " ":
-          event.preventDefault();
-          togglePlayback();
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [next, previous, togglePlayback]);
-
-  const renderCTA = () => {
-    const className =
-      "group/cta relative inline-flex h-11 items-center gap-4 overflow-hidden text-[10px] font-medium uppercase tracking-[0.22em] transition-colors duration-500 sm:text-[11px]";
-
-    const content = (
-      <>
-        <span className="relative z-10">{activeItem.cta}</span>
         <span
           aria-hidden="true"
-          className="relative z-10 flex h-7 w-7 items-center justify-center text-white/45 transition-all duration-500 group-hover/cta:translate-x-1 group-hover/cta:text-white"
-        >
-          <ArrowUpRight size={15} strokeWidth={1} />
-        </span>
-        <span
-          aria-hidden="true"
-          className="absolute bottom-0 left-0 h-px w-12 transition-[width] duration-700 group-hover/cta:w-full"
+          className="pointer-events-none absolute left-5 top-5 h-9 w-9 border-l border-t sm:left-6 sm:top-6 lg:left-7 lg:top-7"
           style={{
-            background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+            borderColor:
+              `${GOLD_LIGHT}38`,
           }}
         />
-      </>
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-5 right-5 h-9 w-9 border-b border-r sm:bottom-6 sm:right-6 lg:bottom-7 lg:right-7"
+          style={{
+            borderColor:
+              `${GOLD}2f`,
+          }}
+        />
+
+        <div className="absolute left-5 right-5 top-5 flex items-center justify-between sm:left-6 sm:right-6 sm:top-6 lg:left-7 lg:right-7 lg:top-7">
+          <div className="flex items-center gap-3">
+            <span
+              className="h-[5px] w-[5px] rounded-full"
+              style={{
+                background:
+                  GOLD_LIGHT,
+                boxShadow:
+                  `0 0 8px ${GOLD_LIGHT}44`,
+              }}
+            />
+
+            <span className="text-[8px] font-semibold uppercase tracking-[0.28em] text-white/[0.42]">
+              UMBRA WINDOW
+            </span>
+          </div>
+
+          <span className="font-mono text-[6px] uppercase tracking-[0.24em] text-white/[0.18]">
+            {panel.number}
+          </span>
+        </div>
+
+        <div className="absolute inset-x-6 bottom-6 flex items-end justify-between gap-6 sm:inset-x-7 sm:bottom-7 lg:inset-x-8 lg:bottom-8">
+          <div>
+            <p
+              className="text-[8px] uppercase tracking-[0.34em]"
+              style={{
+                color:
+                  `${GOLD_LIGHT}84`,
+              }}
+            >
+              {panel.mediaLabel}
+            </p>
+
+            <p className="mt-3 max-w-[560px] text-[clamp(1.65rem,3.4vw,3.5rem)] font-[430] uppercase leading-[0.84] tracking-[-0.065em] text-white">
+              {panel.title}
+            </p>
+          </div>
+
+          {panel.type === "youtube" &&
+          !youtubeId ? (
+            <span
+              className="hidden shrink-0 rounded-full border px-3 py-2 font-mono text-[6px] uppercase tracking-[0.24em] sm:block"
+              style={{
+                borderColor:
+                  `${GOLD_LIGHT}28`,
+                color:
+                  `${GOLD_LIGHT}68`,
+                background:
+                  "rgba(0,0,0,.22)",
+              }}
+            >
+              YOUTUBE
+            </span>
+          ) : null}
+        </div>
+
+        {mediaIsClickable ? (
+          <Link
+            href={panel.href}
+            target={
+              panel.external
+                ? "_blank"
+                : undefined
+            }
+            rel={
+              panel.external
+                ? "noopener noreferrer"
+                : undefined
+            }
+            aria-label={
+              mediaLinkLabel
+            }
+            className="absolute inset-0 z-20 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/75"
+          />
+        ) : null}
+
+        <span
+          aria-hidden="true"
+          className="absolute bottom-0 left-0 h-px w-[30%] transition-[width] duration-500 group-hover/window:w-full"
+          style={{
+            background:
+              `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent 78%)`,
+          }}
+        />
+
+        <div className="absolute bottom-5 right-5 z-30 sm:bottom-6 sm:right-6">
+          {youtubeId ? (
+            <a
+              href={
+                panel.youtubeUrl
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/media-link inline-flex items-center gap-3 border border-white/[0.10] bg-black/[0.42] px-3.5 py-2.5 text-[7px] font-semibold uppercase tracking-[0.22em] text-white/[0.60] outline-none transition-colors duration-300 hover:border-[#ead39a]/35 hover:bg-[#ead39a]/10 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+            >
+              {locale === "en"
+                ? "Open on YouTube"
+                : "Otvori na YouTube-u"}
+
+              <ExternalLink
+                size={12}
+                strokeWidth={1}
+                className="transition-transform duration-300 group-hover/media-link:translate-x-0.5 group-hover/media-link:-translate-y-0.5"
+              />
+            </a>
+          ) : (
+            <span
+              className="inline-flex items-center gap-3 border border-white/[0.10] bg-black/[0.34] px-3.5 py-2.5 text-[7px] font-semibold uppercase tracking-[0.22em] text-white/[0.48] transition-colors duration-300 group-hover/window:border-[#ead39a]/30 group-hover/window:text-[#ead39a]/80"
+            >
+              {mediaLinkLabel}
+
+              {panel.external ? (
+                <ExternalLink
+                  size={12}
+                  strokeWidth={1}
+                />
+              ) : (
+                <ArrowUpRight
+                  size={12}
+                  strokeWidth={1}
+                />
+              )}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HomeHero({
+  locale = "sr",
+}: {
+  locale?: Locale;
+}) {
+  const reducedMotion =
+    useReducedMotion() ?? false;
+
+  const currentProject = useMemo(
+    () => getCurrentProductionProject(),
+    [],
+  );
+
+  const panels = useMemo(
+    () => buildPanels(locale, currentProject),
+    [locale, currentProject],
+  );
+
+  const [activeIndex, setActiveIndex] =
+    useState(0);
+
+  const [navHovered, setNavHovered] =
+    useState(false);
+
+  const [userSelected, setUserSelected] =
+    useState(false);
+
+  const activePanel =
+    panels[
+      activeIndex
+    ] ??
+    panels[0];
+
+  const timerRef =
+    useRef<number | null>(
+      null,
     );
 
-    if (activeItem.external) {
-      return (
-        <a href={activeItem.href} target="_blank" rel="noreferrer" className={className} style={{ color: GOLD_LIGHT }}>
-          {content}
-        </a>
+  const pointerFine =
+    useRef(false);
+
+  const clearTimer =
+    useCallback(() => {
+      if (
+        timerRef.current !== null
+      ) {
+        window.clearTimeout(
+          timerRef.current,
+        );
+
+        timerRef.current = null;
+      }
+    }, []);
+
+  const goTo =
+    useCallback(
+      (
+        index: number,
+        source:
+          | "hover"
+          | "click"
+          | "focus" = "click",
+      ) => {
+        if (!panels.length) {
+          return;
+        }
+
+        const nextIndex =
+          (index +
+            panels.length) %
+          panels.length;
+
+        setActiveIndex(
+          (current) =>
+            current ===
+            nextIndex
+              ? current
+              : nextIndex,
+        );
+
+        if (
+          source ===
+          "click"
+        ) {
+          setUserSelected(
+            true,
+          );
+        }
+      },
+      [panels.length],
+    );
+
+  const next =
+    useCallback(() => {
+      goTo(
+        activeIndex + 1,
+        "click",
       );
+    }, [
+      activeIndex,
+      goTo,
+    ]);
+
+  const previous =
+    useCallback(
+      () => {
+        goTo(
+          activeIndex - 1,
+          "click",
+        );
+      },
+      [
+        activeIndex,
+        goTo,
+      ],
+    );
+
+  useEffect(() => {
+    setActiveIndex(0);
+    setUserSelected(false);
+  }, [locale]);
+
+  useEffect(() => {
+    if (
+      reducedMotion ||
+      navHovered ||
+      userSelected ||
+      panels.length <= 1
+    ) {
+      clearTimer();
+      return;
     }
 
-    return (
-      <Link href={activeItem.href} className={className} style={{ color: GOLD_LIGHT }}>
-        {content}
-      </Link>
+    clearTimer();
+
+    timerRef.current =
+      window.setTimeout(
+        () => {
+          setActiveIndex(
+            (current) =>
+              current ===
+              panels.length - 1
+                ? 0
+                : current + 1,
+          );
+        },
+        AUTO_ROTATE_MS,
+      );
+
+    return clearTimer;
+  }, [
+    activeIndex,
+    clearTimer,
+    navHovered,
+    panels.length,
+    reducedMotion,
+    userSelected,
+  ]);
+
+  useEffect(
+    () => () => clearTimer(),
+    [clearTimer],
+  );
+
+  useEffect(() => {
+    pointerFine.current =
+      window.matchMedia(
+        "(pointer: fine)",
+      ).matches;
+  }, []);
+
+  const handlePanelHover =
+    useCallback(
+      (index: number) => {
+        if (
+          !pointerFine.current
+        ) {
+          return;
+        }
+
+        goTo(
+          index,
+          "hover",
+        );
+      },
+      [goTo],
     );
-  };
+
+  const handlePanelFocus =
+    useCallback(
+      (index: number) => {
+        goTo(
+          index,
+          "focus",
+        );
+      },
+      [goTo],
+    );
+
+  if (!activePanel) {
+    return null;
+  }
+
+  const isExternal =
+    Boolean(
+      activePanel.external,
+    );
+
+  const projectTitle =
+    activePanel.id === "aktuelno" ||
+    activePanel.id === "featured";
 
   return (
     <section
+      id="hero"
       data-umbra-scene="hero"
       aria-labelledby="umbra-hero-title"
-      className="relative min-h-[100svh] overflow-hidden bg-[#020202] text-white"
-      onMouseEnter={handlePointerEnter}
-      onMouseLeave={handlePointerLeave}
-      onFocusCapture={() => setIsHovering(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          handlePointerLeave();
-        }
-      }}
+      className="relative min-h-[88svh] overflow-hidden bg-[#020202] text-white lg:min-h-[calc(100svh-4.5rem)]"
     >
-      {/* Full-bleed cinematic background. The existing artwork is allowed to breathe. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -inset-[3%]">
-          <Image
-            src={imageA}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-            style={{
-              objectPosition: "center center",
-              opacity: imageLayer === 0 ? 1 : 0,
-              transform:
-                "translate3d(0, calc(var(--umbra-scroll-y, 0px) * 0.008), 0) scale(1.025)",
-              transition: reducedMotion
-                ? "none"
-                : "opacity 1500ms cubic-bezier(.22,1,.36,1)",
-              willChange: "opacity, transform",
-            }}
-          />
-        </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <Image
+          src={BACKGROUND_IMAGE}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          style={{
+            opacity: 0.38,
+            filter:
+              "brightness(.64) contrast(.96) saturate(.74)",
+            transform:
+              "scale(1.025)",
+          }}
+        />
 
-        <div className="absolute -inset-[3%]">
-          <Image
-            src={imageB}
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-            style={{
-              objectPosition: "center center",
-              opacity: imageLayer === 1 ? 1 : 0,
-              transform:
-                "translate3d(0, calc(var(--umbra-scroll-y, 0px) * 0.008), 0) scale(1.025)",
-              transition: reducedMotion
-                ? "none"
-                : "opacity 1500ms cubic-bezier(.22,1,.36,1)",
-              willChange: "opacity, transform",
-            }}
-          />
-        </div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,.74) 0%, rgba(0,0,0,.54) 31%, rgba(0,0,0,.14) 66%, rgba(0,0,0,.58) 100%)",
+          }}
+        />
 
-        {/* One cinematic grade, not a stack of UI overlays. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(90deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.60) 29%, rgba(0,0,0,.12) 63%, rgba(0,0,0,.36) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,.50) 0%, rgba(0,0,0,.02) 28%, rgba(0,0,0,.07) 58%, rgba(0,0,0,.74) 100%)",
           }}
         />
+
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,.56) 0%, rgba(0,0,0,.03) 30%, rgba(0,0,0,.10) 58%, rgba(0,0,0,.82) 100%)",
+              `radial-gradient(circle at 69% 30%, ${GOLD_LIGHT}08, transparent 40%)`,
           }}
         />
+
+        <div className="absolute inset-0 shadow-[inset_0_0_170px_rgba(0,0,0,.46)]" />
+
         <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(circle at var(--umbra-pointer-x, 68%) var(--umbra-pointer-y, 28%), rgba(234,211,154,.045), transparent 24%)",
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{ boxShadow: "inset 0 0 170px rgba(0,0,0,.58)" }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.035] mix-blend-soft-light"
+          className="absolute inset-0 opacity-[0.010]"
           style={{
             backgroundImage:
-              "radial-gradient(rgba(255,255,255,.22) .5px, transparent .6px)",
-            backgroundSize: "4px 4px",
+              "radial-gradient(rgba(255,255,255,.24) .5px, transparent .6px)",
+            backgroundSize:
+              "4px 4px",
+          }}
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-px"
+          style={{
+            background:
+              `linear-gradient(90deg, transparent, ${GOLD}30, transparent)`,
           }}
         />
       </div>
 
-      {/* Subtle editorial locator. */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: ready ? 1 : 0 }}
-        transition={{ duration: reducedMotion ? 0 : 0.7, ease: EASE }}
-        className="relative z-30 mx-auto max-w-[1680px] px-6 pt-24 sm:px-9 lg:px-12 lg:pt-28 xl:px-16"
-      >
-        <div className="flex items-center gap-4">
-          <span
-            className="font-mono text-[8px] tracking-[0.32em]"
-            style={{ color: `${GOLD_LIGHT}78` }}
-          >
-            {activeItem.number}
-          </span>
-          <span
-            className="h-px w-12"
-            style={{ background: `linear-gradient(90deg, ${GOLD}70, transparent)` }}
-          />
-          <span className="text-[9px] font-medium uppercase tracking-[0.28em] text-white/35">
-            {activeItem.eyebrow}
-          </span>
-        </div>
-      </motion.div>
-
-      {/* Primary statement. */}
-      <div className="relative z-30 mx-auto flex min-h-[calc(100svh-7rem)] max-w-[1680px] items-end px-6 pb-24 sm:px-9 lg:pb-28 lg:px-12 xl:px-16">
-        <motion.div
-          key={activeItem.id}
-          initial={{ opacity: 0, y: reducedMotion ? 0 : 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reducedMotion ? 0 : 0.72, ease: EASE }}
-          className="w-full max-w-[940px]"
-        >
-          <h1
-            id="umbra-hero-title"
-            className="uppercase text-white"
-            style={{
-              fontFamily: '"Helvetica Neue", "Arial Narrow", Arial, sans-serif',
-              fontSize: "clamp(4.25rem, 8.1vw, 10rem)",
-              fontWeight: 500,
-              lineHeight: 0.78,
-              letterSpacing: "-0.075em",
-              textWrap: "balance",
-            }}
-          >
-            <span className="block overflow-hidden">
-              <motion.span
-                key={`${activeItem.id}-one`}
-                className="block"
-                initial={{ y: "105%" }}
-                animate={{ y: 0 }}
-                transition={{ duration: reducedMotion ? 0 : 0.9, ease: EASE }}
-              >
-                {titleLineOne}
-              </motion.span>
+      <div className="relative z-10 mx-auto min-h-[100svh] max-w-[1680px] px-6 sm:px-9 lg:px-12 xl:px-16">
+        <div className="flex items-center justify-between pt-24 sm:pt-28 lg:pt-32">
+          <div className="flex items-center gap-4">
+            <span
+              className="font-mono text-[7px] tracking-[0.32em]"
+              style={{
+                color:
+                  `${GOLD_LIGHT}80`,
+              }}
+            >
+              {activePanel.number}
             </span>
 
-            {titleLineTwo && (
-              <span className="block overflow-hidden">
-                <motion.span
-                  key={`${activeItem.id}-two`}
-                  className="block text-white/[0.94]"
-                  initial={{ y: "105%" }}
-                  animate={{ y: 0 }}
-                  transition={{
-                    delay: reducedMotion ? 0 : 0.045,
-                    duration: reducedMotion ? 0 : 0.95,
-                    ease: EASE,
+            <span
+              className="h-px w-12"
+              style={{
+                background:
+                  `linear-gradient(90deg, ${GOLD}70, transparent)`,
+              }}
+            />
+
+            <span
+              className="text-[8px] font-medium uppercase tracking-[0.28em]"
+              style={{
+                color:
+                  `${GOLD_LIGHT}76`,
+              }}
+            >
+              {activePanel.eyebrow}
+            </span>
+          </div>
+
+          <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.14] md:block">
+            {String(
+              activeIndex + 1,
+            ).padStart(
+              2,
+              "0",
+            )}{" "}
+            /{" "}
+            {String(
+              panels.length,
+            ).padStart(
+              2,
+              "0",
+            )}
+          </span>
+        </div>
+
+        <div className="grid min-h-[calc(88svh-8rem)] items-center gap-10 pb-8 pt-6 lg:grid-cols-[1fr_0.78fr] lg:gap-16 lg:pb-10 lg:pt-2 xl:grid-cols-[1.02fr_0.76fr] xl:gap-20">
+          <motion.div
+            key={activePanel.id}
+            initial={{
+              opacity: 0,
+              x:
+                reducedMotion
+                  ? 0
+                  : -8,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              duration:
+                reducedMotion
+                  ? 0
+                  : 0.28,
+              ease: EASE,
+            }}
+            className="max-w-[980px]"
+          >
+            <Link
+              href={activePanel.href}
+              target={
+                isExternal
+                  ? "_blank"
+                  : undefined
+              }
+              rel={
+                isExternal
+                  ? "noopener noreferrer"
+                  : undefined
+              }
+              className="group/title inline-block max-w-[980px] outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+              aria-label={
+                locale === "en"
+                  ? `Open ${activePanel.title}`
+                  : `Otvori ${activePanel.title}`
+              }
+            >
+              <div className="mb-7 flex items-center gap-3">
+                <span
+                  className="h-[6px] w-[6px] rounded-full"
+                  style={{
+                    background:
+                      GOLD,
+                    boxShadow:
+                      `0 0 12px ${GOLD}42`,
+                  }}
+                />
+
+                <span
+                  className="text-[8px] font-semibold uppercase tracking-[0.34em]"
+                  style={{
+                    color:
+                      `${GOLD_LIGHT}82`,
                   }}
                 >
-                  {titleLineTwo}
-                </motion.span>
+                  {activePanel.category}
+                </span>
+              </div>
+
+              <h1
+                id="umbra-hero-title"
+                className="uppercase text-white"
+                style={{
+                  fontFamily:
+                    '"Helvetica Neue", "Arial Narrow", Arial, sans-serif',
+                  fontSize:
+                    "clamp(3.6rem, 7.2vw, 8.8rem)",
+                  fontWeight: 430,
+                  lineHeight: 0.80,
+                  letterSpacing:
+                    "-0.085em",
+                }}
+              >
+                {activePanel.title
+                  .split(
+                    " ",
+                  )
+                  .map(
+                    (
+                      word,
+                      index,
+                    ) => (
+                      <span
+                        key={`${activePanel.id}-${word}-${index}`}
+                        className={[
+                          "block",
+                          index >
+                          Math.floor(
+                            activePanel.title
+                              .split(
+                                " ",
+                              )
+                              .length /
+                              2,
+                          )
+                            ? "text-white/[0.48]"
+                            : "",
+                        ].join(
+                          " ",
+                        )}
+                      >
+                        {word}
+                      </span>
+                    ),
+                  )}
+              </h1>
+
+              <div
+                aria-hidden="true"
+                className="mt-6 h-px w-8 origin-left transition-[width] duration-500 group-hover/title:w-20"
+                style={{
+                  background:
+                    `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+                }}
+              />
+            </Link>
+
+            <div className="mt-7 flex flex-wrap items-center gap-4">
+              <span
+                className="font-serif text-[clamp(1.05rem,1.5vw,1.35rem)] italic"
+                style={{
+                  color:
+                    `${GOLD_LIGHT}a2`,
+                }}
+              >
+                {activePanel.eyebrow}
               </span>
-            )}
-          </h1>
 
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: reducedMotion ? 0 : 0.38, duration: reducedMotion ? 0 : 0.6, ease: EASE }}
-            className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2"
-          >
-            <span
-              className="font-serif text-[clamp(1.05rem,1.55vw,1.35rem)] italic"
-              style={{ color: `${GOLD_LIGHT}b0` }}
-            >
-              {activeItem.category}
-            </span>
-            <span className="h-px w-10" style={{ background: `linear-gradient(90deg, ${GOLD}60, transparent)` }} />
-            <span className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/30">
-              {activeItem.meta}
-            </span>
+              <span
+                aria-hidden="true"
+                className="h-px w-10"
+                style={{
+                  background:
+                    `${GOLD}54`,
+                }}
+              />
+
+              <span className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/[0.18]">
+                {activePanel.number} /{" "}
+                {activePanel.tab}
+              </span>
+            </div>
+
+            <p className="mt-6 max-w-[570px] text-[12px] leading-7 text-white/[0.39] sm:text-[13px]">
+              {activePanel.description}
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
+              <Link
+                href={
+                  activePanel.href
+                }
+                target={
+                  isExternal
+                    ? "_blank"
+                    : undefined
+                }
+                rel={
+                  isExternal
+                    ? "noopener noreferrer"
+                    : undefined
+                }
+                className="group/cta inline-flex min-h-11 items-center gap-4 pr-1 text-[8px] font-semibold uppercase tracking-[0.28em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                style={{
+                  color:
+                    GOLD_LIGHT,
+                }}
+              >
+                <span>
+                  {
+                    activePanel.cta
+                  }
+                </span>
+
+                {isExternal ? (
+                  <ExternalLink
+                    size={13}
+                    strokeWidth={1}
+                    className="transition-transform duration-300 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
+                  />
+                ) : (
+                  <ArrowUpRight
+                    size={14}
+                    strokeWidth={1}
+                    className="transition-transform duration-300 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
+                  />
+                )}
+              </Link>
+
+              <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.14]">
+                {projectTitle
+                  ? locale ===
+                    "en"
+                    ? "SELECTED PRODUCTION"
+                    : "AKTUELNA PRODUKCIJA"
+                  : locale ===
+                      "en"
+                    ? "EDITORIAL VIEW"
+                    : "UREĐIVAČKI PREGLED"}
+              </span>
+            </div>
           </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: reducedMotion ? 0 : 0.5, duration: reducedMotion ? 0 : 0.6, ease: EASE }}
-            className="mt-5 max-w-[560px] text-[12px] leading-7 text-white/[0.48]"
-          >
-            {activeItem.description}
-          </motion.p>
-
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: reducedMotion ? 0 : 0.62, duration: reducedMotion ? 0 : 0.6, ease: EASE }}
-            className="mt-7 flex items-center gap-7"
+            key={`window-${activePanel.id}`}
+            initial={{
+              opacity: 0,
+              x:
+                reducedMotion
+                  ? 0
+                  : 10,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              delay:
+                reducedMotion
+                  ? 0
+                  : 0.02,
+              duration:
+                reducedMotion
+                  ? 0
+                  : 0.32,
+              ease: EASE,
+            }}
+            className="group/window relative mx-auto w-full max-w-[570px] lg:justify-self-end"
           >
-            {renderCTA()}
-            <span className="hidden font-mono text-[7px] uppercase tracking-[0.28em] text-white/20 sm:block">
-              {locale === "en" ? "Explore the archive" : "Istraži priču"}
-            </span>
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Readable story selector. */}
-      <motion.nav
-        aria-label={locale === "en" ? "Hero stories" : "Hero priče"}
-        initial={{ opacity: 0, x: 14 }}
-        animate={{ opacity: ready ? 1 : 0, x: ready ? 0 : 14 }}
-        transition={{ delay: reducedMotion ? 0 : 0.5, duration: reducedMotion ? 0 : 0.75, ease: EASE }}
-        className="absolute bottom-24 right-6 z-40 hidden lg:right-12 lg:block xl:right-16"
-      >
-        <div className="flex min-w-[190px] flex-col items-stretch">
-          <div className="mb-4 flex items-center justify-between gap-8 border-b border-white/10 pb-3">
-            <span className="text-[8px] font-medium uppercase tracking-[0.26em] text-white/45">
-              {locale === "en" ? "Explore" : "Istraži"}
-            </span>
-            <button
-              type="button"
-              onClick={togglePlayback}
-              aria-label={
-                isPlaying
-                  ? locale === "en" ? "Pause automatic rotation" : "Pauziraj automatsku rotaciju"
-                  : locale === "en" ? "Start automatic rotation" : "Pokreni automatsku rotaciju"
+            <MediaWindow
+              panel={
+                activePanel
               }
-              className="text-white/35 transition-colors hover:text-white"
-            >
-              {isPlaying ? <Pause size={11} strokeWidth={1.2} /> : <Play size={11} strokeWidth={1.2} />}
-            </button>
-          </div>
+              locale={
+                locale
+              }
+            />
 
-          <div className="space-y-1">
-            {items.map((item, index) => {
-              const active = index === activeIndex;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onMouseEnter={() => changeItem(index)}
-                  onClick={() => changeItem(index)}
-                  aria-label={item.tab}
-                  aria-current={active ? "true" : undefined}
-                  className="group flex w-full items-center gap-3 py-2 text-left"
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="h-px w-8"
+                  style={{
+                    background:
+                      `${GOLD}38`,
+                  }}
+                />
+
+                <span className="text-[7px] uppercase tracking-[0.28em] text-white/[0.18]">
+                  {
+                    activePanel.mediaLabel
+                  }
+                </span>
+              </div>
+
+              {activePanel.type ===
+              "youtube" ? (
+                <a
+                  href={
+                    activePanel.youtubeUrl ??
+                    activePanel.href
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[7px] uppercase tracking-[0.22em] outline-none transition-colors hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                  style={{
+                    color:
+                      `${GOLD_LIGHT}58`,
+                  }}
                 >
-                  <span
-                    className="w-6 font-mono text-[8px] tracking-[0.22em]"
-                    style={{ color: active ? GOLD_LIGHT : "rgba(255,255,255,.28)" }}
-                  >
-                    {item.number}
-                  </span>
-                  <span
-                    className="h-px transition-all duration-500"
+                  {getYouTubeId(
+                    activePanel.youtubeUrl,
+                  )
+                    ? locale ===
+                      "en"
+                      ? "OPEN VIDEO"
+                      : "OTVORI VIDEO"
+                    : locale ===
+                        "en"
+                      ? "OPEN CHANNEL"
+                      : "OTVORI KANAL"}
+                </a>
+              ) : (
+                <Link
+                  href={
+                    activePanel.href
+                  }
+                  className="text-[7px] uppercase tracking-[0.22em] outline-none transition-colors hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                  style={{
+                    color:
+                      `${GOLD_LIGHT}58`,
+                  }}
+                >
+                  {locale ===
+                  "en"
+                    ? "OPEN"
+                    : "OTVORI"}
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="relative border-t border-white/[0.05] pb-5 pt-4">
+          <div className="flex items-center justify-between">
+            <div className="hidden items-center gap-1 sm:flex">
+              <button
+                type="button"
+                onClick={
+                  previous
+                }
+                aria-label={
+                  locale ===
+                  "en"
+                    ? "Previous section"
+                    : "Prethodna sekcija"
+                }
+                className="flex h-8 w-8 items-center justify-center text-white/[0.26] outline-none transition-colors hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+              >
+                <ArrowLeft
+                  size={12}
+                  strokeWidth={1.1}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  next
+                }
+                aria-label={
+                  locale ===
+                  "en"
+                    ? "Next section"
+                    : "Sledeća sekcija"
+                }
+                className="flex h-8 w-8 items-center justify-center text-white/[0.26] outline-none transition-colors hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+              >
+                <ArrowRight
+                  size={12}
+                  strokeWidth={1.1}
+                />
+              </button>
+            </div>
+
+            <div className="mx-auto flex items-center gap-3 sm:mx-0">
+              <span className="text-[7px] uppercase tracking-[0.28em] text-white/[0.18]">
+                {locale ===
+                "en"
+                  ? "SCROLL TO EXPLORE"
+                  : "SKROLUJ ZA ISTRAŽIVANJE"}
+              </span>
+
+              {!reducedMotion ? (
+                <motion.span
+                  animate={{
+                    y: [
+                      0,
+                      4,
+                      0,
+                    ],
+                    opacity: [
+                      0.18,
+                      0.60,
+                      0.18,
+                    ],
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <ArrowDown
+                    size={11}
+                    strokeWidth={1.1}
                     style={{
-                      width: active ? 38 : 18,
-                      background: active ? GOLD_LIGHT : "rgba(255,255,255,.18)",
+                      color:
+                        `${GOLD_LIGHT}58`,
                     }}
                   />
-                  <span
-                    className="text-[9px] font-medium uppercase tracking-[0.22em] transition-colors duration-300"
-                    style={{ color: active ? "rgba(255,255,255,.88)" : "rgba(255,255,255,.36)" }}
-                  >
-                    {item.tab}
-                  </span>
-                </button>
-              );
-            })}
+                </motion.span>
+              ) : null}
+            </div>
+
+            <span className="hidden font-mono text-[6px] uppercase tracking-[0.26em] text-white/[0.12] sm:block">
+              {String(
+                activeIndex + 1,
+              ).padStart(
+                2,
+                "0",
+              )}{" "}
+              /{" "}
+              {String(
+                panels.length,
+              ).padStart(
+                2,
+                "0",
+              )}
+            </span>
           </div>
 
-          <div className="mt-4 flex items-center gap-3 border-t border-white/10 pt-3">
-            <span className="text-[7px] uppercase tracking-[0.2em] text-white/22">
-              {isPlaying ? (locale === "en" ? "Auto" : "Auto") : locale === "en" ? "Paused" : "Pauza"}
-            </span>
-            <span className="h-px flex-1 overflow-hidden bg-white/10">
-              <motion.span
-                className="block h-px origin-left"
-                animate={{ scaleX: isPlaying && !isHovering ? 1 : 0 }}
-                transition={{ duration: AUTO_ROTATE_MS / 1000, ease: "linear" }}
-                style={{ background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT})` }}
-              />
-            </span>
+          <div className="mt-3 h-px w-full overflow-hidden bg-white/[0.045]">
+            <motion.span
+              key={
+                activePanel.id
+              }
+              initial={{
+                width: "0%",
+              }}
+              animate={{
+                width: "100%",
+              }}
+              transition={{
+                duration:
+                  reducedMotion
+                    ? 0
+                    : AUTO_ROTATE_MS /
+                      1000,
+                ease: "linear",
+              }}
+              className="block h-px"
+              style={{
+                background:
+                  `linear-gradient(90deg, transparent, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
+              }}
+            />
           </div>
         </div>
-      </motion.nav>
 
-      {/* Quiet discovery controls. */}
-      <div className="pointer-events-none absolute bottom-7 left-6 right-6 z-40 sm:left-9 sm:right-9 lg:left-12 lg:right-12 xl:left-16 xl:right-16">
-        <div className="flex items-end justify-between">
-          <span className="hidden text-[8px] uppercase tracking-[0.26em] text-white/20 lg:block">
-            UMBRA STUDIO
-          </span>
-
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-[8px] uppercase tracking-[0.28em] text-white/25">
-                {locale === "en" ? "Scroll to explore" : "Skroluj za istraživanje"}
+        <nav
+          aria-label={
+            locale === "en"
+              ? "Hero sections"
+              : "Hero sekcije"
+          }
+          onMouseEnter={() =>
+            setNavHovered(true)
+          }
+          onMouseLeave={() =>
+            setNavHovered(false)
+          }
+          className="absolute bottom-16 right-6 z-50 hidden w-[292px] isolate lg:right-12 lg:block xl:right-16"
+        >
+          <div className="relative z-10 border border-white/[0.10] bg-[#050505] px-5 pb-4 pt-5 shadow-[0_22px_70px_rgba(0,0,0,.52)]">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.30em] text-white/[0.40]">
+                {locale ===
+                "en"
+                  ? "EXPLORE"
+                  : "ISTRAŽI"}
               </span>
-              {!reducedMotion && (
-                <motion.span
-                  animate={{ y: [0, 4, 0], opacity: [0.18, 0.6, 0.18] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <ArrowDown size={11} strokeWidth={1.15} style={{ color: `${GOLD_LIGHT}60` }} />
-                </motion.span>
+
+              <span className="font-mono text-[6px] uppercase tracking-[0.24em] text-white/[0.12]">
+                {userSelected
+                  ? locale ===
+                    "en"
+                    ? "SELECTED"
+                    : "IZABRANO"
+                  : navHovered
+                    ? locale ===
+                      "en"
+                      ? "PAUSED"
+                      : "PAUZA"
+                    : "AUTO"}
+              </span>
+            </div>
+
+            <p className="mb-3 text-[7px] uppercase tracking-[0.26em] text-white/[0.16]">
+              {locale ===
+              "en"
+                ? "SELECT A WINDOW"
+                : "IZABERI PROZOR"}
+            </p>
+
+            <div className="space-y-1.5">
+              {panels.map(
+                (
+                  panel,
+                  index,
+                ) => {
+                  const active =
+                    index ===
+                    activeIndex;
+
+                  return (
+                    <button
+                      key={
+                        panel.id
+                      }
+                      type="button"
+                      onMouseEnter={() =>
+                        handlePanelHover(
+                          index,
+                        )
+                      }
+                      onFocus={() =>
+                        handlePanelFocus(
+                          index,
+                        )
+                      }
+                      onClick={() =>
+                        goTo(
+                          index,
+                          "click",
+                        )
+                      }
+                      aria-pressed={active}
+                      className={[
+                        "group relative flex w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
+                        active
+                          ? "bg-white/[0.045]"
+                          : "hover:bg-white/[0.025]",
+                      ].join(
+                        " ",
+                      )}
+                    >
+                      <span
+                        className="w-8 font-mono text-[9px] tracking-[0.18em]"
+                        style={{
+                          color:
+                            active
+                              ? GOLD_LIGHT
+                              : "rgba(255,255,255,.22)",
+                        }}
+                      >
+                        {
+                          panel.number
+                        }
+                      </span>
+
+                      <span
+                        className="h-px transition-[width,background-color] duration-150"
+                        style={{
+                          width:
+                            active
+                              ? 48
+                              : 22,
+                          background:
+                            active
+                              ? GOLD_LIGHT
+                              : "rgba(255,255,255,.16)",
+                        }}
+                      />
+
+                      <span
+                        className="text-[10px] font-semibold uppercase tracking-[0.24em] transition-colors duration-150"
+                        style={{
+                          color:
+                            active
+                              ? "rgba(255,255,255,.94)"
+                              : "rgba(255,255,255,.36)",
+                        }}
+                      >
+                        {
+                          panel.tab
+                        }
+                      </span>
+
+                      <span
+                        aria-hidden="true"
+                        className="absolute bottom-0 left-0 h-px transition-[width,opacity] duration-150"
+                        style={{
+                          width:
+                            active
+                              ? "68%"
+                              : "0%",
+                          opacity:
+                            active
+                              ? 0.65
+                              : 0,
+                          background:
+                            `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
+                        }}
+                      />
+                    </button>
+                  );
+                },
               )}
             </div>
           </div>
-
-          <div className="pointer-events-auto hidden items-center gap-1 lg:flex">
-            <button
-              type="button"
-              onClick={previous}
-              aria-label={locale === "en" ? "Previous story" : "Prethodna priča"}
-              className="flex h-7 w-7 items-center justify-center text-white/30 transition-colors hover:text-white"
-            >
-              <ArrowLeft size={11} strokeWidth={1.1} />
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              aria-label={locale === "en" ? "Next story" : "Sledeća priča"}
-              className="flex h-7 w-7 items-center justify-center text-white/30 transition-colors hover:text-white"
-            >
-              <ArrowRight size={11} strokeWidth={1.1} />
-            </button>
-          </div>
-        </div>
+        </nav>
       </div>
 
-      <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 right-0 z-50 h-px bg-white/[0.025]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-white/[0.025]"
+      >
         <motion.div
-          className="h-full origin-left"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: ready ? 1 : 0 }}
-          transition={{ delay: reducedMotion ? 0 : 0.35, duration: reducedMotion ? 0 : 1, ease: EASE }}
+          key={activeIndex}
+          initial={{
+            scaleX: 0,
+          }}
+          animate={{
+            scaleX: 1,
+          }}
+          transition={{
+            duration:
+              reducedMotion
+                ? 0
+                : 0.8,
+            ease: EASE,
+          }}
+          className="h-full w-[38%] origin-left"
           style={{
-            width: "34%",
-            background: `linear-gradient(90deg, transparent, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
+            background:
+              `linear-gradient(90deg, transparent, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent)`,
           }}
         />
       </div>
-
-      {!reducedMotion && (
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-[60] bg-[#020202]"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: ready ? 0 : 1 }}
-          transition={{ delay: 0.02, duration: 0.5, ease: EASE }}
-        />
-      )}
     </section>
   );
 }

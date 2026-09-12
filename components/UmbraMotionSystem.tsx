@@ -48,9 +48,14 @@ type MotionDetail = {
   maxScroll: number;
 };
 
-const IDLE_THRESHOLD = 0.001;
-const VELOCITY_SMOOTHING = 0.18;
-const MAX_REFERENCE_VELOCITY = 48;
+const IDLE_THRESHOLD =
+  0.001;
+
+const VELOCITY_SMOOTHING =
+  0.18;
+
+const MAX_REFERENCE_VELOCITY =
+  48;
 
 function clamp(
   value: number,
@@ -110,13 +115,14 @@ function readScrollState(
     );
 
   const scrollY =
-    Math.min(
-      maxScroll,
-      Math.max(
-        0,
-        window.scrollY,
-      ),
-    );
+    clamp(
+      window.scrollY /
+        Math.max(
+          1,
+          maxScroll,
+        ),
+    ) *
+    maxScroll;
 
   const now =
     performance.now();
@@ -181,8 +187,9 @@ function readScrollState(
         )
       : 0;
 
-  let direction: MotionDirection =
-    "idle";
+  let direction:
+    MotionDirection =
+      "idle";
 
   if (
     Math.abs(
@@ -209,10 +216,12 @@ function readScrollState(
       documentHeight,
       maxScroll,
     },
-    nextY: scrollY,
+    nextY:
+      scrollY,
     nextVelocity:
       velocitySmoothed,
-    nextTime: now,
+    nextTime:
+      now,
   };
 }
 
@@ -389,6 +398,19 @@ export default function UmbraMotionSystem() {
 
     const handleResize =
       () => {
+        /*
+         * A resize changes both viewport height and maximum scroll.
+         * Reset velocity so a resize is never interpreted as user scroll.
+         */
+        previousYRef.current =
+          window.scrollY;
+
+        previousVelocityRef.current =
+          0;
+
+        previousTimeRef.current =
+          0;
+
         requestPublish();
       };
 
@@ -419,6 +441,17 @@ export default function UmbraMotionSystem() {
         runningRef.current =
           true;
 
+        /*
+         * The first frame after returning to the page establishes a fresh
+         * baseline. It prevents the time spent in the background from
+         * becoming an artificial velocity spike.
+         */
+        previousYRef.current =
+          window.scrollY;
+
+        previousVelocityRef.current =
+          0;
+
         previousTimeRef.current =
           0;
 
@@ -446,12 +479,24 @@ export default function UmbraMotionSystem() {
       handleVisibility,
     );
 
+    /*
+     * Establish the initial baseline before the first published state.
+     */
     previousYRef.current =
       window.scrollY;
+
+    previousVelocityRef.current =
+      0;
+
+    previousTimeRef.current =
+      0;
 
     requestPublish();
 
     return () => {
+      runningRef.current =
+        false;
+
       window.removeEventListener(
         "scroll",
         handleScroll,
@@ -474,6 +519,9 @@ export default function UmbraMotionSystem() {
         window.cancelAnimationFrame(
           frameRef.current,
         );
+
+        frameRef.current =
+          null;
       }
 
       root.style.removeProperty(

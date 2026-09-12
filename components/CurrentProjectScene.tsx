@@ -3,68 +3,91 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowDownRight,
   ArrowUpRight,
-  Play,
+  Clapperboard,
+  Layers3,
 } from "lucide-react";
 import {
   motion,
-  useMotionValue,
+  useInView,
   useReducedMotion,
-  useSpring,
-  useTransform,
 } from "framer-motion";
-import {
-  useCallback,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useMemo, useRef } from "react";
 
+import { projects } from "@/data/projects";
 import type { Locale } from "@/data/translations";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
-const GOLD_DARK = "#8f7142";
 
 const FALLBACK_IMAGE = "/umbra-background.png";
+const AUTHOR_URL = "https://branislavbojcic.com/";
 
-const EASE = [
-  0.22,
-  1,
-  0.36,
-  1,
-] as const;
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const STATUS_SR = {
+  "in-production": "U produkciji",
+  development: "U razvoju",
+  upcoming: "Uskoro",
+} as const;
+
+const STATUS_EN = {
+  "in-production": "In production",
+  development: "In development",
+  upcoming: "Coming soon",
+} as const;
 
 type CurrentProjectSceneProps = {
   locale?: Locale;
 };
 
-function Meta({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="min-w-0">
-      <div className="font-mono text-[7px] uppercase tracking-[0.24em] text-white/[0.20]">
-        {label}
-      </div>
+const COPY = {
+  sr: {
+    eyebrow: "TRENUTNO",
+    title: "Svet koji sada stvaramo.",
+    intro:
+      "Jedan projekat je trenutno u središtu Umbra Studija. Ostali svetovi rastu uz njega.",
+    archive: "Pogledaj sve projekte",
+    enter: "Uđi u svet",
+    novel: "Po romanu",
+    authorAria: "Otvori sajt Branislava Bojčića",
+    original: "UMBRA ORIGINAL",
+    project: "PROJEKAT",
+    home: "Umbra Studio",
+  },
+  en: {
+    eyebrow: "CURRENTLY",
+    title: "The world we are creating now.",
+    intro:
+      "One project currently sits at the heart of Umbra Studio. Other worlds grow alongside it.",
+    archive: "Explore all projects",
+    enter: "Enter world",
+    novel: "Novel by",
+    authorAria: "Open Branislav Bojčić's website",
+    original: "UMBRA ORIGINAL",
+    project: "PROJECT",
+    home: "Umbra Studio",
+  },
+} as const;
 
-      <div
-        className="mt-2 truncate text-[10px] font-medium uppercase tracking-[0.16em]"
-        style={{
-          color: accent
-            ? `${GOLD_LIGHT}8c`
-            : "rgba(241,237,228,.48)",
-        }}
-      >
-        {value}
-      </div>
-    </div>
+function resolveProjectImage(
+  project: (typeof projects)[number],
+  locale: Locale,
+) {
+  if (locale === "en") {
+    return (
+      project.book?.coverEn ||
+      project.book?.coverSr ||
+      project.cover ||
+      FALLBACK_IMAGE
+    );
+  }
+
+  return (
+    project.book?.coverSr ||
+    project.book?.coverEn ||
+    project.cover ||
+    FALLBACK_IMAGE
   );
 }
 
@@ -73,129 +96,81 @@ export default function CurrentProjectScene({
 }: CurrentProjectSceneProps) {
   const reducedMotion = useReducedMotion() ?? false;
   const isEnglish = locale === "en";
+  const copy = COPY[locale];
 
-  const projectHref = isEnglish
-    ? "/en/projects/mrzim-svog-brata"
-    : "/serije/mrzim-svog-brata";
+  const sectionRef = useRef<HTMLElement | null>(null);
 
-  const charactersHref = isEnglish
-    ? "/en/characters"
-    : "/likovi";
-
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-
-  const smoothX = useSpring(pointerX, {
-    stiffness: 110,
-    damping: 20,
-    mass: 0.5,
+  const inView = useInView(sectionRef, {
+    once: true,
+    amount: 0.10,
   });
 
-  const smoothY = useSpring(pointerY, {
-    stiffness: 110,
-    damping: 20,
-    mass: 0.5,
-  });
+  const orderedProjects = useMemo(
+    () =>
+      projects
+        .filter(Boolean)
+        .slice()
+        .sort((a, b) => {
+          if (a.featured === b.featured) {
+            return 0;
+          }
 
-  const posterX = useTransform(
-    smoothX,
-    [-1, 1],
-    reducedMotion ? [0, 0] : [-8, 8],
+          return a.featured ? -1 : 1;
+        }),
+    [],
   );
 
-  const posterY = useTransform(
-    smoothY,
-    [-1, 1],
-    reducedMotion ? [0, 0] : [-8, 8],
+  const activeProject = orderedProjects[0];
+
+  const secondaryProjects = orderedProjects.slice(1);
+
+  const archiveHref = isEnglish
+    ? "/en/projects"
+    : "/serije";
+
+  const homeHref = isEnglish
+    ? "/en"
+    : "/";
+
+  const hrefForProject = (slug: string) =>
+    isEnglish
+      ? `/en/projects/${slug}`
+      : `/serije/${slug}`;
+
+  const statusLabels = isEnglish
+    ? STATUS_EN
+    : STATUS_SR;
+
+  if (!activeProject) {
+    return null;
+  }
+
+  const activeImage = resolveProjectImage(
+    activeProject,
+    locale,
   );
-
-  const lightX = useTransform(
-    smoothX,
-    [-1, 1],
-    ["36%", "64%"],
-  );
-
-  const lightY = useTransform(
-    smoothY,
-    [-1, 1],
-    ["35%", "65%"],
-  );
-
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [posterSrc, setPosterSrc] =
-    useState(FALLBACK_IMAGE);
-
-  const interactive = hovered || focused;
-
-  const handlePointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLAnchorElement>) => {
-      if (
-        reducedMotion ||
-        event.pointerType === "touch"
-      ) {
-        return;
-      }
-
-      const rect =
-        event.currentTarget.getBoundingClientRect();
-
-      pointerX.set(
-        ((event.clientX - rect.left) / rect.width) *
-          2 -
-          1,
-      );
-
-      pointerY.set(
-        ((event.clientY - rect.top) / rect.height) *
-          2 -
-          1,
-      );
-    },
-    [pointerX, pointerY, reducedMotion],
-  );
-
-  const resetPointer = useCallback(() => {
-    pointerX.set(0);
-    pointerY.set(0);
-  }, [pointerX, pointerY]);
 
   return (
     <section
       id="current-project"
+      ref={sectionRef}
       data-umbra-scene="project"
       aria-labelledby="current-project-title"
-      className="relative overflow-hidden border-b border-white/[0.055] bg-[#030303]"
+      className="relative overflow-hidden border-b border-white/[0.055] bg-[#030303] py-20 sm:py-24 lg:py-28"
     >
-      {/* Ambient field */}
-
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
+        className="pointer-events-none absolute inset-0"
       >
         <div
-          className="absolute -right-[16%] top-[8%] h-[720px] w-[720px] rounded-full"
+          className="absolute inset-0 opacity-[0.075]"
           style={{
-            background: `
-              radial-gradient(
-                circle,
-                ${GOLD}07 0%,
-                ${GOLD}022 34%,
-                transparent 72%
-              )
-            `,
-            filter: "blur(70px)",
-            opacity: interactive ? 0.95 : 0.68,
-            transition: "opacity 700ms var(--ease-umbra-out)",
-          }}
-        />
-
-        <div
-          className="absolute bottom-[-22%] left-[8%] h-[520px] w-[760px]"
-          style={{
-            background:
-              "radial-gradient(ellipse, rgba(255,255,255,.012), transparent 72%)",
-            filter: "blur(82px)",
+            backgroundImage: `url(${activeImage})`,
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+            filter:
+              "grayscale(1) blur(22px) contrast(.72)",
+            transform: "scale(1.045)",
           }}
         />
 
@@ -203,648 +178,576 @@ export default function CurrentProjectScene({
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,.10), transparent 24%, transparent 72%, rgba(0,0,0,.40))",
+              "linear-gradient(180deg, #030303 0%, rgba(3,3,3,.76) 23%, rgba(3,3,3,.92) 72%, #030303 100%)",
           }}
         />
+
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 68% 40%, rgba(199,169,107,.055), transparent 38%)",
+          }}
+        />
+
+        <div className="absolute inset-0 umbra-noise opacity-[0.045]" />
       </div>
 
       <div
-        className="
-          relative
-          z-10
-          mx-auto
-          max-w-[1680px]
-          px-6
-          pb-20
-          pt-24
-          sm:px-9
-          sm:pb-24
-          sm:pt-28
-          lg:px-12
-          lg:pb-28
-          lg:pt-32
-          xl:px-16
-        "
-      >
-        {/* Scene header */}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{
+          background:
+            `linear-gradient(90deg, transparent, ${GOLD}28, transparent)`,
+        }}
+      />
 
-        <motion.div
+      <div className="relative mx-auto max-w-[1480px] px-6 sm:px-9 lg:px-12 xl:px-16">
+        <motion.header
           initial={{
             opacity: 0,
-            y: reducedMotion ? 0 : 8,
+            y: reducedMotion ? 0 : 10,
           }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.16,
-          }}
-          transition={{
-            duration: reducedMotion ? 0 : 0.6,
-            ease: EASE,
-          }}
-          className="flex items-center justify-between border-b border-white/[0.055] pb-5"
-        >
-          <div className="flex items-center gap-4">
-            <span
-              className="font-mono text-[7px] tracking-[0.32em]"
-              style={{
-                color: `${GOLD_LIGHT}82`,
-              }}
-            >
-              02
-            </span>
-
-            <span
-              className="h-px w-12"
-              style={{
-                background: `linear-gradient(90deg, ${GOLD}70, transparent)`,
-              }}
-            />
-
-            <span className="text-[9px] font-semibold uppercase tracking-[0.28em] text-white/[0.62]">
-              {isEnglish
-                ? "CURRENT PROJECT"
-                : "AKTUELNI PROJEKAT"}
-            </span>
-          </div>
-
-          <span className="hidden font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.15] sm:block">
-            02 / 05
-          </span>
-        </motion.div>
-
-        {/* Main composition */}
-
-        <div className="grid items-center gap-14 pt-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16 lg:pt-16 xl:grid-cols-[0.88fr_1.12fr] xl:gap-24">
-          {/* Editorial copy */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              x: reducedMotion ? 0 : -18,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.14,
-            }}
-            transition={{
-              duration: reducedMotion ? 0 : 0.78,
-              ease: EASE,
-            }}
-            className="max-w-[680px]"
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className="h-[6px] w-[6px] rounded-full"
-                style={{
-                  background: GOLD,
-                  boxShadow: `0 0 12px ${GOLD}42`,
-                }}
-              />
-
-              <span className="text-[8px] font-semibold uppercase tracking-[0.32em] text-white/[0.36]">
-                UMBRA ORIGINAL
-              </span>
-
-              <span className="font-mono text-[7px] tracking-[0.24em] text-white/[0.18]">
-                001
-              </span>
-            </div>
-
-            <div className="mt-8 overflow-hidden">
-              <motion.h2
-                id="current-project-title"
-                initial={{
-                  opacity: 0,
-                  y: reducedMotion ? 0 : 42,
-                }}
-                whileInView={{
+          animate={
+            inView
+              ? {
                   opacity: 1,
                   y: 0,
-                }}
-                viewport={{
-                  once: true,
-                  amount: 0.14,
-                }}
-                transition={{
-                  delay: reducedMotion ? 0 : 0.08,
-                  duration: reducedMotion ? 0 : 0.92,
-                  ease: EASE,
-                }}
-                className="text-[clamp(4rem,7.2vw,8.8rem)] font-[430] uppercase leading-[0.79] tracking-[-0.085em] text-white"
-              >
-                <span className="block">
-                  MRZIM
-                </span>
-
-                <span className="block text-white/[0.52]">
-                  SVOG BRATA
-                </span>
-              </motion.h2>
-            </div>
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                x: reducedMotion ? 0 : -10,
-              }}
-              whileInView={{
-                opacity: 1,
-                x: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.12,
-              }}
-              transition={{
-                delay: reducedMotion ? 0 : 0.30,
-                duration: reducedMotion ? 0 : 0.55,
-                ease: EASE,
-              }}
-              className="mt-7 flex items-center gap-4"
-            >
+                }
+              : undefined
+          }
+          transition={{
+            duration: reducedMotion ? 0 : 0.68,
+            ease: EASE,
+          }}
+          className="mb-10 flex flex-col gap-6 sm:mb-12 lg:mb-14 lg:flex-row lg:items-end lg:justify-between"
+        >
+          <div className="max-w-5xl">
+            <div className="mb-4 flex items-center gap-4">
               <span
-                className="font-serif text-[clamp(1.05rem,1.45vw,1.30rem)] italic"
+                className="text-[8px] font-semibold uppercase tracking-[0.32em]"
                 style={{
-                  color: `${GOLD_LIGHT}9d`,
+                  color: `${GOLD_LIGHT}7e`,
                 }}
               >
-                {isEnglish
-                  ? "Series in production"
-                  : "Serija u produkciji"}
+                {copy.eyebrow}
               </span>
 
               <span
-                className="h-px w-14"
+                aria-hidden="true"
+                className="h-px w-10"
                 style={{
-                  background: `linear-gradient(90deg, ${GOLD}64, transparent)`,
+                  background: `${GOLD}2d`,
                 }}
               />
-            </motion.div>
 
-            <motion.p
-              initial={{
-                opacity: 0,
-                y: reducedMotion ? 0 : 10,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.10,
-              }}
-              transition={{
-                delay: reducedMotion ? 0 : 0.42,
-                duration: reducedMotion ? 0 : 0.58,
-                ease: EASE,
-              }}
-              className="mt-7 max-w-[510px] text-[12px] leading-7 text-white/[0.40]"
+              <span className="font-mono text-[7px] uppercase tracking-[0.22em] text-white/[0.17]">
+                {statusLabels[activeProject.status]}
+              </span>
+            </div>
+
+            <Link
+              href={archiveHref}
+              aria-label={
+                isEnglish
+                  ? "Open all projects"
+                  : "Otvori sve projekte"
+              }
+              className="group block w-fit rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
             >
-              {isEnglish
-                ? "The first Umbra production — a cinematic series built around family, character and the weight of what remains unsaid."
-                : "Prva Umbra produkcija — filmska serija o porodici, karakterima i težini onoga što ostaje neizgovoreno."}
-            </motion.p>
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: reducedMotion ? 0 : 8,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.08,
-              }}
-              transition={{
-                delay: reducedMotion ? 0 : 0.52,
-                duration: reducedMotion ? 0 : 0.55,
-                ease: EASE,
-              }}
-              className="mt-9 grid max-w-[580px] grid-cols-3 border-t border-white/[0.055] pt-5"
-            >
-              <Meta
-                label={isEnglish ? "Status" : "Status"}
-                value={
-                  isEnglish
-                    ? "In production"
-                    : "U produkciji"
-                }
-              />
-
-              <Meta
-                label="Format"
-                value={
-                  isEnglish
-                    ? "Web series"
-                    : "Web serija"
-                }
-                accent
-              />
-
-              <Meta
-                label={
-                  isEnglish
-                    ? "Episodes"
-                    : "Epizode"
-                }
-                value="04"
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: reducedMotion ? 0 : 8,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.08,
-              }}
-              transition={{
-                delay: reducedMotion ? 0 : 0.62,
-                duration: reducedMotion ? 0 : 0.56,
-                ease: EASE,
-              }}
-              className="mt-9 flex items-center gap-5"
-            >
-              <Link
-                href={projectHref}
-                className="group/project relative inline-flex min-h-[44px] items-center gap-4 pr-1 text-[8px] font-semibold uppercase tracking-[0.30em] sm:text-[9px]"
-                style={{
-                  color: GOLD_LIGHT,
-                }}
+              <h2
+                id="current-project-title"
+                className="max-w-5xl text-[clamp(2.8rem,6vw,6.6rem)] font-[430] leading-[0.84] tracking-[-0.07em] text-[#F1EDE4] transition-[color,transform] duration-500 group-hover:-translate-y-[2px] group-hover:text-white"
               >
-                <span className="relative z-10">
-                  {isEnglish
-                    ? "Enter project"
-                    : "Uđi u projekat"}
+                {copy.title}
+              </h2>
+
+              <span className="mt-5 inline-flex items-center gap-3 text-[8px] font-semibold uppercase tracking-[0.28em]">
+                <span
+                  style={{
+                    color: `${GOLD_LIGHT}a8`,
+                  }}
+                >
+                  {copy.archive}
                 </span>
 
                 <ArrowUpRight
-                  size={13}
-                  strokeWidth={1}
-                  className="relative z-10 transition-transform duration-500 group-hover/project:translate-x-1 group-hover/project:-translate-y-0.5"
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  style={{
+                    color: `${GOLD_LIGHT}70`,
+                  }}
+                />
+              </span>
+            </Link>
+          </div>
+
+          <p className="max-w-[390px] text-[11px] leading-6 text-white/[0.30] lg:pb-1 lg:text-right">
+            {copy.intro}
+          </p>
+        </motion.header>
+
+        <div
+          className={
+            secondaryProjects.length > 0
+              ? "grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,.55fr)]"
+              : "grid"
+          }
+        >
+          <motion.article
+            initial={{
+              opacity: 0,
+              y: reducedMotion ? 0 : 20,
+            }}
+            animate={
+              inView
+                ? {
+                    opacity: 1,
+                    y: 0,
+                  }
+                : undefined
+            }
+            transition={{
+              delay: reducedMotion ? 0 : 0.08,
+              duration: reducedMotion ? 0 : 0.78,
+              ease: EASE,
+            }}
+            className="group flex min-w-0 flex-col overflow-hidden border border-white/[0.08] bg-[#070707]"
+          >
+            <Link
+              href={hrefForProject(activeProject.slug)}
+              aria-label={
+                isEnglish
+                  ? `Open ${activeProject.title}`
+                  : `Otvori ${activeProject.title}`
+              }
+              className="group/visual relative block min-h-[420px] overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/75 sm:min-h-[500px] lg:min-h-[610px]"
+            >
+              <Image
+                src={activeImage}
+                alt={activeProject.title}
+                fill
+                sizes="(min-width: 1024px) 62vw, 94vw"
+                className="object-cover transition-transform duration-[1200ms] ease-out group-hover/visual:scale-[1.035]"
+                priority
+              />
+
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-black/[0.20]"
+              />
+
+              <div
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.02) 32%, rgba(0,0,0,.80) 100%)",
+                }}
+              />
+
+              <div
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(90deg, rgba(0,0,0,.46) 0%, transparent 68%, rgba(0,0,0,.16) 100%)",
+                }}
+              />
+
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-5 border border-white/[0.065] sm:inset-7"
+              >
+                <span
+                  className="absolute -left-px -top-px h-12 w-12 border-l border-t"
+                  style={{
+                    borderColor: `${GOLD}42`,
+                  }}
                 />
 
+                <span className="absolute -right-px -top-px h-10 w-10 border-r border-t border-white/[0.06]" />
+
+                <span className="absolute -bottom-px -left-px h-10 w-10 border-b border-l border-white/[0.045]" />
+
                 <span
-                  aria-hidden="true"
-                  className="absolute bottom-0 left-0 h-px w-8 transition-[width] duration-700 group-hover/project:w-full"
+                  className="absolute -bottom-px -right-px h-12 w-12 border-b border-r"
                   style={{
-                    background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+                    borderColor: `${GOLD}22`,
+                  }}
+                />
+              </div>
+
+              <div className="absolute left-7 top-7 right-7 flex items-center justify-between sm:left-9 sm:right-9 sm:top-9">
+                <span
+                  className="text-[8px] font-semibold uppercase tracking-[0.30em]"
+                  style={{
+                    color: `${GOLD_LIGHT}92`,
+                  }}
+                >
+                  {copy.project} 01
+                </span>
+
+                <span className="text-[7px] uppercase tracking-[0.24em] text-white/[0.30]">
+                  {statusLabels[activeProject.status]}
+                </span>
+              </div>
+
+              <div className="absolute inset-x-7 bottom-7 sm:inset-x-9 sm:bottom-9">
+                <div className="flex items-end justify-between gap-8">
+                  <div className="max-w-[78%]">
+                    <p
+                      className="mb-3 text-[8px] font-semibold uppercase tracking-[0.28em]"
+                      style={{
+                        color: `${GOLD_LIGHT}88`,
+                      }}
+                    >
+                      {activeProject.type}
+                    </p>
+
+                    <h3 className="text-[clamp(2.7rem,6vw,7rem)] font-[430] uppercase leading-[0.82] tracking-[-0.075em] text-white">
+                      {activeProject.title}
+                    </h3>
+                  </div>
+
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.50] backdrop-blur-sm transition-[border-color,color,transform,background-color] duration-300 group-hover/visual:-translate-y-0.5 group-hover/visual:border-[#ead39a]/45 group-hover/visual:bg-black/30 group-hover/visual:text-[#ead39a] sm:h-14 sm:w-14">
+                    <ArrowUpRight
+                      aria-hidden="true"
+                      className="h-4.5 w-4.5"
+                      strokeWidth={1.1}
+                    />
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            <div className="flex flex-1 flex-col px-6 py-6 sm:px-8 sm:py-8">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span
+                  className="text-[7px] font-semibold uppercase tracking-[0.27em]"
+                  style={{
+                    color: `${GOLD_LIGHT}78`,
+                  }}
+                >
+                  {activeProject.platform}
+                </span>
+
+                {activeProject.book ? (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="h-px w-6 bg-white/[0.10]"
+                    />
+
+                    <a
+                      href={AUTHOR_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${copy.authorAria}: ${activeProject.book.author}`}
+                      className="inline-flex max-w-full items-center gap-2 rounded-sm outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
+                      style={{
+                        color: `${GOLD_LIGHT}a8`,
+                      }}
+                    >
+                      <span className="truncate text-[7px] font-semibold uppercase tracking-[0.18em]">
+                        {copy.novel}{" "}
+                        {activeProject.book.author}
+                      </span>
+
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="h-3 w-3 shrink-0"
+                      />
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="h-px w-6 bg-white/[0.09]"
+                    />
+
+                    <span
+                      className="inline-flex items-center gap-2 text-[7px] font-semibold uppercase tracking-[0.18em]"
+                      style={{
+                        color: `${GOLD_LIGHT}55`,
+                      }}
+                    >
+                      <Clapperboard
+                        aria-hidden="true"
+                        className="h-3 w-3"
+                      />
+
+                      <span>{copy.original}</span>
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                <p className="max-w-2xl text-[11px] leading-6 text-white/[0.34] sm:text-[12px] sm:leading-7">
+                  {activeProject.shortDescription}
+                </p>
+
+                <Link
+                  href={hrefForProject(activeProject.slug)}
+                  className="group/cta inline-flex h-11 shrink-0 items-center gap-3 rounded-sm border px-5 text-[8px] font-semibold uppercase tracking-[0.24em] outline-none backdrop-blur-md transition-[border-color,color,transform,background-color] duration-300 hover:-translate-y-0.5 focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
+                  style={{
+                    borderColor: `${GOLD}42`,
+                    background: `${GOLD}06`,
+                    color: `${GOLD_LIGHT}c8`,
+                  }}
+                >
+                  <span>{copy.enter}</span>
+
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5"
+                  />
+                </Link>
+              </div>
+            </div>
+          </motion.article>
+
+          {secondaryProjects.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+              {secondaryProjects.map(
+                (project, index) => {
+                  const projectImage =
+                    resolveProjectImage(
+                      project,
+                      locale,
+                    );
+
+                  return (
+                    <motion.article
+                      key={project.id}
+                      initial={{
+                        opacity: 0,
+                        y: reducedMotion ? 0 : 20,
+                      }}
+                      animate={
+                        inView
+                          ? {
+                              opacity: 1,
+                              y: 0,
+                            }
+                          : undefined
+                      }
+                      transition={{
+                        delay: reducedMotion
+                          ? 0
+                          : 0.18 +
+                            index * 0.08,
+                        duration: reducedMotion
+                          ? 0
+                          : 0.72,
+                        ease: EASE,
+                      }}
+                      className="group flex min-w-0 flex-col overflow-hidden border border-white/[0.075] bg-[#070707]"
+                    >
+                      <Link
+                        href={hrefForProject(
+                          project.slug,
+                        )}
+                        aria-label={
+                          isEnglish
+                            ? `Open ${project.title}`
+                            : `Otvori ${project.title}`
+                        }
+                        className="group/secondary relative block aspect-[16/10] min-h-[220px] overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/70 lg:aspect-auto lg:h-[280px]"
+                      >
+                        <Image
+                          src={projectImage}
+                          alt={project.title}
+                          fill
+                          sizes="(min-width: 1024px) 34vw, 90vw"
+                          className="object-cover transition-transform duration-[1000ms] ease-out group-hover/secondary:scale-[1.035]"
+                        />
+
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0 bg-black/[0.28]"
+                        />
+
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.76) 100%)",
+                          }}
+                        />
+
+                        <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+                          <p
+                            className="mb-2 text-[7px] font-semibold uppercase tracking-[0.27em]"
+                            style={{
+                              color: `${GOLD_LIGHT}7e`,
+                            }}
+                          >
+                            {project.type}
+                          </p>
+
+                          <div className="flex items-end justify-between gap-5">
+                            <h3 className="text-[clamp(1.8rem,3.2vw,3rem)] font-[430] uppercase leading-[0.84] tracking-[-0.06em] text-white">
+                              {project.title}
+                            </h3>
+
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/[0.12] bg-black/20 text-white/[0.42] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover/secondary:-translate-y-0.5 group-hover/secondary:border-[#ead39a]/40 group-hover/secondary:text-[#ead39a]">
+                              <ArrowUpRight
+                                aria-hidden="true"
+                                className="h-3.5 w-3.5"
+                                strokeWidth={1.1}
+                              />
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+
+                      <div className="flex flex-1 flex-col px-5 py-5 sm:px-6 sm:py-6">
+                        <div className="flex items-center justify-between gap-4">
+                          <span
+                            className="text-[7px] font-semibold uppercase tracking-[0.24em]"
+                            style={{
+                              color: `${GOLD_LIGHT}70`,
+                            }}
+                          >
+                            {statusLabels[
+                              project.status
+                            ]}
+                          </span>
+
+                          <span className="text-[7px] uppercase tracking-[0.23em] text-white/[0.19]">
+                            {project.platform}
+                          </span>
+                        </div>
+
+                        <p className="mt-4 line-clamp-3 text-[10px] leading-5 text-white/[0.29]">
+                          {project.shortDescription}
+                        </p>
+
+                        <div className="mt-5 pt-1">
+                          <Link
+                            href={hrefForProject(
+                              project.slug,
+                            )}
+                            className="group/link inline-flex items-center gap-2 rounded-sm text-[7px] font-semibold uppercase tracking-[0.22em] outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
+                            style={{
+                              color: `${GOLD_LIGHT}82`,
+                            }}
+                          >
+                            <span>{copy.enter}</span>
+
+                            <ArrowUpRight
+                              aria-hidden="true"
+                              className="h-3.5 w-3.5 transition-transform duration-300 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
+                            />
+                          </Link>
+                        </div>
+                      </div>
+                    </motion.article>
+                  );
+                },
+              )}
+
+              <Link
+                href={archiveHref}
+                className="group hidden items-center justify-between border-t border-white/[0.055] pt-4 outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/60 lg:flex"
+              >
+                <span
+                  className="text-[7px] font-semibold uppercase tracking-[0.28em]"
+                  style={{
+                    color: `${GOLD_LIGHT}62`,
+                  }}
+                >
+                  {copy.archive}
+                </span>
+
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  style={{
+                    color: `${GOLD_LIGHT}55`,
                   }}
                 />
               </Link>
-
-              <span className="font-mono text-[5px] uppercase tracking-[0.32em] text-white/[0.14]">
-                {isEnglish
-                  ? "PROJECT 001"
-                  : "PROJEKAT 001"}
-              </span>
-            </motion.div>
-          </motion.div>
-
-          {/* Cinematic key art */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: reducedMotion ? 0 : 30,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.08,
-            }}
-            transition={{
-              delay: reducedMotion ? 0 : 0.10,
-              duration: reducedMotion ? 0 : 0.95,
-              ease: EASE,
-            }}
-            className="relative"
-          >
-            <Link
-              href={projectHref}
-              onPointerMove={handlePointerMove}
-              onPointerEnter={() => setHovered(true)}
-              onPointerLeave={() => {
-                setHovered(false);
-                resetPointer();
-              }}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              className="group/project-art relative mx-auto block w-full max-w-[680px] outline-none"
-              aria-label={
-                isEnglish
-                  ? "Open MRZIM SVOG BRATA project"
-                  : "Otvori projekat MRZIM SVOG BRATA"
-              }
-            >
-              {/* offset registration mark */}
-
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-3 top-10 hidden h-[72%] w-px bg-white/[0.045] lg:block"
-              />
-
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -bottom-3 left-10 hidden h-px w-[72%] bg-white/[0.045] lg:block"
-              />
-
-              <motion.div
-                style={{
-                  x: posterX,
-                  y: posterY,
-                }}
-                className="relative aspect-[0.78/1] overflow-hidden border border-white/[0.08] bg-[#080808] shadow-[0_28px_90px_rgba(0,0,0,.34)]"
-              >
-                <Image
-                  src={posterSrc}
-                  alt={
-                    isEnglish
-                      ? "MRZIM SVOG BRATA"
-                      : "MRZIM SVOG BRATA"
-                  }
-                  fill
-                  priority
-                  sizes="(min-width: 1280px) 47vw, (min-width: 1024px) 52vw, 94vw"
-                  className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/project-art:scale-[1.025]"
-                  onError={() =>
-                    setPosterSrc(FALLBACK_IMAGE)
-                  }
-                />
-
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0"
-                  style={{
-                    background: `
-                      linear-gradient(
-                        180deg,
-                        rgba(0,0,0,.08) 0%,
-                        transparent 34%,
-                        rgba(0,0,0,.08) 58%,
-                        rgba(0,0,0,.72) 100%
-                      )
-                    `,
-                  }}
-                />
-
-                <motion.div
-                  aria-hidden="true"
-                  className="absolute inset-0"
-                  animate={{
-                    opacity: interactive ? 1 : 0,
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    ease: EASE,
-                  }}
-                  style={{
-                    background: `radial-gradient(circle at ${lightX} ${lightY}, ${GOLD_LIGHT}12, ${GOLD}05 20%, transparent 48%)`,
-                  }}
-                />
-
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-4 border border-white/[0.055] sm:inset-5 lg:inset-6"
-                />
-
-                <motion.span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-5 top-5 h-8 w-8 border-l border-t lg:left-6 lg:top-6"
-                  animate={{
-                    opacity: interactive
-                      ? 0.8
-                      : 0.42,
-                  }}
-                  transition={{
-                    duration: 0.45,
-                  }}
-                  style={{
-                    borderColor: `${GOLD_LIGHT}38`,
-                  }}
-                />
-
-                <motion.span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute bottom-5 right-5 h-8 w-8 border-b border-r lg:bottom-6 lg:right-6"
-                  animate={{
-                    opacity: interactive
-                      ? 0.85
-                      : 0.35,
-                  }}
-                  transition={{
-                    duration: 0.45,
-                  }}
-                  style={{
-                    borderColor: `${GOLD}32`,
-                  }}
-                />
-
-                {/* top project marker */}
-
-                <div className="absolute left-5 right-5 top-5 flex items-center justify-between lg:left-6 lg:right-6 lg:top-6">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="h-[5px] w-[5px] rounded-full"
-                      style={{
-                        background:
-                          GOLD_LIGHT,
-                        boxShadow: `0 0 8px ${GOLD_LIGHT}48`,
-                      }}
-                    />
-
-                    <span className="text-[7px] font-semibold uppercase tracking-[0.30em] text-white/[0.42]">
-                      UMBRA ORIGINAL
-                    </span>
-                  </div>
-
-                  <span className="font-mono text-[6px] tracking-[0.24em] text-white/[0.22]">
-                    001
-                  </span>
-                </div>
-
-                {/* center play cue */}
-
-                <motion.div
-                  aria-hidden="true"
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                  animate={{
-                    scale: interactive ? 1.04 : 1,
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    ease: EASE,
-                  }}
-                >
-                  <span
-                    className="flex h-[68px] w-[68px] items-center justify-center rounded-full border bg-black/[0.16] backdrop-blur-[2px]"
-                    style={{
-                      borderColor: interactive
-                        ? `${GOLD_LIGHT}42`
-                        : `${GOLD_LIGHT}22`,
-                    }}
-                  >
-                    <Play
-                      size={15}
-                      strokeWidth={1}
-                      fill="currentColor"
-                      className="ml-0.5 text-white/[0.58] transition-colors duration-300 group-hover/project-art:text-[#ead39a]"
-                    />
-                  </span>
-                </motion.div>
-
-                {/* bottom title band */}
-
-                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 lg:p-7">
-                  <div className="max-w-[75%]">
-                    <div className="text-[9px] font-medium uppercase tracking-[0.24em] text-white/[0.66]">
-                      MRZIM SVOG BRATA
-                    </div>
-
-                    <div className="mt-2 text-[7px] uppercase tracking-[0.24em] text-white/[0.30]">
-                      {isEnglish
-                        ? "THE FIRST UMBRA SERIES"
-                        : "PRVA UMBRA SERIJA"}
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-6 right-6 lg:bottom-7 lg:right-7">
-                    <span
-                      className="font-mono text-[6px] tracking-[0.24em]"
-                      style={{
-                        color: `${GOLD_LIGHT}62`,
-                      }}
-                    >
-                      001 / 2026
-                    </span>
-                  </div>
-                </div>
-
-                {/* hover signal */}
-
-                <motion.span
-                  aria-hidden="true"
-                  className="absolute bottom-0 left-0 h-px origin-left"
-                  animate={{
-                    width: interactive
-                      ? "100%"
-                      : "26%",
-                  }}
-                  transition={{
-                    duration: 0.65,
-                    ease: EASE,
-                  }}
-                  style={{
-                    background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent 78%)`,
-                  }}
-                />
-              </motion.div>
-
-              {/* caption */}
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span
-                    className="h-px w-8"
-                    style={{
-                      background: `${GOLD}38`,
-                    }}
-                  />
-
-                  <span className="text-[7px] uppercase tracking-[0.28em] text-white/[0.22]">
-                    {isEnglish
-                      ? "CURRENT PRODUCTION"
-                      : "AKTUELNA PRODUKCIJA"}
-                  </span>
-                </div>
-
-                <span
-                  className="text-[7px] uppercase tracking-[0.22em]"
-                  style={{
-                    color: interactive
-                      ? `${GOLD_LIGHT}8c`
-                      : `${GOLD_LIGHT}52`,
-                  }}
-                >
-                  {isEnglish
-                    ? "OPEN PROJECT"
-                    : "OTVORI PROJEKAT"}
-                </span>
-              </div>
-            </Link>
-          </motion.div>
+            </div>
+          ) : null}
         </div>
 
-        {/* Scene hand-off */}
-
-        <motion.div
+        <motion.footer
           initial={{
             opacity: 0,
           }}
-          whileInView={{
-            opacity: 1,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.08,
-          }}
+          animate={
+            inView
+              ? {
+                  opacity: 1,
+                }
+              : undefined
+          }
           transition={{
-            delay: reducedMotion ? 0 : 0.16,
-            duration: reducedMotion ? 0 : 0.55,
+            delay: reducedMotion ? 0 : 0.34,
+            duration: reducedMotion ? 0 : 0.52,
             ease: EASE,
           }}
-          className="mt-16 flex items-center justify-between border-t border-white/[0.05] pt-5 lg:mt-20"
+          className="mt-9 flex items-center justify-between border-t border-white/[0.055] pt-5"
         >
-          <div>
-            <span className="font-mono text-[6px] uppercase tracking-[0.30em] text-white/[0.14]">
-              {isEnglish
-                ? "THE STORY CONTINUES"
-                : "PRIČA SE NASTAVLJA"}
-            </span>
-          </div>
-
           <Link
-            href={charactersHref}
-            className="group/next flex items-center gap-3"
+            href={archiveHref}
+            className="group inline-flex items-center gap-3 rounded-sm text-[7px] font-semibold uppercase tracking-[0.28em] outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 hover:text-white/[0.48] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+            style={{
+              color: "rgba(255,255,255,.17)",
+            }}
           >
-            <span className="text-[7px] font-semibold uppercase tracking-[0.25em] text-white/[0.24] transition-colors duration-300 group-hover/next:text-white/[0.62]">
-              {isEnglish
-                ? "03 / CHARACTERS"
-                : "03 / LIKOVI"}
-            </span>
-
-            <ArrowDownRight
-              size={13}
-              strokeWidth={1}
-              className="transition-transform duration-400 group-hover/next:translate-x-0.5 group-hover/next:translate-y-0.5"
+            <Layers3
+              aria-hidden="true"
+              className="h-3.5 w-3.5"
               style={{
-                color: `${GOLD_LIGHT}70`,
+                color: `${GOLD}45`,
+              }}
+            />
+
+            <span>{copy.archive}</span>
+
+            <ArrowUpRight
+              aria-hidden="true"
+              className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+              style={{
+                color: `${GOLD_LIGHT}55`,
               }}
             />
           </Link>
-        </motion.div>
+
+          <Link
+            href={homeHref}
+            className="group hidden items-center gap-3 rounded-sm text-[7px] uppercase tracking-[0.28em] outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 hover:text-white/[0.42] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 sm:flex"
+            style={{
+              color: "rgba(255,255,255,.13)",
+            }}
+          >
+            <Clapperboard
+              aria-hidden="true"
+              className="h-3.5 w-3.5"
+              style={{
+                color: `${GOLD}40`,
+              }}
+            />
+
+            <span>{copy.home}</span>
+          </Link>
+        </motion.footer>
       </div>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 h-px w-full"
+        style={{
+          background:
+            `linear-gradient(90deg, transparent, ${GOLD}1e, ${GOLD_LIGHT}0d, transparent)`,
+        }}
+      />
     </section>
   );
 }

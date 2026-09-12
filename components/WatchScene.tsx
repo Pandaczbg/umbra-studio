@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import {
@@ -18,21 +19,20 @@ const GOLD_DARK = "#8f7142";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const YOUTUBE_URL =
-  "https://www.youtube.com/@umbrastud";
+const YOUTUBE_URL = "https://www.youtube.com/@umbrastud";
 
 const COPY = {
   sr: {
-    eyebrow: "05 / GLEDAJ",
+    eyebrow: "GLEDAJ",
     titleA: "Priča",
-    titleB: "se nastavlja.",
+    titleB: "se nastavlja",
     body:
       "Ono što počinje ovde, nastavlja se kroz serije, epizode i nove priče na Umbra kanalu.",
     channel: "UMBRA STUDIO / YOUTUBE",
     action: "OTVORI KANAL",
     portal: "GLEDAJ NA YOUTUBE-U",
     portalNote:
-      "Sledeća scena čeka na drugoj strani.",
+      "Sledeća scena čeka na drugoj strani",
     signal: "UMBRA / SIGNAL",
     continue: "SLEDEĆI KADAR",
     end: "KRAJ POČETNE STRANE",
@@ -40,19 +40,20 @@ const COPY = {
     transmission: "SIGNAL / UMBRA STUDIO",
     platform: "YOUTUBE",
     index: "05 / 05",
+    youtubeAria: "Otvori Umbra Studio YouTube kanal",
   },
 
   en: {
-    eyebrow: "05 / WATCH",
+    eyebrow: "WATCH",
     titleA: "The story",
-    titleB: "continues.",
+    titleB: "continues",
     body:
       "What begins here continues through series, episodes and new stories on the Umbra channel.",
     channel: "UMBRA STUDIO / YOUTUBE",
     action: "OPEN CHANNEL",
     portal: "WATCH ON YOUTUBE",
     portalNote:
-      "The next scene waits on the other side.",
+      "The next scene waits on the other side",
     signal: "UMBRA / SIGNAL",
     continue: "NEXT FRAME",
     end: "END OF HOMEPAGE",
@@ -60,30 +61,27 @@ const COPY = {
     transmission: "SIGNAL / UMBRA STUDIO",
     platform: "YOUTUBE",
     index: "05 / 05",
+    youtubeAria: "Open the Umbra Studio YouTube channel",
   },
-};
+} as const;
 
 export default function WatchScene({
   locale = "sr",
 }: {
   locale?: Locale;
 }) {
-  const reducedMotion =
-    useReducedMotion() ?? false;
-
+  const reducedMotion = useReducedMotion() ?? false;
   const copy = COPY[locale];
 
   return (
     <section
       id="watch"
       data-umbra-scene="watch"
+      data-umbra-interactive="watch-portal"
       aria-labelledby="watch-title"
       className="relative overflow-hidden border-b border-white/[0.055] bg-[#050505]"
     >
-      {/* ================================================================
-          ATMOSPHERE
-          ================================================================ */}
-
+      {/* ATMOSPHERE */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -150,10 +148,7 @@ export default function WatchScene({
         />
       </div>
 
-      {/* ================================================================
-          OUTER FRAME
-          ================================================================ */}
-
+      {/* OUTER FRAME */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-5 border border-white/[0.025] sm:inset-7 lg:inset-9 xl:inset-10"
@@ -177,15 +172,9 @@ export default function WatchScene({
         />
       </div>
 
-      {/* ================================================================
-          CONTENT
-          ================================================================ */}
-
+      {/* CONTENT */}
       <div className="relative z-10 mx-auto max-w-[1540px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-36 xl:px-16">
-        {/* ==============================================================
-            SECTION HEADER
-            ============================================================== */}
-
+        {/* SECTION HEADER */}
         <motion.div
           initial={{
             opacity: 0,
@@ -210,8 +199,7 @@ export default function WatchScene({
               aria-hidden="true"
               className="h-px w-10"
               style={{
-                background:
-                  `linear-gradient(90deg, transparent, ${GOLD})`,
+                background: `linear-gradient(90deg, transparent, ${GOLD})`,
               }}
             />
 
@@ -234,15 +222,9 @@ export default function WatchScene({
           </span>
         </motion.div>
 
-        {/* ==============================================================
-            MAIN COMPOSITION
-            ============================================================== */}
-
+        {/* MAIN COMPOSITION */}
         <div className="mt-14 grid items-center gap-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-20 xl:mt-20 xl:gap-[7rem]">
-          {/* ============================================================
-              LEFT
-              ============================================================ */}
-
+          {/* LEFT */}
           <div>
             <motion.div
               initial={{
@@ -309,9 +291,7 @@ export default function WatchScene({
               }}
               className="mt-7 max-w-[920px] text-[clamp(4rem,8.3vw,9.2rem)] font-[420] uppercase leading-[0.77] tracking-[-0.086em] text-white"
             >
-              <span className="block">
-                {copy.titleA}
-              </span>
+              <span className="block">{copy.titleA}</span>
 
               <span className="block font-serif font-normal italic text-white/[0.58]">
                 {copy.titleB}
@@ -336,8 +316,7 @@ export default function WatchScene({
               }}
               className="mt-9 h-px w-full max-w-[560px] origin-left"
               style={{
-                background:
-                  `linear-gradient(90deg, ${GOLD}60, rgba(255,255,255,.05), transparent)`,
+                background: `linear-gradient(90deg, ${GOLD}60, rgba(255,255,255,.05), transparent)`,
               }}
             />
 
@@ -386,7 +365,7 @@ export default function WatchScene({
                 duration: reducedMotion ? 0 : 0.54,
                 ease: EASE,
               }}
-              className="group relative mt-9 inline-flex h-12 items-center gap-4 overflow-hidden border px-6 text-[9px] font-semibold uppercase tracking-[0.27em] transition-[transform,border-color,background-color] duration-300 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+              className="group relative mt-9 inline-flex min-h-12 items-center gap-4 overflow-hidden border px-6 py-3 text-[9px] font-semibold uppercase tracking-[0.27em] transition-[transform,border-color,background-color] duration-300 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
               style={{
                 borderColor: `${GOLD}62`,
                 background: `${GOLD}03`,
@@ -397,14 +376,11 @@ export default function WatchScene({
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 style={{
-                  background:
-                    `radial-gradient(circle at 50% 0%, ${GOLD}12, transparent 68%)`,
+                  background: `radial-gradient(circle at 50% 0%, ${GOLD}12, transparent 68%)`,
                 }}
               />
 
-              <span className="relative z-10">
-                {copy.action}
-              </span>
+              <span className="relative z-10">{copy.action}</span>
 
               <ArrowUpRight
                 aria-hidden="true"
@@ -417,17 +393,13 @@ export default function WatchScene({
                 aria-hidden="true"
                 className="absolute bottom-0 left-0 h-px w-8 transition-[width] duration-500 group-hover:w-full"
                 style={{
-                  background:
-                    `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
+                  background: `linear-gradient(90deg, ${GOLD_LIGHT}, ${GOLD}, transparent)`,
                 }}
               />
             </motion.a>
           </div>
 
-          {/* ============================================================
-              YOUTUBE PORTAL
-              ============================================================ */}
-
+          {/* YOUTUBE PORTAL */}
           <motion.div
             initial={{
               opacity: 0,
@@ -451,25 +423,22 @@ export default function WatchScene({
               href={YOUTUBE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={copy.portal}
-              className="group block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+              aria-label={copy.youtubeAria}
+              className="group block outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
             >
               <div className="relative aspect-[1/0.94] overflow-hidden border border-white/[0.075] bg-[#060606] transition-[border-color,box-shadow,transform] duration-500 group-hover:-translate-y-1 group-hover:border-white/[0.13] group-hover:shadow-[0_28px_90px_rgba(0,0,0,.36)]">
-                {/* Inner frame */}
-
+                {/* INNER FRAME */}
                 <div
                   aria-hidden="true"
                   className="absolute inset-5 border border-white/[0.04] sm:inset-6 lg:inset-7"
                 />
 
-                {/* Light field */}
-
+                {/* LIGHT FIELD */}
                 <div
                   aria-hidden="true"
                   className="absolute inset-x-[13%] top-[15%] h-[58%]"
                   style={{
-                    background:
-                      `linear-gradient(125deg, transparent 0%, ${GOLD}06 45%, transparent 100%)`,
+                    background: `linear-gradient(125deg, transparent 0%, ${GOLD}06 45%, transparent 100%)`,
                     filter: "blur(30px)",
                   }}
                 />
@@ -478,8 +447,7 @@ export default function WatchScene({
                   aria-hidden="true"
                   className="absolute bottom-[14%] left-[12%] h-px w-[76%]"
                   style={{
-                    background:
-                      `linear-gradient(90deg, transparent, ${GOLD}22, transparent)`,
+                    background: `linear-gradient(90deg, transparent, ${GOLD}22, transparent)`,
                   }}
                 />
 
@@ -493,8 +461,7 @@ export default function WatchScene({
                   className="absolute right-[18%] top-[18%] h-[64%] w-px bg-white/[0.018]"
                 />
 
-                {/* Central play area */}
-
+                {/* CENTRAL PLAY AREA */}
                 <div className="absolute inset-x-[15%] bottom-[22%] top-[22%] border border-white/[0.055] transition-[border-color,transform] duration-500 group-hover:scale-[1.008] group-hover:border-white/[0.09]">
                   <span
                     aria-hidden="true"
@@ -524,6 +491,7 @@ export default function WatchScene({
                       />
 
                       <Play
+                        aria-hidden="true"
                         size={20}
                         strokeWidth={1.05}
                         fill="currentColor"
@@ -548,8 +516,7 @@ export default function WatchScene({
                   </div>
                 </div>
 
-                {/* Top metadata */}
-
+                {/* TOP METADATA */}
                 <div className="absolute left-5 top-5 flex items-center gap-3 sm:left-7 sm:top-7">
                   <span
                     aria-hidden="true"
@@ -574,25 +541,21 @@ export default function WatchScene({
                   UMBRA
                 </span>
 
-                {/* Hover field */}
-
+                {/* HOVER FIELD */}
                 <span
                   aria-hidden="true"
                   className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                   style={{
-                    background:
-                      `radial-gradient(circle at 50% 50%, ${GOLD}06, transparent 46%)`,
+                    background: `radial-gradient(circle at 50% 50%, ${GOLD}06, transparent 46%)`,
                   }}
                 />
 
-                {/* Active edges */}
-
+                {/* ACTIVE EDGES */}
                 <span
                   aria-hidden="true"
                   className="absolute left-0 top-0 h-px w-full origin-left scale-x-[0.08] transition-transform duration-500 group-hover:scale-x-100"
                   style={{
-                    background:
-                      `linear-gradient(90deg, ${GOLD}, ${GOLD_LIGHT}35, transparent 78%)`,
+                    background: `linear-gradient(90deg, ${GOLD}, ${GOLD_LIGHT}35, transparent 78%)`,
                   }}
                 />
 
@@ -600,14 +563,12 @@ export default function WatchScene({
                   aria-hidden="true"
                   className="absolute bottom-0 right-0 h-px w-full origin-right scale-x-[0.08] transition-transform duration-500 group-hover:scale-x-100"
                   style={{
-                    background:
-                      `linear-gradient(90deg, transparent, ${GOLD})`,
+                    background: `linear-gradient(90deg, transparent, ${GOLD})`,
                   }}
                 />
               </div>
 
-              {/* Portal caption */}
-
+              {/* PORTAL CAPTION */}
               <div className="mt-4 flex items-center justify-between px-1">
                 <div className="flex items-center gap-3">
                   <span
@@ -647,10 +608,7 @@ export default function WatchScene({
           </motion.div>
         </div>
 
-        {/* ==============================================================
-            CLOSING
-            ============================================================== */}
-
+        {/* CLOSING */}
         <motion.div
           initial={{
             opacity: 0,
@@ -729,10 +687,7 @@ export default function WatchScene({
           </div>
         </motion.div>
 
-        {/* ==============================================================
-            END FRAME
-            ============================================================== */}
-
+        {/* END FRAME */}
         <div className="mt-12 flex items-center justify-between border-t border-white/[0.05] pt-5">
           <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.1]">
             {copy.end}

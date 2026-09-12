@@ -17,6 +17,10 @@ import {
    It does not use Framer Motion.
    It does not listen to scroll.
    It does not capture pointer interaction.
+
+   Design rule:
+   The atmosphere should be felt before it is noticed.
+   It adds depth, not decoration.
    ========================================================================== */
 
 export default function UmbraAtmosphere() {
@@ -66,10 +70,97 @@ export default function UmbraAtmosphere() {
           coarseQuery.matches;
       };
 
+    const resetAtmosphere =
+      () => {
+        currentXRef.current =
+          68;
+
+        currentYRef.current =
+          28;
+
+        targetXRef.current =
+          68;
+
+        targetYRef.current =
+          28;
+
+        root.style.setProperty(
+          "--umbra-pointer-x",
+          "68%",
+        );
+
+        root.style.setProperty(
+          "--umbra-pointer-y",
+          "28%",
+        );
+      };
+
+    const render =
+      () => {
+        frameRef.current =
+          null;
+
+        if (
+          reducedMotionRef.current ||
+          coarseRef.current
+        ) {
+          return;
+        }
+
+        const ease =
+          0.075;
+
+        currentXRef.current +=
+          (
+            targetXRef.current -
+            currentXRef.current
+          ) *
+          ease;
+
+        currentYRef.current +=
+          (
+            targetYRef.current -
+            currentYRef.current
+          ) *
+          ease;
+
+        root.style.setProperty(
+          "--umbra-pointer-x",
+          `${currentXRef.current.toFixed(2)}%`,
+        );
+
+        root.style.setProperty(
+          "--umbra-pointer-y",
+          `${currentYRef.current.toFixed(2)}%`,
+        );
+
+        const settled =
+          Math.abs(
+            targetXRef.current -
+              currentXRef.current,
+          ) <= 0.02 &&
+          Math.abs(
+            targetYRef.current -
+              currentYRef.current,
+          ) <= 0.02;
+
+        if (
+          !settled
+        ) {
+          frameRef.current =
+            window.requestAnimationFrame(
+              render,
+            );
+        }
+      };
+
     syncMedia();
+    resetAtmosphere();
 
     const handlePointerMove =
-      (event: PointerEvent) => {
+      (
+        event: PointerEvent,
+      ) => {
         if (
           reducedMotionRef.current ||
           coarseRef.current
@@ -115,86 +206,39 @@ export default function UmbraAtmosphere() {
         }
       };
 
-    const render =
-      () => {
-        frameRef.current =
-          null;
-
-        if (
-          reducedMotionRef.current ||
-          coarseRef.current
-        ) {
-          return;
-        }
-
-        const ease =
-          0.075;
-
-        currentXRef.current +=
-          (
-            targetXRef.current -
-            currentXRef.current
-          ) *
-          ease;
-
-        currentYRef.current +=
-          (
-            targetYRef.current -
-            currentYRef.current
-          ) *
-          ease;
-
-        root.style.setProperty(
-          "--umbra-pointer-x",
-          `${currentXRef.current.toFixed(2)}%`,
-        );
-
-        root.style.setProperty(
-          "--umbra-pointer-y",
-          `${currentYRef.current.toFixed(2)}%`,
-        );
-
-        if (
-          Math.abs(
-            targetXRef.current -
-              currentXRef.current,
-          ) >
-            0.02 ||
-          Math.abs(
-            targetYRef.current -
-              currentYRef.current,
-          ) >
-            0.02
-        ) {
-          frameRef.current =
-            window.requestAnimationFrame(
-              render,
-            );
-        }
-      };
-
     const handleReducedMotion =
       () => {
         syncMedia();
 
         if (
-          reducedMotionRef.current
+          reducedMotionRef.current ||
+          coarseRef.current
         ) {
-          currentXRef.current =
-            68;
+          resetAtmosphere();
 
-          currentYRef.current =
-            28;
+          if (
+            frameRef.current !==
+            null
+          ) {
+            window.cancelAnimationFrame(
+              frameRef.current,
+            );
 
-          root.style.setProperty(
-            "--umbra-pointer-x",
-            "68%",
-          );
+            frameRef.current =
+              null;
+          }
 
-          root.style.setProperty(
-            "--umbra-pointer-y",
-            "28%",
-          );
+          return;
+        }
+
+        if (
+          frameRef.current ===
+          null
+        ) {
+          frameRef.current =
+            window.requestAnimationFrame(
+              render,
+            );
         }
       };
 
@@ -214,16 +258,6 @@ export default function UmbraAtmosphere() {
     coarseQuery.addEventListener(
       "change",
       handleReducedMotion,
-    );
-
-    root.style.setProperty(
-      "--umbra-pointer-x",
-      "68%",
-    );
-
-    root.style.setProperty(
-      "--umbra-pointer-y",
-      "28%",
     );
 
     return () => {
@@ -249,7 +283,20 @@ export default function UmbraAtmosphere() {
         window.cancelAnimationFrame(
           frameRef.current,
         );
+
+        frameRef.current =
+          null;
       }
+
+      root.style.setProperty(
+        "--umbra-pointer-x",
+        "68%",
+      );
+
+      root.style.setProperty(
+        "--umbra-pointer-y",
+        "28%",
+      );
     };
   }, []);
 

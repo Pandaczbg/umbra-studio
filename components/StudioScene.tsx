@@ -11,10 +11,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import {
-  useRef,
-  useState,
-} from "react";
+import { useRef, useState } from "react";
 
 type Locale = "sr" | "en";
 
@@ -39,8 +36,7 @@ const copyByLocale = {
     statementC: "TRAŽIMO",
     statementD: "KADAR KOJI OSTAVLJA SENKU.",
     systemLabel: "KAKO GRADIMO",
-    systemTitle:
-      "Svaka priča ima svoj ritam.",
+    systemTitle: "Svaka priča ima svoj ritam.",
     principles: [
       {
         index: "01",
@@ -67,14 +63,12 @@ const copyByLocale = {
           "Najvažnije počinje kada se kadar završi. Ako nešto ostane u gledaocu, priča je uspela.",
       },
     ],
-    closing:
-      "Umbra Studio — priče koje ostavljaju senku.",
+    closing: "Umbra Studio — priče koje ostavljaju senku.",
     next: "05 / GLEDAJ",
     nextLabel: "Gledaj",
     definitionLabel: "NAŠA IDEJA",
     positionLabel: "AUTORSKI STAV",
-    systemMeta:
-      "PRIČA / LIK / SVET / TRAG",
+    systemMeta: "PRIČA / LIK / SVET / TRAG",
   },
 
   en: {
@@ -91,8 +85,7 @@ const copyByLocale = {
     statementC: "BEAUTIFUL FRAME.",
     statementD: "WE WANT THE FRAME THAT LEAVES A SHADOW.",
     systemLabel: "HOW WE BUILD",
-    systemTitle:
-      "Every story has its own rhythm.",
+    systemTitle: "Every story has its own rhythm.",
     principles: [
       {
         index: "01",
@@ -119,14 +112,12 @@ const copyByLocale = {
           "The most important part begins when the frame ends. If something remains with the viewer, the story worked.",
       },
     ],
-    closing:
-      "Umbra Studio — stories that leave a shadow.",
+    closing: "Umbra Studio — stories that leave a shadow.",
     next: "05 / WATCH",
     nextLabel: "Watch",
     definitionLabel: "OUR IDEA",
     positionLabel: "CREATIVE POSITION",
-    systemMeta:
-      "STORY / CHARACTER / WORLD / TRACE",
+    systemMeta: "STORY / CHARACTER / WORLD / TRACE",
   },
 } as const;
 
@@ -138,10 +129,7 @@ export default function StudioScene({
   const reducedMotion = useReducedMotion() ?? false;
   const copy = copyByLocale[locale];
 
-  const nextHref =
-    locale === "en"
-      ? "/en#watch"
-      : "/#watch";
+  const nextHref = locale === "en" ? "/en#watch" : "/#watch";
 
   const stageRef = useRef<HTMLDivElement | null>(null);
 
@@ -157,17 +145,8 @@ export default function StudioScene({
     mass: 0.6,
   });
 
-  const glowX = useTransform(
-    pointerX,
-    [-1, 1],
-    ["28%", "72%"],
-  );
-
-  const glowY = useTransform(
-    pointerY,
-    [-1, 1],
-    ["30%", "70%"],
-  );
+  const glowX = useTransform(pointerX, [-1, 1], ["28%", "72%"]);
+  const glowY = useTransform(pointerY, [-1, 1], ["30%", "70%"]);
 
   const [activePrinciple, setActivePrinciple] =
     useState<string | null>(null);
@@ -212,9 +191,7 @@ export default function StudioScene({
       aria-labelledby="studio-title"
       className="relative overflow-hidden border-b border-white/[0.055] bg-[#050505]"
     >
-      {/* ================================================================
-          ATMOSPHERE
-          ================================================================ */}
+      {/* ATMOSPHERE */}
 
       <div
         aria-hidden="true"
@@ -276,9 +253,7 @@ export default function StudioScene({
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1540px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-36 xl:px-16">
-        {/* ==============================================================
-            SECTION HEADER
-            ============================================================== */}
+        {/* SECTION HEADER */}
 
         <motion.div
           initial={{
@@ -312,17 +287,14 @@ export default function StudioScene({
             <span
               className="font-mono text-[7px] tracking-[0.42em]"
               style={{
-                color:
-                  `${GOLD_LIGHT}82`,
+                color: `${GOLD_LIGHT}82`,
               }}
             >
               04
             </span>
 
             <span className="text-[8px] font-semibold uppercase tracking-[0.37em] text-white/[0.5]">
-              {locale === "en"
-                ? "ABOUT UMBRA"
-                : "O UMBRI"}
+              {copy.section.split("/")[1]?.trim() ?? copy.section}
             </span>
           </div>
 
@@ -331,9 +303,7 @@ export default function StudioScene({
           </span>
         </motion.div>
 
-        {/* ==============================================================
-            INTRO
-            ============================================================== */}
+        {/* INTRO */}
 
         <div className="mt-16 grid gap-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-24 xl:mt-20">
           <div>
@@ -418,10 +388,6 @@ export default function StudioScene({
             </motion.p>
           </div>
 
-          {/* ============================================================
-              DEFINITION
-              ============================================================ */}
-
           <StudioDefinition
             text={copy.body}
             label={copy.definitionLabel}
@@ -429,9 +395,7 @@ export default function StudioScene({
           />
         </div>
 
-        {/* ==============================================================
-            MANIFEST
-            ============================================================== */}
+        {/* MANIFEST */}
 
         <motion.div
           ref={stageRef}
@@ -495,8 +459,7 @@ export default function StudioScene({
               <span
                 className="font-mono text-[6px] tracking-[0.34em]"
                 style={{
-                  color:
-                    `${GOLD_LIGHT}66`,
+                  color: `${GOLD_LIGHT}66`,
                 }}
               >
                 04
@@ -564,9 +527,7 @@ export default function StudioScene({
           </div>
         </motion.div>
 
-        {/* ==============================================================
-            SYSTEM
-            ============================================================== */}
+        {/* SYSTEM */}
 
         <div className="mt-20 lg:mt-24">
           <motion.div
@@ -610,35 +571,28 @@ export default function StudioScene({
           </motion.div>
 
           <div className="grid gap-px border border-white/[0.055] bg-white/[0.035] sm:grid-cols-2 lg:grid-cols-4">
-            {copy.principles.map(
-              (principle, index) => (
-                <PrincipleCard
-                  key={principle.index}
-                  principle={principle}
-                  index={index}
-                  active={
-                    activePrinciple ===
-                    principle.index
-                  }
-                  setActive={() =>
-                    setActivePrinciple(
-                      (current) =>
-                        current ===
-                        principle.index
-                          ? null
-                          : principle.index,
-                    )
-                  }
-                  reducedMotion={reducedMotion}
-                />
-              ),
-            )}
+            {copy.principles.map((principle, index) => (
+              <PrincipleCard
+                key={principle.index}
+                principle={principle}
+                index={index}
+                active={
+                  activePrinciple === principle.index
+                }
+                setActive={() =>
+                  setActivePrinciple((current) =>
+                    current === principle.index
+                      ? null
+                      : principle.index,
+                  )
+                }
+                reducedMotion={reducedMotion}
+              />
+            ))}
           </div>
         </div>
 
-        {/* ==============================================================
-            CLOSING
-            ============================================================== */}
+        {/* CLOSING */}
 
         <motion.div
           initial={{
@@ -661,13 +615,12 @@ export default function StudioScene({
             <span
               className="h-px w-8"
               style={{
-                background:
-                  `${GOLD}48`,
+                background: `${GOLD}48`,
               }}
             />
 
             <span
-              className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.16]"
+              className="font-mono text-[6px] uppercase tracking-[0.3em]"
               style={{
                 color: `${GOLD_LIGHT}5d`,
               }}
@@ -689,8 +642,7 @@ export default function StudioScene({
               strokeWidth={1.1}
               className="transition-transform duration-300 group-hover/next:translate-x-0.5 group-hover/next:translate-y-0.5"
               style={{
-                color:
-                  `${GOLD_LIGHT}78`,
+                color: `${GOLD_LIGHT}78`,
               }}
             />
 
@@ -704,9 +656,7 @@ export default function StudioScene({
   );
 }
 
-/* ==========================================================================
-   DEFINING BLOCK
-   ========================================================================== */
+/* DEFINING BLOCK */
 
 function StudioDefinition({
   text,
@@ -759,8 +709,7 @@ function StudioDefinition({
         <span
           className="h-px w-8"
           style={{
-            background:
-              `${GOLD}4d`,
+            background: `${GOLD}4d`,
           }}
         />
 
@@ -772,9 +721,7 @@ function StudioDefinition({
   );
 }
 
-/* ==========================================================================
-   MANIFEST LINE
-   ========================================================================== */
+/* MANIFEST LINE */
 
 function ManifestLine({
   text,
@@ -808,7 +755,7 @@ function ManifestLine({
         ease: EASE,
       }}
       className={[
-        "max-w-[1180px] text-[clamp(2.15rem,5vw,5.8rem)] font-[420] uppercase leading-[0.86] tracking-[-0.064em]",
+        "max-w-[1180px] text-[clamp(2.15rem,5vw,5.8rem)] font-[420] uppercase leading-[0.86] tracking-[-0.064em] sm:leading-[0.84]",
         serif
           ? "font-serif font-normal italic"
           : "",
@@ -823,7 +770,6 @@ function ManifestLine({
         !serif
           ? "text-white"
           : "",
-        "sm:leading-[0.84]",
       ].join(" ")}
     >
       {text}
@@ -831,9 +777,7 @@ function ManifestLine({
   );
 }
 
-/* ==========================================================================
-   PRINCIPLE CARD
-   ========================================================================== */
+/* PRINCIPLE CARD */
 
 function PrincipleCard({
   principle,

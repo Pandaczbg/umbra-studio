@@ -28,15 +28,25 @@ import {
    - renders a short cinematic reveal
 
    It never listens to scroll.
+
+   Design rule:
+   The image is the transition itself. UI remains secondary.
    ========================================================================== */
 
 const STORAGE_KEY =
   "umbra-image-transition";
 
-const DISPLAY_DURATION = 560;
+const DISPLAY_DURATION =
+  560;
 
-const GOLD = "#c7a96b";
-const GOLD_LIGHT = "#ead39a";
+const REDUCED_DISPLAY_DURATION =
+  60;
+
+const GOLD =
+  "#c7a96b";
+
+const GOLD_LIGHT =
+  "#ead39a";
 
 const EASE = [
   0.22,
@@ -44,6 +54,23 @@ const EASE = [
   0.36,
   1,
 ] as const;
+
+function readStoredImage() {
+  try {
+    const stored =
+      window.sessionStorage.getItem(
+        STORAGE_KEY,
+      );
+
+    window.sessionStorage.removeItem(
+      STORAGE_KEY,
+    );
+
+    return stored;
+  } catch {
+    return null;
+  }
+}
 
 export default function UmbraImageTransition() {
   const pathname =
@@ -81,29 +108,6 @@ export default function UmbraImageTransition() {
     previousPathRef.current =
       pathname;
 
-    let storedImage:
-      | string
-      | null = null;
-
-    try {
-      storedImage =
-        window.sessionStorage.getItem(
-          STORAGE_KEY,
-        );
-
-      window.sessionStorage.removeItem(
-        STORAGE_KEY,
-      );
-    } catch {
-      storedImage = null;
-    }
-
-    if (
-      !storedImage
-    ) {
-      return;
-    }
-
     if (
       timerRef.current !==
       null
@@ -114,6 +118,16 @@ export default function UmbraImageTransition() {
 
       timerRef.current =
         null;
+    }
+
+    const storedImage =
+      readStoredImage();
+
+    if (
+      !storedImage
+    ) {
+      setImage(null);
+      return;
     }
 
     setTransitionKey(
@@ -134,7 +148,7 @@ export default function UmbraImageTransition() {
           setImage(null);
         },
         reducedMotion
-          ? 60
+          ? REDUCED_DISPLAY_DURATION
           : DISPLAY_DURATION,
       );
   }, [
@@ -181,8 +195,9 @@ export default function UmbraImageTransition() {
             duration:
               reducedMotion
                 ? 0.01
-                : 0.18,
-            ease: EASE,
+                : 0.20,
+            ease:
+              EASE,
           }}
         >
           <motion.div
@@ -195,7 +210,7 @@ export default function UmbraImageTransition() {
               opacity:
                 reducedMotion
                   ? 1
-                  : 0.72,
+                  : 0.76,
             }}
             animate={{
               scale: 1,
@@ -210,7 +225,8 @@ export default function UmbraImageTransition() {
                 reducedMotion
                   ? 0.01
                   : 0.48,
-              ease: EASE,
+              ease:
+                EASE,
             }}
           >
             <Image
@@ -229,9 +245,9 @@ export default function UmbraImageTransition() {
               background:
                 `linear-gradient(
                   90deg,
-                  rgba(2,2,2,.82),
-                  rgba(2,2,2,.14) 52%,
-                  rgba(2,2,2,.72)
+                  rgba(2,2,2,.84),
+                  rgba(2,2,2,.12) 52%,
+                  rgba(2,2,2,.74)
                 )`,
             }}
           />
@@ -242,36 +258,68 @@ export default function UmbraImageTransition() {
               background:
                 `radial-gradient(
                   circle at 50% 50%,
-                  transparent 30%,
-                  rgba(0,0,0,.42) 100%
+                  transparent 28%,
+                  rgba(0,0,0,.44) 100%
                 )`,
             }}
           />
 
-          <div className="absolute inset-x-6 top-6 bottom-6 border border-white/[0.07]">
+          <div
+            aria-hidden="true"
+            className="absolute inset-5 border border-white/[0.065] sm:inset-6"
+          >
             <span
               className="absolute left-[-1px] top-[-1px] h-9 w-9 border-l border-t"
               style={{
                 borderColor:
-                  `${GOLD}35`,
+                  `${GOLD}32`,
               }}
             />
 
             <span
-              className="absolute right-[-1px] bottom-[-1px] h-9 w-9 border-b border-r"
+              className="absolute bottom-[-1px] right-[-1px] h-9 w-9 border-b border-r"
               style={{
                 borderColor:
-                  `${GOLD_LIGHT}25`,
+                  `${GOLD_LIGHT}22`,
               }}
             />
           </div>
 
-          <div className="absolute bottom-8 left-8">
+          <motion.div
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 h-px w-[min(22vw,280px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/20 to-transparent"
+            initial={{
+              scaleX: 0.35,
+              opacity: 0,
+            }}
+            animate={{
+              scaleX: 1,
+              opacity: 1,
+            }}
+            exit={{
+              scaleX: 0.65,
+              opacity: 0,
+            }}
+            transition={{
+              duration:
+                reducedMotion
+                  ? 0
+                  : 0.22,
+              delay:
+                reducedMotion
+                  ? 0
+                  : 0.03,
+              ease:
+                EASE,
+            }}
+          />
+
+          <div className="absolute bottom-7 left-7 sm:bottom-8 sm:left-8">
             <span
               className="font-mono text-[6px] uppercase tracking-[0.32em]"
               style={{
                 color:
-                  `${GOLD_LIGHT}70`,
+                  `${GOLD_LIGHT}66`,
               }}
             >
               UMBRA / IMAGE TRANSITION

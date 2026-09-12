@@ -701,7 +701,7 @@ const UmbraClock = memo(function UmbraClock({
         <div className="flex min-w-0 flex-col leading-none">
           <div className="flex items-center gap-2">
             <span
-              className="font-mono text-[6px] font-medium uppercase tracking-[0.28em]"
+              className="font-mono text-[7px] font-medium uppercase tracking-[0.28em]"
               style={{
                 color:
                   `${GOLD_LIGHT}88`,
@@ -740,7 +740,7 @@ const UmbraClock = memo(function UmbraClock({
             transition={{
               duration: 0.16,
             }}
-            className="mt-[5px] block font-mono text-[17px] font-medium leading-none tracking-[0.13em]"
+            className="mt-[5px] block font-mono text-[18px] font-semibold leading-none tracking-[0.11em]"
             style={{
               color:
                 `${GOLD_LIGHT}e6`,
@@ -749,11 +749,11 @@ const UmbraClock = memo(function UmbraClock({
             {time}
           </motion.span>
 
-          <span className="mt-[6px] font-mono text-[7px] uppercase tracking-[0.25em] text-white/[0.6]">
+          <span className="mt-[6px] font-mono text-[7px] uppercase tracking-[0.24em] text-white/[0.68]">
             {date}
           </span>
 
-          <span className="mt-[5px] font-mono text-[7px] uppercase tracking-[0.16em] text-white/[0.62]">
+          <span className="mt-[5px] font-mono text-[7px] uppercase tracking-[0.15em] text-white/[0.68]">
             {location}
           </span>
         </div>
@@ -796,7 +796,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="group relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/[0.08] text-white/[0.42] transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.28] hover:bg-white/[0.025] hover:text-[#ead39a]"
+      className="group relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/[0.10] bg-white/[0.012] text-white/[0.52] transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.28] hover:bg-white/[0.025] hover:text-[#ead39a]"
     >
       <span
         aria-hidden="true"
@@ -862,12 +862,12 @@ function DesktopNavItem({
           : undefined
       }
       className={[
-        "group relative flex h-12 items-center justify-center px-4",
-        "text-[9px] font-medium uppercase tracking-[0.24em]",
+        "group relative flex h-12 items-center justify-center px-5",
+        "text-[10px] font-medium uppercase tracking-[0.24em]",
         "outline-none transition-colors duration-300",
         active
-          ? "text-[#f5f1e8]"
-          : "text-white/[0.42] hover:text-white/[0.84]",
+          ? "text-[#fbf8f0]"
+          : "text-white/[0.58] hover:text-white/[0.92]",
       ].join(" ")}
     >
       <span
@@ -921,7 +921,7 @@ function DesktopSubscribe({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="group relative flex h-10 items-center gap-2.5 overflow-hidden border border-[#c7a96b62] px-4 text-[8px] font-semibold uppercase tracking-[0.2em] text-[#f2ede2] transition-[border-color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.88] hover:bg-[#c7a96b0a]"
+      className="group relative flex h-11 items-center gap-3 overflow-hidden border border-[#c7a96b72] bg-[#c7a96b]/[0.025] px-5 text-[9px] font-semibold uppercase tracking-[0.20em] text-[#f7f2e8] transition-[border-color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/[0.88] hover:bg-[#c7a96b0a]"
     >
       <span
         aria-hidden="true"
@@ -935,7 +935,7 @@ function DesktopSubscribe({
 
       <span
         aria-hidden="true"
-        className="relative z-10 h-1 w-1 rounded-full"
+        className="relative z-10 h-1.5 w-1.5 rounded-full"
         style={{
           background:
             GOLD,
@@ -1070,28 +1070,28 @@ function ScrollProgressFrame({
       <span
         className="absolute left-0 right-0 top-0 h-px"
         style={{
-          background: `${GOLD}20`,
+          background: `${GOLD}24`,
         }}
       />
 
       <span
         className="absolute bottom-0 left-0 right-0 h-px"
         style={{
-          background: `${GOLD}18`,
+          background: `${GOLD}20`,
         }}
       />
 
       <span
         className="absolute bottom-0 left-0 top-0 w-px"
         style={{
-          background: `${GOLD}18`,
+          background: `${GOLD}20`,
         }}
       />
 
       <span
         className="absolute bottom-0 right-0 top-0 w-px"
         style={{
-          background: `${GOLD}20`,
+          background: `${GOLD}24`,
         }}
       />
 
@@ -1856,11 +1856,11 @@ export default function Header() {
             }
             className={[
               "pointer-events-auto relative overflow-hidden border",
-              "border-white/[0.085]",
+              "border-white/[0.12]",
               "transition-[background-color,box-shadow] duration-500",
               scrolled
-                ? "bg-[#050505]/97 shadow-[0_24px_70px_rgba(0,0,0,.46)]"
-                : "bg-[#060606]/94 shadow-[0_18px_55px_rgba(0,0,0,.28)]",
+                ? "bg-[#050505]/98 shadow-[0_24px_70px_rgba(0,0,0,.48)]"
+                : "bg-[#060606]/96 shadow-[0_18px_55px_rgba(0,0,0,.30)]",
             ].join(" ")}
           >
             <ScrollProgressFrame
@@ -1901,7 +1901,7 @@ export default function Header() {
               }}
             />
 
-            <div className="relative z-10 grid min-h-[68px] grid-cols-[auto_1fr_auto] items-center px-3 sm:min-h-[72px] sm:px-5 lg:px-6">
+            <div className="relative z-10 grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center px-3.5 sm:min-h-[76px] sm:px-5.5 lg:px-6">
               <div className="flex min-w-0 items-center">
                 <UmbraClock
                   locale={locale}
@@ -1919,7 +1919,7 @@ export default function Header() {
                   }
                   className="group flex min-w-0 items-center"
                 >
-                  <span className="relative block h-10 w-10 shrink-0 overflow-hidden border border-white/[0.12] bg-black/50">
+                  <span className="relative block h-11 w-11 shrink-0 overflow-hidden border border-white/[0.14] bg-black/55 shadow-[0_8px_24px_rgba(0,0,0,.22)] sm:h-12 sm:w-12">
                     <Image
                       src="/umbra-avatar.png"
                       alt="Umbra Studio"
@@ -1944,12 +1944,12 @@ export default function Header() {
                     />
                   </span>
 
-                  <span className="ml-3 hidden min-w-0 lg:block">
-                    <span className="block truncate text-[10px] font-medium uppercase tracking-[0.34em] text-white/[0.84] transition-colors duration-300 group-hover:text-white">
+                  <span className="ml-4 hidden min-w-0 lg:block">
+                    <span className="block truncate text-[11px] font-semibold uppercase tracking-[0.32em] text-white/[0.90] transition-colors duration-300 group-hover:text-white">
                       UMBRA STUDIO
                     </span>
 
-                    <span className="mt-1 block text-[5px] uppercase tracking-[0.23em] text-white/[0.22] transition-colors duration-300 group-hover:text-white/[0.32]">
+                    <span className="mt-1 block text-[6px] uppercase tracking-[0.24em] text-white/[0.28] transition-colors duration-300 group-hover:text-white/[0.38]">
                       STORIES THAT LEAVE A SHADOW
                     </span>
                   </span>
@@ -1962,7 +1962,7 @@ export default function Header() {
                     ? "Main navigation"
                     : "Glavna navigacija"
                 }
-                className="hidden justify-self-center lg:flex"
+                className="hidden justify-self-center gap-1 lg:flex"
               >
                 {NAVIGATION.map(
                   (item) => {
