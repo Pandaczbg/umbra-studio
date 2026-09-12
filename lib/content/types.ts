@@ -135,31 +135,21 @@ export type ProjectSource = {
 export type ProjectContent =
   ContentBase & {
     readonly contentType: "project";
-
     readonly type: ProjectType;
     readonly status: ProjectStatus;
     readonly featured: boolean;
     readonly platform?: string;
-
     readonly source?: ProjectSource;
   };
 
 export type CharacterContent =
   ContentBase & {
     readonly contentType: "character";
-
     readonly projectId: ContentId;
-
     readonly category: CharacterCategory;
     readonly gender: CharacterGender;
     readonly heightCm: number | null;
-
     readonly profileAvailable: boolean;
-
-    /**
-     * Reverse/explicit content links.
-     * These are optional until the relevant content exists.
-     */
     readonly episodeIds?: readonly ContentId[];
     readonly storyIds?: readonly ContentId[];
     readonly mediaIds?: readonly ContentId[];
@@ -168,30 +158,19 @@ export type CharacterContent =
 export type EpisodeContent =
   ContentBase & {
     readonly contentType: "episode";
-
     readonly projectId: ContentId;
     readonly storyId?: ContentId;
-
     readonly episodeNumber: number;
     readonly status: EpisodeStatus;
-
     readonly runtime?: string;
     readonly runtimeSeconds?: number;
     readonly releaseDate?: string;
-
     readonly chapterStart?: number;
     readonly chapterEnd?: number;
-
     readonly logline?: LocalizedText;
-
     readonly featured: boolean;
-
     readonly youtubeUrl?: string;
     readonly thumbnail?: string;
-
-    /**
-     * Explicit content relationships.
-     */
     readonly characterIds?: readonly ContentId[];
     readonly mediaIds?: readonly ContentId[];
   };
@@ -199,13 +178,8 @@ export type EpisodeContent =
 export type StoryContent =
   ContentBase & {
     readonly contentType: "story";
-
     readonly projectId: ContentId;
     readonly status: StoryStatus;
-
-    /**
-     * Explicit content relationships.
-     */
     readonly characterIds?: readonly ContentId[];
     readonly episodeIds?: readonly ContentId[];
     readonly mediaIds?: readonly ContentId[];
@@ -214,19 +188,11 @@ export type StoryContent =
 export type MediaContent =
   ContentBase & {
     readonly contentType: "media";
-
     readonly mediaType: MediaType;
     readonly src: string;
-
     readonly poster?: string;
-
     readonly alt?: LocalizedText;
     readonly caption?: LocalizedText;
-
-    /**
-     * A media item may belong to one or more
-     * content contexts.
-     */
     readonly projectId?: ContentId;
     readonly characterId?: ContentId;
     readonly episodeId?: ContentId;
@@ -237,14 +203,10 @@ export type RelationshipContent = {
   readonly id: ContentId;
   readonly contentType: "relationship";
   readonly visibility: ContentVisibility;
-
   readonly projectId: ContentId;
-
   readonly sourceId: ContentId;
   readonly targetId: ContentId;
-
   readonly type: RelationshipType;
-
   readonly description?: LocalizedText;
 };
 
@@ -252,18 +214,13 @@ export type TimelineEventContent = {
   readonly id: ContentId;
   readonly contentType: "timeline-event";
   readonly visibility: ContentVisibility;
-
   readonly projectId: ContentId;
   readonly slug: string;
-
   readonly title: LocalizedText;
   readonly description?: LocalizedText;
-
   readonly date?: string;
   readonly period?: string;
-
   readonly precision: TimelinePrecision;
-
   readonly characterIds?: readonly ContentId[];
   readonly storyIds?: readonly ContentId[];
   readonly episodeIds?: readonly ContentId[];
@@ -273,19 +230,14 @@ export type ArchiveEntryContent = {
   readonly id: ContentId;
   readonly contentType: "archive-entry";
   readonly visibility: ContentVisibility;
-
   readonly type: ArchiveEntryType;
-
   readonly title: LocalizedText;
   readonly description?: LocalizedText;
-
   readonly date?: string;
-
   readonly projectId?: ContentId;
   readonly characterId?: ContentId;
   readonly episodeId?: ContentId;
   readonly storyId?: ContentId;
-
   readonly mediaIds?: readonly ContentId[];
 };
 
