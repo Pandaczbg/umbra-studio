@@ -14,7 +14,7 @@ export type CharacterNavigation = {
   projectCharacters: Character[];
 };
 
-export function getCharactersForProject(
+function getProjectCharacters(
   projectSlug: string,
 ): Character[] {
   return characters
@@ -25,6 +25,14 @@ export function getCharactersForProject(
     .sort(
       (a, b) => a.order - b.order,
     );
+}
+
+export function getCharactersForProject(
+  projectSlug: string,
+): Character[] {
+  return getProjectCharacters(
+    projectSlug,
+  );
 }
 
 export function getCharacterBySlug(
@@ -39,13 +47,13 @@ export function getCharacterNavigation(
   character: Character,
 ): CharacterNavigation {
   const projectCharacters =
-    getCharactersForProject(
+    getProjectCharacters(
       character.projectSlug,
     );
 
   const currentIndex =
     projectCharacters.findIndex(
-      (item) => item.slug === character.slug,
+      (item) => item.id === character.id,
     );
 
   const position =
@@ -55,12 +63,14 @@ export function getCharacterNavigation(
 
   return {
     current: character,
+
     previous:
       currentIndex > 0
         ? projectCharacters[
             currentIndex - 1
           ]
         : null,
+
     next:
       currentIndex >= 0 &&
       currentIndex <
@@ -69,9 +79,9 @@ export function getCharacterNavigation(
             currentIndex + 1
           ]
         : null,
+
     position,
-    total:
-      projectCharacters.length,
+    total: projectCharacters.length,
     projectCharacters,
   };
 }
