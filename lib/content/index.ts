@@ -3,13 +3,16 @@
  * Canonical content entry point
  *
  * Responsibilities:
- * - Build the canonical content snapshot from V5 adapters
- * - Create the immutable V6 registry
+ * - Adapt legacy V5 source data into canonical V6 content
+ * - Create the canonical in-memory registry
  * - Expose readonly collections and registry accessors
  *
- * No UI logic belongs here.
- * No route logic belongs here.
- * No direct legacy-data access belongs outside the adapters.
+ * Rules:
+ * - No UI logic
+ * - No routing logic
+ * - No validation side effects
+ * - No direct legacy-data access outside adapters
+ * - No slug-query logic
  */
 
 import {
@@ -17,121 +20,177 @@ import {
   adaptEpisodes,
   adaptProjects,
 } from "@/lib/content/adapters";
+
 import {
   createUmbraContentRegistry,
 } from "@/lib/content/registry";
 
-const projectContent =
+import type {
+  ArchiveEntryContent,
+  CharacterContent,
+  EpisodeContent,
+  MediaContent,
+  ProjectContent,
+  RelationshipContent,
+  StoryContent,
+  TimelineEventContent,
+} from "@/lib/content/types";
+
+/* -------------------------------------------------------------------------- */
+/* Canonical source snapshot                                                  */
+/* -------------------------------------------------------------------------- */
+
+const projectContent: readonly ProjectContent[] =
   adaptProjects();
 
-const characterContent =
-  adaptCharacters(
-    projectContent,
-  );
+const characterContent: readonly CharacterContent[] =
+  adaptCharacters(projectContent);
 
-const episodeContent =
-  adaptEpisodes(
-    projectContent,
-  );
+const episodeContent: readonly EpisodeContent[] =
+  adaptEpisodes(projectContent);
+
+/*
+ * These collections intentionally remain empty until
+ * their real canonical source data exists.
+ *
+ * No content is invented during migration.
+ */
+const storyContent: readonly StoryContent[] =
+  [];
+
+const mediaContent: readonly MediaContent[] =
+  [];
+
+const relationshipContent:
+  readonly RelationshipContent[] =
+  [];
+
+const timelineContent:
+  readonly TimelineEventContent[] =
+  [];
+
+const archiveContent:
+  readonly ArchiveEntryContent[] =
+  [];
+
+/* -------------------------------------------------------------------------- */
+/* Canonical registry                                                         */
+/* -------------------------------------------------------------------------- */
 
 export const umbraContent =
   createUmbraContentRegistry({
     projects: projectContent,
     characters: characterContent,
     episodes: episodeContent,
-
-    /*
-     * These V6 entity collections are intentionally
-     * empty until their real canonical source data
-     * exists.
-     *
-     * We do not manufacture content during migration.
-     */
-    stories: [],
-    media: [],
-    relationships: [],
-    timelines: [],
-    archive: [],
+    stories: storyContent,
+    media: mediaContent,
+    relationships: relationshipContent,
+    timelines: timelineContent,
+    archive: archiveContent,
   });
 
-/**
- * Canonical readonly collections
- */
-export const {
-  projects,
-  characters,
-  episodes,
-  stories,
-  media,
-  relationships,
-  timelines,
-  archive,
-} = umbraContent;
+/* -------------------------------------------------------------------------- */
+/* Canonical collections                                                      */
+/* -------------------------------------------------------------------------- */
 
-/**
- * Canonical registry accessors
- */
-export const {
-  getById,
+export const projects =
+  umbraContent.projects;
 
-  getProject,
-  getCharacter,
-  getEpisode,
-  getStory,
-  getMedia,
-  getRelationship,
-  getTimelineEvent,
-  getArchiveEntry,
+export const characters =
+  umbraContent.characters;
 
-  getCharactersForProject,
-  getEpisodesForProject,
-  getStoriesForProject,
-  getMediaForProject,
-  getTimelineForProject,
-  getArchiveForProject,
-  getRelationshipsForProject,
+export const episodes =
+  umbraContent.episodes;
 
-  getCharactersForEpisode,
-  getEpisodesForCharacter,
-  getStoriesForCharacter,
-  getMediaForCharacter,
-  getMediaForEpisode,
-  getMediaForStory,
-} = umbraContent;
+export const stories =
+  umbraContent.stories;
 
-/**
- * Compatibility lookups
- *
- * These remain here temporarily so existing callers can
- * resolve canonical entities by slug without knowing
- * registry internals.
- *
- * Dedicated query functions will eventually live in
- * lib/content/queries.ts.
- */
-export function getCharacterBySlug(
-  slug: string,
-) {
-  return characters.find(
-    (character) =>
-      character.slug === slug,
-  );
-}
+export const media =
+  umbraContent.media;
 
-export function getProjectBySlug(
-  slug: string,
-) {
-  return projects.find(
-    (project) =>
-      project.slug === slug,
-  );
-}
+export const relationships =
+  umbraContent.relationships;
 
-export function getEpisodeBySlug(
-  slug: string,
-) {
-  return episodes.find(
-    (episode) =>
-      episode.slug === slug,
-  );
-}
+export const timelines =
+  umbraContent.timelines;
+
+export const archive =
+  umbraContent.archive;
+
+/* -------------------------------------------------------------------------- */
+/* Registry accessors                                                         */
+/* -------------------------------------------------------------------------- */
+
+export const getById =
+  umbraContent.getById;
+
+export const getProject =
+  umbraContent.getProject;
+
+export const getCharacter =
+  umbraContent.getCharacter;
+
+export const getEpisode =
+  umbraContent.getEpisode;
+
+export const getStory =
+  umbraContent.getStory;
+
+export const getMedia =
+  umbraContent.getMedia;
+
+export const getRelationship =
+  umbraContent.getRelationship;
+
+export const getTimelineEvent =
+  umbraContent.getTimelineEvent;
+
+export const getArchiveEntry =
+  umbraContent.getArchiveEntry;
+
+/* -------------------------------------------------------------------------- */
+/* Project relationships                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const getCharactersForProject =
+  umbraContent.getCharactersForProject;
+
+export const getEpisodesForProject =
+  umbraContent.getEpisodesForProject;
+
+export const getStoriesForProject =
+  umbraContent.getStoriesForProject;
+
+export const getMediaForProject =
+  umbraContent.getMediaForProject;
+
+export const getTimelineForProject =
+  umbraContent.getTimelineForProject;
+
+export const getArchiveForProject =
+  umbraContent.getArchiveForProject;
+
+export const getRelationshipsForProject =
+  umbraContent.getRelationshipsForProject;
+
+/* -------------------------------------------------------------------------- */
+/* Cross-content relationships                                                */
+/* -------------------------------------------------------------------------- */
+
+export const getCharactersForEpisode =
+  umbraContent.getCharactersForEpisode;
+
+export const getEpisodesForCharacter =
+  umbraContent.getEpisodesForCharacter;
+
+export const getStoriesForCharacter =
+  umbraContent.getStoriesForCharacter;
+
+export const getMediaForCharacter =
+  umbraContent.getMediaForCharacter;
+
+export const getMediaForEpisode =
+  umbraContent.getMediaForEpisode;
+
+export const getMediaForStory =
+  umbraContent.getMediaForStory;
