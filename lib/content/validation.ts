@@ -1,8 +1,8 @@
 /**
- * UMBRA STUDIO — V6
+ * UMBRA STUDIO — V7
  * Canonical content validation
  *
- * Validates the V6 content graph before it enters the registry.
+ * Validates the Umbra content graph before it enters the registry.
  *
  * Responsibilities:
  * - unique ids
@@ -10,11 +10,14 @@
  * - valid project ownership
  * - valid cross-content references
  * - project-boundary integrity
+ * - publication invariants
  * - basic content invariants
  *
- * No UI logic.
- * No routing logic.
- * No legacy-data access.
+ * Architecture:
+ * - no UI logic
+ * - no routing logic
+ * - no legacy-data access
+ * - no registry construction
  */
 
 import type {
@@ -42,14 +45,12 @@ export type UmbraContentValidationInput = {
 };
 
 type ContentWithProject = {
+  readonly id: ContentId;
   readonly projectId?: ContentId;
 };
 
 type ValidationContext = {
-  readonly allById: ReadonlyMap<
-    ContentId,
-    UmbraContent
-  >;
+  readonly allById: ReadonlyMap<ContentId, UmbraContent>;
   readonly projectsById: ReadonlyMap<
     ContentId,
     ProjectContent
@@ -81,7 +82,7 @@ class UmbraContentValidationError extends Error {
   ) {
     super(
       [
-        "Umbra V6 content validation failed:",
+        "Umbra V7 content validation failed:",
         ...issues.map(
           (issue) => `- ${issue}`,
         ),
@@ -90,7 +91,9 @@ class UmbraContentValidationError extends Error {
 
     this.name =
       "UmbraContentValidationError";
-    this.issues = issues;
+    this.issues = Object.freeze([
+      ...issues,
+    ]);
   }
 }
 
@@ -275,7 +278,10 @@ function validateIds(
     new Set<ContentId>();
 
   for (const item of items) {
-    if (!item.id.trim()) {
+    const id =
+      item.id.trim();
+
+    if (!id) {
       issues.push(
         `${item.contentType} has an empty id`,
       );
@@ -306,11 +312,20 @@ function validateSlugs<
     new Set<string>();
 
   for (const item of items) {
-    if (!item.slug.trim()) {
+    const slug =
+      item.slug.trim();
+
+    if (!slug) {
       issues.push(
         `${type} has an empty slug`,
       );
       continue;
+    }
+
+    if (slug !== item.slug) {
+      issues.push(
+        `${type} "${getItemId(item)}" has leading or trailing whitespace in slug`,
+      );
     }
 
     if (seen.has(item.slug)) {
@@ -346,6 +361,12 @@ function validateProjects(
         `project "${project.id}" has an empty source title`,
       );
     }
+
+    validatePublishedAt(
+      project,
+      `project "${project.id}"`,
+      issues,
+    );
   }
 }
 
@@ -362,7 +383,7 @@ function validateProjectOwnedContent(
   for (const item of items) {
     if (!item.projectId) {
       issues.push(
-        `${type} "${getItemId(item)}" has no projectId`,
+        `${type} "${item.id}" has no projectId`,
       );
       continue;
     }
@@ -373,7 +394,7 @@ function validateProjectOwnedContent(
       )
     ) {
       issues.push(
-        `${type} "${getItemId(item)}" references unknown project "${item.projectId}"`,
+        `${type} "${item.id}" references unknown project "${item.projectId}"`,
       );
     }
   }
@@ -388,6 +409,12 @@ function validateEpisodes(
   context: ValidationContext,
   issues: string[],
 ): void {
+  const episodeNumbersByProject =
+    new Map<
+      ContentId,
+      Set<number>
+    >();
+
   for (const episode of episodes) {
     validateLocalizedTitle(
       episode,
@@ -403,15 +430,78 @@ function validateEpisodes(
       issues.push(
         `episode "${episode.id}" has invalid episodeNumber`,
       );
+    } else {
+      const numbers =
+        episodeNumbersByProject.get(
+          episode.projectId,
+        );
+
+      if (numbers) {
+        if (
+          numbers.has(
+            episode.episodeNumber,
+          )
+        ) {
+          issues.push(
+            `project "${episode.projectId}" has duplicate episodeNumber ${episode.episodeNumber}`,
+          );
+        }
+
+        numbers.add(
+          episode.episodeNumber,
+        );
+      } else {
+        episodeNumbersByProject.set(
+          episode.projectId,
+          new Set([
+            episode.episodeNumber,
+          ]),
+        );
+      }
     }
 
     if (
       episode.runtimeSeconds !==
         undefined &&
-      episode.runtimeSeconds < 0
+      (
+        !Number.isInteger(
+          episode.runtimeSeconds,
+        ) ||
+        episode.runtimeSeconds <= 0
+      )
     ) {
       issues.push(
         `episode "${episode.id}" has invalid runtimeSeconds`,
+      );
+    }
+
+    if (
+      episode.chapterStart !==
+        undefined &&
+      (
+        !Number.isInteger(
+          episode.chapterStart,
+        ) ||
+        episode.chapterStart < 1
+      )
+    ) {
+      issues.push(
+        `episode "${episode.id}" has invalid chapterStart`,
+      );
+    }
+
+    if (
+      episode.chapterEnd !==
+        undefined &&
+      (
+        !Number.isInteger(
+          episode.chapterEnd,
+        ) ||
+        episode.chapterEnd < 1
+      )
+    ) {
+      issues.push(
+        `episode "${episode.id}" has invalid chapterEnd`,
       );
     }
 
@@ -425,6 +515,50 @@ function validateEpisodes(
     ) {
       issues.push(
         `episode "${episode.id}" has chapterEnd before chapterStart`,
+      );
+    }
+
+    validatePublishedAt(
+      episode,
+      `episode "${episode.id}"`,
+      issues,
+    );
+
+    if (
+      episode.status === "published" &&
+      !episode.publishedAt
+    ) {
+      issues.push(
+        `published episode "${episode.id}" must have publishedAt`,
+      );
+    }
+
+    if (
+      episode.status === "published" &&
+      !episode.youtubeUrl
+    ) {
+      issues.push(
+        `published episode "${episode.id}" must have youtubeUrl`,
+      );
+    }
+
+    if (
+      episode.youtubeUrl &&
+      !isHttpUrl(
+        episode.youtubeUrl,
+      )
+    ) {
+      issues.push(
+        `episode "${episode.id}" has an invalid youtubeUrl`,
+      );
+    }
+
+    if (
+      episode.thumbnail &&
+      !episode.thumbnail.trim()
+    ) {
+      issues.push(
+        `episode "${episode.id}" has an empty thumbnail`,
       );
     }
 
@@ -619,6 +753,16 @@ function validateCharacters(
         `character "${character.id}"`,
         issues,
       );
+
+      if (
+        media.characterId &&
+        media.characterId !==
+          character.id
+      ) {
+        issues.push(
+          `character "${character.id}" references media "${media.id}" owned by another character`,
+        );
+      }
     }
   }
 }
@@ -641,6 +785,16 @@ function validateMedia(
     if (!item.src.trim()) {
       issues.push(
         `media "${item.id}" has an empty src`,
+      );
+    }
+
+    if (
+      item.mediaType === "video" &&
+      item.poster &&
+      !item.poster.trim()
+    ) {
+      issues.push(
+        `media "${item.id}" has an empty poster`,
       );
     }
 
@@ -1022,14 +1176,11 @@ function createIdSet<
 }
 
 function getItemId(
-  item: ContentWithProject,
+  item: {
+    readonly id: ContentId;
+  },
 ): string {
-  return (
-    "id" in item &&
-    typeof item.id === "string"
-      ? item.id
-      : "unknown"
-  );
+  return item.id;
 }
 
 function validateLocalizedTitle(
@@ -1052,6 +1203,51 @@ function validateLocalizedTitle(
     issues.push(
       `content "${item.id}" has an empty EN title`,
     );
+  }
+}
+
+function validatePublishedAt(
+  item: {
+    readonly publishedAt?: string;
+  },
+  context: string,
+  issues: string[],
+): void {
+  if (!item.publishedAt) {
+    return;
+  }
+
+  const date =
+    new Date(
+      item.publishedAt,
+    );
+
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
+    issues.push(
+      `${context} has an invalid publishedAt timestamp`,
+    );
+  }
+}
+
+function isHttpUrl(
+  value: string,
+): boolean {
+  try {
+    const url =
+      new URL(value);
+
+    return (
+      url.protocol ===
+        "http:" ||
+      url.protocol ===
+        "https:"
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -1095,7 +1291,10 @@ function validateContentProject(
     return;
   }
 
-  if (item.projectId) {
+  if (
+    "projectId" in item &&
+    item.projectId
+  ) {
     assertSameProject(
       projectId,
       item.projectId,

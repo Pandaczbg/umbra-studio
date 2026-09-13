@@ -1,16 +1,17 @@
 /**
- * UMBRA STUDIO — V6
+ * UMBRA STUDIO — V7 POLISH
  * Canonical content schema
  *
  * Shared content language for the entire Umbra digital universe.
+ * Types only. No data, routing or UI logic belongs here.
  *
- * Rules:
- * - Types only
- * - No data
- * - No routing
- * - No UI logic
- * - Canonical relationships are represented explicitly
- * - Content collections are treated as readonly
+ * Design goals
+ * --------------------------------------------------------------------------
+ * - Keep one stable canonical contract for registry, validation, queries and UI.
+ * - Support editorial publication state without inventing publication dates.
+ * - Keep relationship indexes explicit so the registry can build reverse lookups.
+ * - Preserve the existing V6 data contract used by project/detail views.
+ * - Avoid introducing runtime validation into the type layer.
  */
 
 export type ContentId = string;
@@ -103,143 +104,158 @@ export type ArchiveEntryType =
   | "document";
 
 export type ContentReference = {
-  readonly type: ContentType;
-  readonly id: ContentId;
+  type: ContentType;
+  id: ContentId;
 };
 
 export type LocalizedText = {
-  readonly sr: string;
-  readonly en: string;
+  sr: string;
+  en: string;
 };
 
 export type ContentBase = {
-  readonly id: ContentId;
-  readonly slug: string;
-  readonly visibility: ContentVisibility;
-  readonly title: LocalizedText;
-  readonly shortDescription?: LocalizedText;
-  readonly description?: LocalizedText;
-  readonly order?: number;
+  id: ContentId;
+  slug: string;
+  visibility: ContentVisibility;
+  title: LocalizedText;
+  shortDescription?: LocalizedText;
+  description?: LocalizedText;
+
+  /**
+   * Canonical publication timestamp used by editorial latest feeds.
+   *
+   * The value is intentionally typed as string because this layer does not
+   * validate or parse dates. Content validation belongs in runtime/data
+   * validation, not in the schema-only contract.
+   */
+  publishedAt?: string;
+
+  order?: number;
 };
 
 export type ProjectSource = {
-  readonly title: string;
-  readonly author?: string;
-  readonly coverSr?: string;
-  readonly coverEn?: string;
-  readonly pdfSr?: string;
-  readonly pdfEn?: string;
-  readonly publicUrl?: string;
+  title: string;
+  author?: string;
+  coverSr?: string;
+  coverEn?: string;
+  pdfSr?: string;
+  pdfEn?: string;
+  publicUrl?: string;
 };
 
-export type ProjectContent =
-  ContentBase & {
-    readonly contentType: "project";
-    readonly type: ProjectType;
-    readonly status: ProjectStatus;
-    readonly featured: boolean;
-    readonly platform?: string;
-    readonly cover?: string;
-    readonly source?: ProjectSource;
-  };
+export type ProjectContent = ContentBase & {
+  contentType: "project";
+  type: ProjectType;
+  status: ProjectStatus;
+  featured: boolean;
 
-export type CharacterContent =
-  ContentBase & {
-    readonly contentType: "character";
-    readonly projectId: ContentId;
-    readonly category: CharacterCategory;
-    readonly gender: CharacterGender;
-    readonly heightCm: number | null;
-    readonly profileAvailable: boolean;
-    readonly episodeIds?: readonly ContentId[];
-    readonly storyIds?: readonly ContentId[];
-    readonly mediaIds?: readonly ContentId[];
-  };
+  /** Primary project artwork used by current V6 project surfaces. */
+  cover?: string;
 
-export type EpisodeContent =
-  ContentBase & {
-    readonly contentType: "episode";
-    readonly projectId: ContentId;
-    readonly storyId?: ContentId;
-    readonly episodeNumber: number;
-    readonly status: EpisodeStatus;
-    readonly runtime?: string;
-    readonly runtimeSeconds?: number;
-    readonly releaseDate?: string;
-    readonly chapterStart?: number;
-    readonly chapterEnd?: number;
-    readonly logline?: LocalizedText;
-    readonly featured: boolean;
-    readonly youtubeUrl?: string;
-    readonly thumbnail?: string;
-    readonly characterIds?: readonly ContentId[];
-    readonly mediaIds?: readonly ContentId[];
-  };
+  platform?: string;
+  source?: ProjectSource;
+};
 
-export type StoryContent =
-  ContentBase & {
-    readonly contentType: "story";
-    readonly projectId: ContentId;
-    readonly status: StoryStatus;
-    readonly characterIds?: readonly ContentId[];
-    readonly episodeIds?: readonly ContentId[];
-    readonly mediaIds?: readonly ContentId[];
-  };
+export type CharacterContent = ContentBase & {
+  contentType: "character";
+  projectId: ContentId;
+  category: CharacterCategory;
+  gender: CharacterGender;
+  heightCm: number | null;
+  profileAvailable: boolean;
 
-export type MediaContent =
-  ContentBase & {
-    readonly contentType: "media";
-    readonly mediaType: MediaType;
-    readonly src: string;
-    readonly poster?: string;
-    readonly alt?: LocalizedText;
-    readonly caption?: LocalizedText;
-    readonly projectId?: ContentId;
-    readonly characterId?: ContentId;
-    readonly episodeId?: ContentId;
-    readonly storyId?: ContentId;
-  };
+  /** Reverse indexes used by canonical relationship queries/validation. */
+  episodeIds?: ContentId[];
+  storyIds?: ContentId[];
+  mediaIds?: ContentId[];
+};
+
+export type EpisodeContent = ContentBase & {
+  contentType: "episode";
+  projectId: ContentId;
+  storyId?: ContentId;
+  episodeNumber: number;
+  status: EpisodeStatus;
+  runtime?: string;
+  runtimeSeconds?: number;
+  releaseDate?: string;
+  chapterStart?: number;
+  chapterEnd?: number;
+  logline?: LocalizedText;
+  featured: boolean;
+
+  /** Reverse indexes used by canonical relationship queries/validation. */
+  characterIds?: ContentId[];
+  mediaIds?: ContentId[];
+
+  youtubeUrl?: string;
+  thumbnail?: string;
+};
+
+export type StoryContent = ContentBase & {
+  contentType: "story";
+  projectId: ContentId;
+  status: StoryStatus;
+
+  /** Explicit links keep the canonical graph queryable in both directions. */
+  characterIds?: ContentId[];
+  episodeIds?: ContentId[];
+  mediaIds?: ContentId[];
+};
+
+export type MediaContent = ContentBase & {
+  contentType: "media";
+  mediaType: MediaType;
+  src: string;
+  poster?: string;
+  alt?: LocalizedText;
+  caption?: LocalizedText;
+  projectId?: ContentId;
+  characterId?: ContentId;
+  episodeId?: ContentId;
+  storyId?: ContentId;
+};
 
 export type RelationshipContent = {
-  readonly id: ContentId;
-  readonly contentType: "relationship";
-  readonly visibility: ContentVisibility;
-  readonly projectId: ContentId;
-  readonly sourceId: ContentId;
-  readonly targetId: ContentId;
-  readonly type: RelationshipType;
-  readonly description?: LocalizedText;
+  id: ContentId;
+  contentType: "relationship";
+  visibility: ContentVisibility;
+  projectId: ContentId;
+  sourceId: ContentId;
+  targetId: ContentId;
+  type: RelationshipType;
+  description?: LocalizedText;
 };
 
 export type TimelineEventContent = {
-  readonly id: ContentId;
-  readonly contentType: "timeline-event";
-  readonly visibility: ContentVisibility;
-  readonly projectId: ContentId;
-  readonly slug: string;
-  readonly title: LocalizedText;
-  readonly description?: LocalizedText;
-  readonly date?: string;
-  readonly period?: string;
-  readonly precision: TimelinePrecision;
-  readonly characterIds?: readonly ContentId[];
-  readonly storyIds?: readonly ContentId[];
-  readonly episodeIds?: readonly ContentId[];
+  id: ContentId;
+  contentType: "timeline-event";
+  visibility: ContentVisibility;
+  projectId: ContentId;
+  slug: string;
+  title: LocalizedText;
+  description?: LocalizedText;
+  date?: string;
+  period?: string;
+  precision: TimelinePrecision;
+  characterIds?: ContentId[];
+  storyIds?: ContentId[];
+  episodeIds?: ContentId[];
 };
 
 export type ArchiveEntryContent = {
-  readonly id: ContentId;
-  readonly contentType: "archive-entry";
-  readonly visibility: ContentVisibility;
-  readonly type: ArchiveEntryType;
-  readonly title: LocalizedText;
-  readonly description?: LocalizedText;
-  readonly date?: string;
-  readonly projectId?: ContentId;
-  readonly characterId?: ContentId;
-  readonly episodeId?: ContentId;
-  readonly storyId?: ContentId;
-  readonly mediaIds?: readonly ContentId[];
+  id: ContentId;
+  contentType: "archive-entry";
+  visibility: ContentVisibility;
+  type: ArchiveEntryType;
+  title: LocalizedText;
+  description?: LocalizedText;
+  date?: string;
+  projectId?: ContentId;
+  characterId?: ContentId;
+  episodeId?: ContentId;
+  storyId?: ContentId;
+  mediaIds?: ContentId[];
 };
 
 export type UmbraContent =

@@ -11,6 +11,27 @@ import type {
   UmbraContent,
 } from "@/lib/content/types";
 
+/* ========================================================================== 
+   UMBRA STUDIO — V7 POLISH
+   CANONICAL CONTENT REGISTRY
+
+   Responsibilities
+   --------------------------------------------------------------------------
+   - Own one immutable in-memory index over canonical content.
+   - Provide O(1) primary-id lookups.
+   - Provide precomputed relationship/group lookups.
+   - Keep query code free from ad-hoc scans and duplicated relationship logic.
+   - Fail fast when a canonical relation points at a missing target.
+
+   Non-responsibilities
+   --------------------------------------------------------------------------
+   - No UI logic.
+   - No routing logic.
+   - No localization logic.
+   - No runtime date parsing.
+   - No persistence.
+   ========================================================================== */
+
 export type UmbraContentRegistryInput = {
   readonly projects?: readonly ProjectContent[];
   readonly characters?: readonly CharacterContent[];
@@ -34,33 +55,19 @@ export type UmbraContentRegistry = {
   readonly timelines: readonly TimelineEventContent[];
   readonly archive: readonly ArchiveEntryContent[];
 
-  getById(
-    id: ContentId,
-  ): UmbraContent | undefined;
+  getById(id: ContentId): UmbraContent | undefined;
 
-  getProject(
-    id: ContentId,
-  ): ProjectContent | undefined;
+  getProject(id: ContentId): ProjectContent | undefined;
 
-  getCharacter(
-    id: ContentId,
-  ): CharacterContent | undefined;
+  getCharacter(id: ContentId): CharacterContent | undefined;
 
-  getEpisode(
-    id: ContentId,
-  ): EpisodeContent | undefined;
+  getEpisode(id: ContentId): EpisodeContent | undefined;
 
-  getStory(
-    id: ContentId,
-  ): StoryContent | undefined;
+  getStory(id: ContentId): StoryContent | undefined;
 
-  getMedia(
-    id: ContentId,
-  ): MediaContent | undefined;
+  getMedia(id: ContentId): MediaContent | undefined;
 
-  getRelationship(
-    id: ContentId,
-  ): RelationshipContent | undefined;
+  getRelationship(id: ContentId): RelationshipContent | undefined;
 
   getTimelineEvent(
     id: ContentId,
@@ -123,9 +130,8 @@ export type UmbraContentRegistry = {
   ): readonly MediaContent[];
 };
 
-type IdLookup<
-  T extends { id: ContentId },
-> = ReadonlyMap<ContentId, T>;
+type IdLookup<T extends { id: ContentId }> =
+  ReadonlyMap<ContentId, T>;
 
 type GroupLookup<T> =
   ReadonlyMap<ContentId, readonly T[]>;
@@ -136,13 +142,10 @@ function freezeArray<T>(
   return Object.freeze([...items]);
 }
 
-function createIdLookup<
-  T extends { id: ContentId },
->(
+function createIdLookup<T extends { id: ContentId }>(
   items: readonly T[],
 ): IdLookup<T> {
-  const lookup =
-    new Map<ContentId, T>();
+  const lookup = new Map<ContentId, T>();
 
   for (const item of items) {
     if (lookup.has(item.id)) {
@@ -151,10 +154,7 @@ function createIdLookup<
       );
     }
 
-    lookup.set(
-      item.id,
-      item,
-    );
+    lookup.set(item.id, item);
   }
 
   return lookup;
@@ -165,54 +165,30 @@ function createProjectLookup<
 >(
   items: readonly T[],
 ): GroupLookup<T> {
-  const groups =
-    new Map<
-      ContentId,
-      T[]
-    >();
+  const groups = new Map<ContentId, T[]>();
 
   for (const item of items) {
-    const group =
-      groups.get(
-        item.projectId,
-      );
+    const group = groups.get(item.projectId);
 
     if (group) {
       group.push(item);
     } else {
-      groups.set(
-        item.projectId,
-        [item],
-      );
+      groups.set(item.projectId, [item]);
     }
   }
 
-  const result =
-    new Map<
-      ContentId,
-      readonly T[]
-    >();
+  const result = new Map<ContentId, readonly T[]>();
 
-  for (const [
-    projectId,
-    group,
-  ] of groups) {
-    result.set(
-      projectId,
-      freezeArray(group),
-    );
+  for (const [projectId, group] of groups) {
+    result.set(projectId, freezeArray(group));
   }
 
   return result;
 }
 
 function createRelationLookup<
-  TSource extends {
-    id: ContentId;
-  },
-  TTarget extends {
-    id: ContentId;
-  },
+  TSource extends { id: ContentId },
+  TTarget extends { id: ContentId },
 >(
   sourceItems: readonly TSource[],
   getTargetIds: (
@@ -220,22 +196,13 @@ function createRelationLookup<
   ) => readonly ContentId[],
   targetLookup: IdLookup<TTarget>,
 ): GroupLookup<TTarget> {
-  const groups =
-    new Map<
-      ContentId,
-      TTarget[]
-    >();
+  const groups = new Map<ContentId, TTarget[]>();
 
   for (const source of sourceItems) {
     const groupId = source.id;
 
-    for (const targetId of getTargetIds(
-      source,
-    )) {
-      const target =
-        targetLookup.get(
-          targetId,
-        );
+    for (const targetId of getTargetIds(source)) {
+      const target = targetLookup.get(targetId);
 
       if (!target) {
         throw new Error(
@@ -243,89 +210,51 @@ function createRelationLookup<
         );
       }
 
-      const group =
-        groups.get(groupId);
+      const group = groups.get(groupId);
 
       if (group) {
         group.push(target);
       } else {
-        groups.set(
-          groupId,
-          [target],
-        );
+        groups.set(groupId, [target]);
       }
     }
   }
 
-  const result =
-    new Map<
-      ContentId,
-      readonly TTarget[]
-    >();
+  const result = new Map<ContentId, readonly TTarget[]>();
 
-  for (const [
-    sourceId,
-    group,
-  ] of groups) {
-    result.set(
-      sourceId,
-      freezeArray(group),
-    );
+  for (const [sourceId, group] of groups) {
+    result.set(sourceId, freezeArray(group));
   }
 
   return result;
 }
 
 function createReverseRelationLookup<
-  TSource extends {
-    id: ContentId;
-  },
+  TSource extends { id: ContentId },
 >(
   sourceItems: readonly TSource[],
   getTargetIds: (
     source: TSource,
   ) => readonly ContentId[],
 ): GroupLookup<TSource> {
-  const groups =
-    new Map<
-      ContentId,
-      TSource[]
-    >();
+  const groups = new Map<ContentId, TSource[]>();
 
   for (const source of sourceItems) {
-    for (const targetId of getTargetIds(
-      source,
-    )) {
-      const group =
-        groups.get(
-          targetId,
-        );
+    for (const targetId of getTargetIds(source)) {
+      const group = groups.get(targetId);
 
       if (group) {
         group.push(source);
       } else {
-        groups.set(
-          targetId,
-          [source],
-        );
+        groups.set(targetId, [source]);
       }
     }
   }
 
-  const result =
-    new Map<
-      ContentId,
-      readonly TSource[]
-    >();
+  const result = new Map<ContentId, readonly TSource[]>();
 
-  for (const [
-    targetId,
-    group,
-  ] of groups) {
-    result.set(
-      targetId,
-      freezeArray(group),
-    );
+  for (const [targetId, group] of groups) {
+    result.set(targetId, freezeArray(group));
   }
 
   return result;
@@ -337,49 +266,28 @@ function createMediaLookup(
     item: MediaContent,
   ) => ContentId | undefined,
 ): GroupLookup<MediaContent> {
-  const groups =
-    new Map<
-      ContentId,
-      MediaContent[]
-    >();
+  const groups = new Map<ContentId, MediaContent[]>();
 
   for (const item of media) {
-    const relatedId =
-      getRelation(item);
+    const relatedId = getRelation(item);
 
     if (!relatedId) {
       continue;
     }
 
-    const group =
-      groups.get(
-        relatedId,
-      );
+    const group = groups.get(relatedId);
 
     if (group) {
       group.push(item);
     } else {
-      groups.set(
-        relatedId,
-        [item],
-      );
+      groups.set(relatedId, [item]);
     }
   }
 
-  const result =
-    new Map<
-      ContentId,
-      readonly MediaContent[]
-    >();
+  const result = new Map<ContentId, readonly MediaContent[]>();
 
-  for (const [
-    relatedId,
-    group,
-  ] of groups) {
-    result.set(
-      relatedId,
-      freezeArray(group),
-    );
+  for (const [relatedId, group] of groups) {
+    result.set(relatedId, freezeArray(group));
   }
 
   return result;
@@ -391,8 +299,7 @@ function sortCharacters(
   return freezeArray(
     [...items].sort(
       (a, b) =>
-        (a.order ?? 0) -
-        (b.order ?? 0),
+        (a.order ?? 0) - (b.order ?? 0),
     ),
   );
 }
@@ -403,8 +310,7 @@ function sortEpisodes(
   return freezeArray(
     [...items].sort(
       (a, b) =>
-        a.episodeNumber -
-        b.episodeNumber,
+        a.episodeNumber - b.episodeNumber,
     ),
   );
 }
@@ -415,8 +321,7 @@ function sortStories(
   return freezeArray(
     [...items].sort(
       (a, b) =>
-        (a.order ?? 0) -
-        (b.order ?? 0),
+        (a.order ?? 0) - (b.order ?? 0),
     ),
   );
 }
@@ -424,204 +329,122 @@ function sortStories(
 export function createUmbraContentRegistry(
   input: UmbraContentRegistryInput = {},
 ): UmbraContentRegistry {
-  const projects =
-    freezeArray(
-      input.projects ?? [],
-    );
+  const projects = freezeArray(input.projects ?? []);
+  const characters = sortCharacters(
+    input.characters ?? [],
+  );
+  const episodes = sortEpisodes(
+    input.episodes ?? [],
+  );
+  const stories = sortStories(
+    input.stories ?? [],
+  );
+  const media = freezeArray(input.media ?? []);
+  const relationships = freezeArray(
+    input.relationships ?? [],
+  );
+  const timelines = freezeArray(
+    input.timelines ?? [],
+  );
+  const archive = freezeArray(input.archive ?? []);
 
-  const characters =
-    sortCharacters(
-      input.characters ?? [],
-    );
+  const all = freezeArray([
+    ...projects,
+    ...characters,
+    ...episodes,
+    ...stories,
+    ...media,
+    ...relationships,
+    ...timelines,
+    ...archive,
+  ]);
 
-  const episodes =
-    sortEpisodes(
-      input.episodes ?? [],
-    );
+  const allById = createIdLookup(all);
+  const projectsById = createIdLookup(projects);
+  const charactersById = createIdLookup(characters);
+  const episodesById = createIdLookup(episodes);
+  const storiesById = createIdLookup(stories);
+  const mediaById = createIdLookup(media);
+  const relationshipsById = createIdLookup(
+    relationships,
+  );
+  const timelinesById = createIdLookup(timelines);
+  const archiveById = createIdLookup(archive);
 
-  const stories =
-    sortStories(
-      input.stories ?? [],
-    );
+  const charactersByProject = createProjectLookup(
+    characters,
+  );
+  const episodesByProject = createProjectLookup(
+    episodes,
+  );
+  const storiesByProject = createProjectLookup(
+    stories,
+  );
 
-  const media =
-    freezeArray(
-      input.media ?? [],
-    );
+  const mediaWithProject = media.filter(
+    (
+      item,
+    ): item is MediaContent & {
+      projectId: ContentId;
+    } => Boolean(item.projectId),
+  );
 
-  const relationships =
-    freezeArray(
-      input.relationships ?? [],
-    );
+  const mediaByProject = createProjectLookup(
+    mediaWithProject,
+  );
 
-  const timelines =
-    freezeArray(
-      input.timelines ?? [],
-    );
+  const timelinesByProject = createProjectLookup(
+    timelines,
+  );
 
-  const archive =
-    freezeArray(
-      input.archive ?? [],
-    );
+  const archiveWithProject = archive.filter(
+    (
+      item,
+    ): item is ArchiveEntryContent & {
+      projectId: ContentId;
+    } => Boolean(item.projectId),
+  );
 
-  const all =
-    freezeArray([
-      ...projects,
-      ...characters,
-      ...episodes,
-      ...stories,
-      ...media,
-      ...relationships,
-      ...timelines,
-      ...archive,
-    ]);
+  const archiveByProject = createProjectLookup(
+    archiveWithProject,
+  );
 
-  const allById =
-    createIdLookup(all);
+  const relationshipsByProject = createProjectLookup(
+    relationships,
+  );
 
-  const projectsById =
-    createIdLookup(
-      projects,
-    );
+  const charactersByEpisode = createRelationLookup(
+    episodes,
+    (episode) => episode.characterIds ?? [],
+    charactersById,
+  );
 
-  const charactersById =
-    createIdLookup(
-      characters,
-    );
+  const episodesByCharacter = createReverseRelationLookup(
+    episodes,
+    (episode) => episode.characterIds ?? [],
+  );
 
-  const episodesById =
-    createIdLookup(
-      episodes,
-    );
+  const storiesByCharacter = createReverseRelationLookup(
+    stories,
+    (story) => story.characterIds ?? [],
+  );
 
-  const storiesById =
-    createIdLookup(
-      stories,
-    );
+  const mediaByCharacter = createMediaLookup(
+    media,
+    (item) => item.characterId,
+  );
 
-  const mediaById =
-    createIdLookup(
-      media,
-    );
+  const mediaByEpisode = createMediaLookup(
+    media,
+    (item) => item.episodeId,
+  );
 
-  const relationshipsById =
-    createIdLookup(
-      relationships,
-    );
+  const mediaByStory = createMediaLookup(
+    media,
+    (item) => item.storyId,
+  );
 
-  const timelinesById =
-    createIdLookup(
-      timelines,
-    );
-
-  const archiveById =
-    createIdLookup(
-      archive,
-    );
-
-  const charactersByProject =
-    createProjectLookup(
-      characters,
-    );
-
-  const episodesByProject =
-    createProjectLookup(
-      episodes,
-    );
-
-  const storiesByProject =
-    createProjectLookup(
-      stories,
-    );
-
-  const mediaWithProject =
-    media.filter(
-      (
-        item,
-      ): item is MediaContent & {
-        projectId: ContentId;
-      } =>
-        Boolean(
-          item.projectId,
-        ),
-    );
-
-  const mediaByProject =
-    createProjectLookup(
-      mediaWithProject,
-    );
-
-  const timelinesByProject =
-    createProjectLookup(
-      timelines,
-    );
-
-  const archiveWithProject =
-    archive.filter(
-      (
-        item,
-      ): item is ArchiveEntryContent & {
-        projectId: ContentId;
-      } =>
-        Boolean(
-          item.projectId,
-        ),
-    );
-
-  const archiveByProject =
-    createProjectLookup(
-      archiveWithProject,
-    );
-
-  const relationshipsByProject =
-    createProjectLookup(
-      relationships,
-    );
-
-  const charactersByEpisode =
-    createRelationLookup(
-      episodes,
-      (episode) =>
-        episode.characterIds ?? [],
-      charactersById,
-    );
-
-  const episodesByCharacter =
-    createReverseRelationLookup(
-      episodes,
-      (episode) =>
-        episode.characterIds ?? [],
-    );
-
-  const storiesByCharacter =
-    createReverseRelationLookup(
-      stories,
-      (story) =>
-        story.characterIds ?? [],
-    );
-
-  const mediaByCharacter =
-    createMediaLookup(
-      media,
-      (item) =>
-        item.characterId,
-    );
-
-  const mediaByEpisode =
-    createMediaLookup(
-      media,
-      (item) =>
-        item.episodeId,
-    );
-
-  const mediaByStory =
-    createMediaLookup(
-      media,
-      (item) =>
-        item.storyId,
-    );
-
-  return {
+  return Object.freeze({
     all,
 
     projects,
@@ -669,134 +492,56 @@ export function createUmbraContentRegistry(
       return archiveById.get(id);
     },
 
-    getCharactersForProject(
-      projectId,
-    ) {
-      return (
-        charactersByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getCharactersForProject(projectId) {
+      return charactersByProject.get(projectId) ?? [];
     },
 
-    getEpisodesForProject(
-      projectId,
-    ) {
-      return (
-        episodesByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getEpisodesForProject(projectId) {
+      return episodesByProject.get(projectId) ?? [];
     },
 
-    getStoriesForProject(
-      projectId,
-    ) {
-      return (
-        storiesByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getStoriesForProject(projectId) {
+      return storiesByProject.get(projectId) ?? [];
     },
 
-    getMediaForProject(
-      projectId,
-    ) {
-      return (
-        mediaByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getMediaForProject(projectId) {
+      return mediaByProject.get(projectId) ?? [];
     },
 
-    getTimelineForProject(
-      projectId,
-    ) {
-      return (
-        timelinesByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getTimelineForProject(projectId) {
+      return timelinesByProject.get(projectId) ?? [];
     },
 
-    getArchiveForProject(
-      projectId,
-    ) {
-      return (
-        archiveByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getArchiveForProject(projectId) {
+      return archiveByProject.get(projectId) ?? [];
     },
 
-    getRelationshipsForProject(
-      projectId,
-    ) {
-      return (
-        relationshipsByProject.get(
-          projectId,
-        ) ?? []
-      );
+    getRelationshipsForProject(projectId) {
+      return relationshipsByProject.get(projectId) ?? [];
     },
 
-    getCharactersForEpisode(
-      episodeId,
-    ) {
-      return (
-        charactersByEpisode.get(
-          episodeId,
-        ) ?? []
-      );
+    getCharactersForEpisode(episodeId) {
+      return charactersByEpisode.get(episodeId) ?? [];
     },
 
-    getEpisodesForCharacter(
-      characterId,
-    ) {
-      return (
-        episodesByCharacter.get(
-          characterId,
-        ) ?? []
-      );
+    getEpisodesForCharacter(characterId) {
+      return episodesByCharacter.get(characterId) ?? [];
     },
 
-    getStoriesForCharacter(
-      characterId,
-    ) {
-      return (
-        storiesByCharacter.get(
-          characterId,
-        ) ?? []
-      );
+    getStoriesForCharacter(characterId) {
+      return storiesByCharacter.get(characterId) ?? [];
     },
 
-    getMediaForCharacter(
-      characterId,
-    ) {
-      return (
-        mediaByCharacter.get(
-          characterId,
-        ) ?? []
-      );
+    getMediaForCharacter(characterId) {
+      return mediaByCharacter.get(characterId) ?? [];
     },
 
-    getMediaForEpisode(
-      episodeId,
-    ) {
-      return (
-        mediaByEpisode.get(
-          episodeId,
-        ) ?? []
-      );
+    getMediaForEpisode(episodeId) {
+      return mediaByEpisode.get(episodeId) ?? [];
     },
 
-    getMediaForStory(
-      storyId,
-    ) {
-      return (
-        mediaByStory.get(
-          storyId,
-        ) ?? []
-      );
+    getMediaForStory(storyId) {
+      return mediaByStory.get(storyId) ?? [];
     },
-  };
+  });
 }
