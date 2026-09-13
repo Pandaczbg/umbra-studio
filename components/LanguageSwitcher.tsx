@@ -7,10 +7,7 @@ import {
   useState,
 } from "react";
 
-import {
-  getLocalePrefix,
-  type Locale,
-} from "@/data/translations";
+type Locale = "sr" | "en";
 
 type LanguageOption = {
   locale: Locale;
@@ -33,6 +30,14 @@ const OPTIONS: Record<
     ariaLabel: "Switch to English",
   },
 };
+
+function getLocalePrefix(
+  locale: Locale,
+): string {
+  return locale === "en"
+    ? "/en"
+    : "/";
+}
 
 function detectLocale(
   pathname: string,
@@ -77,6 +82,16 @@ function mapLocalizedRoute(
       /^\/projects(?:\/(.+))?\/?$/,
     );
 
+  const dynamicCharacterMatch =
+    cleanPath.match(
+      /^\/likovi(?:\/(.+))?\/?$/,
+    );
+
+  const dynamicCharactersMatch =
+    cleanPath.match(
+      /^\/characters(?:\/(.+))?\/?$/,
+    );
+
   if (targetLocale === "en") {
     if (cleanPath === "/") {
       return getLocalePrefix("en");
@@ -97,6 +112,15 @@ function mapLocalizedRoute(
       return slug
         ? `/en/projects/${slug}`
         : "/en/projects";
+    }
+
+    if (dynamicCharacterMatch) {
+      const slug =
+        dynamicCharacterMatch[1];
+
+      return slug
+        ? `/en/characters/${slug}`
+        : "/en/characters";
     }
 
     return `/en${cleanPath}`;
@@ -124,6 +148,15 @@ function mapLocalizedRoute(
     return slug
       ? `/serije/${slug}`
       : "/serije";
+  }
+
+  if (dynamicCharactersMatch) {
+    const slug =
+      dynamicCharactersMatch[1];
+
+    return slug
+      ? `/likovi/${slug}`
+      : "/likovi";
   }
 
   return cleanPath;

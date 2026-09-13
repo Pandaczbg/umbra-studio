@@ -7,7 +7,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA SCROLLBAR — V5
+   UMBRA SCROLLBAR — V6
 
    Visual client of UmbraMotionSystem.
 
@@ -22,7 +22,7 @@ import {
    - keyboard navigation
    - hover / idle state
 
-   V5 visual direction:
+   V6 visual direction:
    - clearer right-edge presence
    - slightly wider / brighter thumb
    - restrained champagne-gold glass treatment

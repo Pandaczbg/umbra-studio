@@ -14,7 +14,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA IMAGE TRANSITION — V5
+   UMBRA IMAGE TRANSITION — V6
 
    Optional image carried across navigation.
 

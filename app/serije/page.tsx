@@ -1,4 +1,3 @@
-
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -8,13 +7,23 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { projects } from "@/data/projects";
+import {
+  getProjects,
+} from "@/lib/content/queries";
+
+import type {
+  ProjectContent,
+} from "@/lib/content/types";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const FALLBACK_IMAGE = "/umbra-background.png";
 
-type ProjectFilter = "all" | "original" | "adaptation" | "series";
+type ProjectFilter =
+  | "all"
+  | "original"
+  | "adaptation"
+  | "series";
 
 type ProjectsPageProps = {
   searchParams?: Promise<{
@@ -24,70 +33,69 @@ type ProjectsPageProps = {
 };
 
 function getStatusLabel(
-  status: (typeof projects)[number]["status"],
+  status: ProjectContent["status"],
 ) {
   switch (status) {
     case "in-production":
       return "U produkciji";
+
     case "development":
       return "U razvoju";
+
     case "upcoming":
       return "Uskoro";
+
     default:
       return status;
   }
 }
 
 function getTypeLabel(
-  type: (typeof projects)[number]["type"],
+  type: ProjectContent["type"],
 ) {
   switch (type) {
     case "Serija":
       return "Serija";
+
     case "Film":
       return "Film";
+
     default:
       return "Projekat";
   }
 }
 
 function getProjectImage(
-  project: (typeof projects)[number],
+  project: ProjectContent,
 ) {
   return (
-    project.book?.coverSr ||
-    project.book?.coverEn ||
-    project.cover ||
+    project.source?.coverSr ??
+    project.source?.coverEn ??
     FALLBACK_IMAGE
   );
 }
 
-function getProjectNumber(id: string) {
+function getProjectNumber(
+  id: string,
+) {
   const match = id.match(/(\d+)$/);
 
-  return match?.[1]?.padStart(2, "0") ?? "00";
+  return (
+    match?.[1]?.padStart(2, "0") ??
+    "00"
+  );
 }
 
-/**
- * Current data model does not need a second taxonomy field.
- *
- * - A project with a `book` is treated as an adaptation.
- * - A project without a `book` is treated as an original Umbra project.
- * - `type === "Serija"` is treated as a series filter.
- *
- * This keeps the archive connected directly to `data/projects.ts`
- * instead of duplicating category information inside the page.
- */
 function matchesFilter(
-  project: (typeof projects)[number],
+  project: ProjectContent,
   filter: ProjectFilter,
 ) {
   switch (filter) {
     case "original":
-      return !project.book;
+      return !project.source;
 
     case "adaptation":
-      return Boolean(project.book);
+      return Boolean(project.source);
 
     case "series":
       return project.type === "Serija";
@@ -117,7 +125,9 @@ function resolveFilter(
   return "all";
 }
 
-function getFilterHref(filter: ProjectFilter) {
+function getFilterHref(
+  filter: ProjectFilter,
+) {
   switch (filter) {
     case "original":
       return "/serije?vrsta=originalne";
@@ -134,7 +144,9 @@ function getFilterHref(filter: ProjectFilter) {
   }
 }
 
-function getFilterLabel(filter: ProjectFilter) {
+function getFilterLabel(
+  filter: ProjectFilter,
+) {
   switch (filter) {
     case "original":
       return "Originalne priče";
@@ -151,7 +163,10 @@ function getFilterLabel(filter: ProjectFilter) {
   }
 }
 
-function getFilterCount(filter: ProjectFilter) {
+function getFilterCount(
+  projects: readonly ProjectContent[],
+  filter: ProjectFilter,
+) {
   return projects.filter((project) =>
     matchesFilter(project, filter),
   ).length;
@@ -160,15 +175,24 @@ function getFilterCount(filter: ProjectFilter) {
 export default async function ProjectsPage({
   searchParams,
 }: ProjectsPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const activeFilter = resolveFilter(
-    resolvedSearchParams?.vrsta,
-    resolvedSearchParams?.format,
-  );
+  const projects = getProjects();
 
-  const visibleProjects = projects.filter((project) =>
-    matchesFilter(project, activeFilter),
-  );
+  const resolvedSearchParams =
+    await searchParams;
+
+  const activeFilter =
+    resolveFilter(
+      resolvedSearchParams?.vrsta,
+      resolvedSearchParams?.format,
+    );
+
+  const visibleProjects =
+    projects.filter((project) =>
+      matchesFilter(
+        project,
+        activeFilter,
+      ),
+    );
 
   const filters: ProjectFilter[] = [
     "all",
@@ -228,7 +252,7 @@ export default async function ProjectsPage({
             <div>
               <h1
                 id="projects-title"
-                className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.80] tracking-[-0.075em] text-white"
+                className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.8] tracking-[-0.075em] text-white"
               >
                 Svetovi
                 <br />
@@ -240,14 +264,17 @@ export default async function ProjectsPage({
 
             <div className="max-w-[430px] lg:pb-2">
               <p className="text-sm leading-7 text-white/[0.38] sm:text-[15px] sm:leading-8">
-                Projekti Umbra Studija okupljeni na jednom mestu — priče,
-                svetovi i produkcije u nastajanju.
+                Projekti Umbra Studija okupljeni na
+                jednom mestu — priče, svetovi i
+                produkcije u nastajanju.
               </p>
 
               <div className="mt-7 flex items-center gap-4 border-t border-white/[0.065] pt-4">
                 <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.17]">
                   {visibleProjects.length}{" "}
-                  {visibleProjects.length === 1 ? "projekat" : "projekta"}
+                  {visibleProjects.length === 1
+                    ? "projekat"
+                    : "projekta"}
                 </span>
 
                 <span
@@ -255,8 +282,10 @@ export default async function ProjectsPage({
                   className="h-px w-5 bg-white/[0.12]"
                 />
 
-                <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.20]">
-                  {getFilterLabel(activeFilter)}
+                <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.2]">
+                  {getFilterLabel(
+                    activeFilter,
+                  )}
                 </span>
               </div>
             </div>
@@ -276,20 +305,25 @@ export default async function ProjectsPage({
                   className="text-[#ead39a]/55"
                 />
 
-                <span className="font-mono text-[6px] uppercase tracking-[0.30em] text-white/[0.20]">
+                <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.2]">
                   Pregled arhive
                 </span>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 {filters.map((filter) => {
-                  const isActive = filter === activeFilter;
+                  const isActive =
+                    filter === activeFilter;
 
                   return (
                     <Link
                       key={filter}
                       href={getFilterHref(filter)}
-                      aria-current={isActive ? "page" : undefined}
+                      aria-current={
+                        isActive
+                          ? "page"
+                          : undefined
+                      }
                       data-cursor-interactive
                       className="group inline-flex items-center gap-3 border border-white/[0.075] px-4 py-2.5 outline-none transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#c7a96b]/34 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
                       style={
@@ -309,18 +343,23 @@ export default async function ProjectsPage({
                             : "rgba(255,255,255,.25)",
                         }}
                       >
-                        {getFilterLabel(filter)}
+                        {getFilterLabel(
+                          filter,
+                        )}
                       </span>
 
                       <span
-                        className="font-mono text-[6px] tracking-[0.20em]"
+                        className="font-mono text-[6px] tracking-[0.2em]"
                         style={{
                           color: isActive
                             ? `${GOLD_LIGHT}58`
                             : "rgba(255,255,255,.14)",
                         }}
                       >
-                        {getFilterCount(filter)
+                        {getFilterCount(
+                          projects,
+                          filter,
+                        )
                           .toString()
                           .padStart(2, "0")}
                       </span>
@@ -350,190 +389,221 @@ export default async function ProjectsPage({
         <div className="mx-auto max-w-[1480px]">
           {visibleProjects.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
-              {visibleProjects.map((project, index) => (
-                <Link
-                  key={project.id}
-                  href={`/serije/${project.slug}`}
-                  aria-label={`Otvori projekat ${project.title}`}
-                  data-cursor-interactive
-                  className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-                >
-                  {/* VISUAL */}
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image
-                      src={getProjectImage(project)}
-                      alt={project.title}
-                      fill
-                      priority={index === 0}
-                      sizes="(min-width: 1024px) 47vw, 94vw"
-                      className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
-                    />
+              {visibleProjects.map(
+                (project, index) => {
+                  const title =
+                    project.title.sr;
 
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 bg-black/[0.20]"
-                    />
+                  const shortDescription =
+                    project.shortDescription
+                      ?.sr ??
+                    project.description
+                      ?.sr ??
+                    "";
 
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.08) 42%, rgba(0,0,0,.76) 100%)",
-                      }}
-                    />
+                  return (
+                    <Link
+                      key={project.id}
+                      href={`/serije/${project.slug}`}
+                      aria-label={`Otvori projekat ${title}`}
+                      data-cursor-interactive
+                      className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                    >
+                      {/* VISUAL */}
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <Image
+                          src={getProjectImage(
+                            project,
+                          )}
+                          alt={title}
+                          fill
+                          priority={
+                            index === 0
+                          }
+                          sizes="(min-width: 1024px) 47vw, 94vw"
+                          className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
+                        />
 
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-4 border border-white/[0.05] sm:inset-5"
-                    />
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0 bg-black/[0.2]"
+                        />
 
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
-                      style={{
-                        borderColor: `${GOLD_LIGHT}38`,
-                      }}
-                    />
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.08) 42%, rgba(0,0,0,.76) 100%)",
+                          }}
+                        />
 
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
-                      style={{
-                        borderColor: `${GOLD}2b`,
-                      }}
-                    />
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-4 border border-white/[0.05] sm:inset-5"
+                        />
 
-                    <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
-                      <span
-                        className="text-[6px] font-semibold uppercase tracking-[0.28em]"
-                        style={{
-                          color: `${GOLD_LIGHT}72`,
-                        }}
-                      >
-                        Project
-                      </span>
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
+                          style={{
+                            borderColor: `${GOLD_LIGHT}38`,
+                          }}
+                        />
 
-                      <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
-                        {getProjectNumber(project.id)}
-                      </span>
-                    </div>
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
+                          style={{
+                            borderColor: `${GOLD}2b`,
+                          }}
+                        />
 
-                    <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
-                      <div className="flex items-end justify-between gap-6">
-                        <div className="min-w-0">
-                          <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
+                        <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
+                          <span
+                            className="text-[6px] font-semibold uppercase tracking-[0.28em]"
+                            style={{
+                              color: `${GOLD_LIGHT}72`,
+                            }}
+                          >
+                            Project
+                          </span>
+
+                          <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
+                            {getProjectNumber(
+                              project.id,
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+                          <div className="flex items-end justify-between gap-6">
+                            <div className="min-w-0">
+                              <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
+                                <span
+                                  style={{
+                                    color: `${GOLD_LIGHT}82`,
+                                  }}
+                                >
+                                  {getTypeLabel(
+                                    project.type,
+                                  )}
+                                </span>
+
+                                <span
+                                  aria-hidden="true"
+                                  className="h-px w-4 bg-white/[0.16]"
+                                />
+
+                                <span className="text-white/[0.34]">
+                                  {getStatusLabel(
+                                    project.status,
+                                  )}
+                                </span>
+                              </div>
+
+                              <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
+                                {title}
+                              </h2>
+                            </div>
+
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.4] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
+                              <ArrowUpRight
+                                aria-hidden="true"
+                                className="h-3.5 w-3.5"
+                              />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* INFORMATION */}
+                      <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
+                        <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                          <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
+                            {
+                              shortDescription
+                            }
+                          </p>
+
+                          <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
+                            <div>
+                              <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                                Status
+                              </div>
+
+                              <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                                {getStatusLabel(
+                                  project.status,
+                                )}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                                Platform
+                              </div>
+
+                              <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                                {project.platform ??
+                                  "Umbra Studio"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {project.source ? (
+                          <div className="mt-5 flex items-center gap-3">
                             <span
+                              className="text-[7px] font-semibold uppercase tracking-[0.21em]"
                               style={{
-                                color: `${GOLD_LIGHT}82`,
+                                color: `${GOLD_LIGHT}78`,
                               }}
                             >
-                              {getTypeLabel(project.type)}
+                              Ekranizacija
                             </span>
 
                             <span
                               aria-hidden="true"
-                              className="h-px w-4 bg-white/[0.16]"
+                              className="h-px w-6 bg-white/[0.1]"
                             />
 
-                            <span className="text-white/[0.34]">
-                              {getStatusLabel(project.status)}
+                            <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
+                              {project.source
+                                .author ??
+                                "Izvorno delo"}
                             </span>
                           </div>
-
-                          <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
-                            {project.title}
-                          </h2>
-                        </div>
-
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
-                          <ArrowUpRight
-                            aria-hidden="true"
-                            className="h-3.5 w-3.5"
-                          />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* INFORMATION */}
-                  <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
-                    <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                      <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
-                        {project.shortDescription}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
-                        <div>
-                          <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                            Status
+                        ) : (
+                          <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
+                            Umbra Original
                           </div>
+                        )}
 
-                          <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                            {getStatusLabel(project.status)}
-                          </div>
-                        </div>
+                        <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
+                          <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
+                            Umbra Studio
+                          </span>
 
-                        <div>
-                          <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                            Platform
-                          </div>
+                          <span
+                            className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
+                            style={{
+                              color: `${GOLD_LIGHT}82`,
+                            }}
+                          >
+                            Otvori projekat
 
-                          <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                            {project.platform}
-                          </div>
+                            <ArrowUpRight
+                              aria-hidden="true"
+                              className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                            />
+                          </span>
                         </div>
                       </div>
-                    </div>
-
-                    {project.book ? (
-                      <div className="mt-5 flex items-center gap-3">
-                        <span
-                          className="text-[7px] font-semibold uppercase tracking-[0.21em]"
-                          style={{
-                            color: `${GOLD_LIGHT}78`,
-                          }}
-                        >
-                          Ekranizacija
-                        </span>
-
-                        <span
-                          aria-hidden="true"
-                          className="h-px w-6 bg-white/[0.10]"
-                        />
-
-                        <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
-                          {project.book.author}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
-                        Umbra Original
-                      </div>
-                    )}
-
-                    <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
-                      <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
-                        Umbra Studio
-                      </span>
-
-                      <span
-                        className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
-                        style={{
-                          color: `${GOLD_LIGHT}82`,
-                        }}
-                      >
-                        Otvori projekat
-
-                        <ArrowUpRight
-                          aria-hidden="true"
-                          className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                        />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                    </Link>
+                  );
+                },
+              )}
             </div>
           ) : (
             <div className="border border-white/[0.065] bg-[#070707] px-6 py-16 sm:px-10 sm:py-20">
@@ -541,12 +611,16 @@ export default async function ProjectsPage({
                 <span
                   aria-hidden="true"
                   className="h-px w-8"
-                  style={{ background: `${GOLD}70` }}
+                  style={{
+                    background: `${GOLD}70`,
+                  }}
                 />
 
                 <span
                   className="text-[7px] font-semibold uppercase tracking-[0.28em]"
-                  style={{ color: `${GOLD_LIGHT}78` }}
+                  style={{
+                    color: `${GOLD_LIGHT}78`,
+                  }}
                 >
                   Arhiva
                 </span>
@@ -558,9 +632,10 @@ export default async function ProjectsPage({
                 u ovoj kategoriji
               </h2>
 
-              <p className="mt-5 max-w-xl text-sm leading-7 text-white/[0.30]">
-                Kategorija je spremna za buduće projekte. Vrati se na celu
-                arhivu da vidiš sve što trenutno stvaramo.
+              <p className="mt-5 max-w-xl text-sm leading-7 text-white/[0.3]">
+                Kategorija je spremna za buduće
+                projekte. Vrati se na celu arhivu
+                da vidiš sve što trenutno stvaramo.
               </p>
 
               <Link
@@ -569,6 +644,7 @@ export default async function ProjectsPage({
                 className="group mt-8 inline-flex items-center gap-3 border border-white/[0.08] px-5 py-3 text-[7px] font-semibold uppercase tracking-[0.24em] text-white/[0.45] outline-none transition-[border-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/40 hover:text-[#ead39a] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
               >
                 Svi projekti
+
                 <ArrowUpRight
                   aria-hidden="true"
                   size={13}
@@ -591,11 +667,11 @@ export default async function ProjectsPage({
               className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
               <div>
-                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.2]">
                   Umbra Studio
                 </div>
 
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.7]">
                   Početna
                 </div>
               </div>
@@ -612,11 +688,11 @@ export default async function ProjectsPage({
               className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
               <div>
-                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.2]">
                   Arhiva
                 </div>
 
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.7]">
                   Istraži likove
                 </div>
               </div>

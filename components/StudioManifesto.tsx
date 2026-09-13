@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import type { Locale } from "@/data/translations";
+type Locale = "sr" | "en";
 
 type StudioManifestoProps = {
   locale?: Locale;
@@ -22,13 +22,16 @@ const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const COPY: Record<Locale, {
-  eyebrow: string;
-  title: string;
-  body: string;
-  cta: string;
-  items: BridgeItem[];
-}> = {
+const COPY: Record<
+  Locale,
+  {
+    eyebrow: string;
+    title: string;
+    body: string;
+    cta: string;
+    items: BridgeItem[];
+  }
+> = {
   sr: {
     eyebrow: "UMBRA STUDIO / NAČIN RADA",
     title: "Od priče do kadra",
@@ -104,7 +107,9 @@ export default function StudioManifesto({
   const copy = COPY[locale];
   const projectsHref = locale === "en" ? "/en/projects" : "/serije";
 
-  const getDestinationHref = (destination: BridgeItem["destination"]) => {
+  const getDestinationHref = (
+    destination: BridgeItem["destination"],
+  ) => {
     const base = locale === "en" ? "/en/projects" : "/serije";
 
     switch (destination) {
@@ -117,7 +122,9 @@ export default function StudioManifesto({
     }
   };
 
-  const getDestinationLabel = (destination: BridgeItem["destination"]) => {
+  const getDestinationLabel = (
+    destination: BridgeItem["destination"],
+  ) => {
     if (locale === "en") {
       switch (destination) {
         case "original":
@@ -232,36 +239,36 @@ export default function StudioManifesto({
               <Link
                 href={getDestinationHref(item.destination)}
                 aria-label={getDestinationLabel(item.destination)}
-                className="group relative flex min-h-[250px] h-full flex-col bg-[#040404] p-7 outline-none transition-[background-color,transform] duration-500 hover:bg-[#070707] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 sm:p-8 lg:min-h-[290px] lg:p-10"
+                className="group relative flex h-full min-h-[250px] flex-col bg-[#040404] p-7 outline-none transition-[background-color,transform] duration-500 hover:bg-[#070707] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 sm:p-8 lg:min-h-[290px] lg:p-10"
               >
-              <div className="flex items-center justify-between">
-                <span
-                  className="font-mono text-[7px] tracking-[0.3em]"
-                  style={{ color: `${GOLD_LIGHT}72` }}
+                <div className="flex items-center justify-between">
+                  <span
+                    className="font-mono text-[7px] tracking-[0.3em]"
+                    style={{ color: `${GOLD_LIGHT}72` }}
+                  >
+                    {item.index}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="h-px w-8 transition-[width] duration-500 group-hover:w-14"
+                    style={{ background: `${GOLD}55` }}
+                  />
+                </div>
+
+                <p
+                  className="mt-10 font-mono text-[6px] uppercase tracking-[0.28em]"
+                  style={{ color: `${GOLD_LIGHT}4f` }}
                 >
-                  {item.index}
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="h-px w-8 transition-[width] duration-500 group-hover:w-14"
-                  style={{ background: `${GOLD}55` }}
-                />
-              </div>
+                  {item.label}
+                </p>
 
-              <p
-                className="mt-10 font-mono text-[6px] uppercase tracking-[0.28em]"
-                style={{ color: `${GOLD_LIGHT}4f` }}
-              >
-                {item.label}
-              </p>
+                <h3 className="mt-4 max-w-[280px] text-[clamp(1.35rem,2.3vw,2rem)] font-[430] leading-[0.95] tracking-[-0.045em] text-white/[0.9]">
+                  {item.title}
+                </h3>
 
-              <h3 className="mt-4 max-w-[280px] text-[clamp(1.35rem,2.3vw,2rem)] font-[430] leading-[0.95] tracking-[-0.045em] text-white/[0.9]">
-                {item.title}
-              </h3>
-
-              <p className="mt-5 max-w-[340px] text-[11px] leading-6 text-white/[0.28] sm:text-[12px]">
-                {item.description}
-              </p>
+                <p className="mt-5 max-w-[340px] text-[11px] leading-6 text-white/[0.28] sm:text-[12px]">
+                  {item.description}
+                </p>
 
                 <div className="absolute bottom-7 left-7 right-7 flex items-center justify-between sm:bottom-8 sm:left-8 sm:right-8 lg:bottom-10 lg:left-10 lg:right-10">
                   <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.10]">

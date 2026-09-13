@@ -14,8 +14,12 @@ import {
 } from "framer-motion";
 import { useRef } from "react";
 
-import { projects } from "@/data/projects";
-import type { Locale } from "@/data/translations";
+import type {
+  LocalizedText,
+  ProjectContent,
+} from "@/lib/content/types";
+
+type Locale = "sr" | "en";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
@@ -43,6 +47,7 @@ const STATUS_EN = {
 
 type CurrentProjectSceneProps = {
   locale?: Locale;
+  projects: readonly ProjectContent[];
 };
 
 const COPY = {
@@ -58,6 +63,8 @@ const COPY = {
     original: "UMBRA ORIGINAL",
     project: "PROJEKAT",
     home: "Umbra Studio",
+    worlds: "SVETA",
+    projectFallback: "Projekat",
   },
 
   en: {
@@ -72,32 +79,53 @@ const COPY = {
     original: "UMBRA ORIGINAL",
     project: "PROJECT",
     home: "Umbra Studio",
+    worlds: "WORLDS",
+    projectFallback: "Project",
   },
 } as const;
 
-function resolveProjectImage(
-  project: (typeof projects)[number],
+function getLocalizedText(
+  text: LocalizedText | undefined,
   locale: Locale,
-) {
+): string {
+  if (!text) {
+    return "";
+  }
+
+  return text[locale] || text.sr;
+}
+
+function resolveProjectImage(
+  project: ProjectContent,
+  locale: Locale,
+): string {
   if (locale === "en") {
     return (
-      project.book?.coverEn ||
-      project.book?.coverSr ||
-      project.cover ||
+      project.source?.coverEn ||
+      project.source?.coverSr ||
       FALLBACK_IMAGE
     );
   }
 
   return (
-    project.book?.coverSr ||
-    project.book?.coverEn ||
-    project.cover ||
+    project.source?.coverSr ||
+    project.source?.coverEn ||
     FALLBACK_IMAGE
   );
 }
 
+function getProjectHref(
+  slug: string,
+  locale: Locale,
+): string {
+  return locale === "en"
+    ? `/en/projects/${slug}`
+    : `/serije/${slug}`;
+}
+
 export default function CurrentProjectScene({
   locale = "sr",
+  projects,
 }: CurrentProjectSceneProps) {
   const reducedMotion =
     useReducedMotion() ?? false;
@@ -121,13 +149,6 @@ export default function CurrentProjectScene({
     ? "/en"
     : "/";
 
-  const hrefForProject = (
-    slug: string,
-  ) =>
-    isEnglish
-      ? `/en/projects/${slug}`
-      : `/serije/${slug}`;
-
   const statusLabels = isEnglish
     ? STATUS_EN
     : STATUS_SR;
@@ -144,10 +165,9 @@ export default function CurrentProjectScene({
       aria-labelledby="projects-title"
       className="relative overflow-hidden border-b border-white/[0.055] bg-[#030303] py-20 sm:py-24 lg:py-28"
     >
-      {/* ATMOSPHERE */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <div
           className="absolute inset-0"
@@ -169,7 +189,6 @@ export default function CurrentProjectScene({
       />
 
       <div className="relative mx-auto max-w-[1480px] px-6 sm:px-9 lg:px-12 xl:px-16">
-        {/* HEADER */}
         <motion.header
           initial={{
             opacity: 0,
@@ -209,13 +228,8 @@ export default function CurrentProjectScene({
               />
 
               <span className="font-mono text-[7px] uppercase tracking-[0.22em] text-white/[0.17]">
-                {String(projects.length).padStart(
-                  2,
-                  "0",
-                )}{" "}
-                {isEnglish
-                  ? "WORLDS"
-                  : "SVETA"}
+                {String(projects.length).padStart(2, "0")}{" "}
+                {copy.worlds}
               </span>
             </div>
 
@@ -234,6 +248,7 @@ export default function CurrentProjectScene({
 
             <Link
               href={archiveHref}
+              aria-label={copy.archive}
               className="group inline-flex w-fit items-center gap-3 rounded-sm text-[8px] font-semibold uppercase tracking-[0.28em] outline-none transition-[color,transform] duration-300 hover:-translate-y-0.5 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
               style={{
                 color: `${GOLD_LIGHT}a8`,
@@ -249,14 +264,34 @@ export default function CurrentProjectScene({
           </div>
         </motion.header>
 
-        {/* EQUAL PROJECT GRID */}
         <div className="grid gap-5 md:grid-cols-2 xl:gap-6">
           {projects.map((project, index) => {
-            const projectImage =
-              resolveProjectImage(
-                project,
+            const projectImage = resolveProjectImage(
+              project,
+              locale,
+            );
+
+            const projectTitle = getLocalizedText(
+              project.title,
+              locale,
+            );
+
+            const projectDescription =
+              getLocalizedText(
+                project.shortDescription,
                 locale,
               );
+
+            const projectHref = getProjectHref(
+              project.slug,
+              locale,
+            );
+
+            const sourceAuthor =
+              project.source?.author?.trim() || null;
+
+            const platform =
+              project.platform?.trim() || null;
 
             return (
               <motion.article
@@ -283,19 +318,16 @@ export default function CurrentProjectScene({
                 className="group flex min-w-0 flex-col overflow-hidden border border-white/[0.075] bg-[#070707]"
               >
                 <Link
-                  href={hrefForProject(
-                    project.slug,
-                  )}
+                  href={projectHref}
                   aria-label={
-                    isEnglish
-                      ? `Open ${project.title}`
-                      : `Otvori ${project.title}`
+                    projectTitle ||
+                    copy.projectFallback
                   }
                   className="group/visual relative block aspect-[16/10] overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/75 sm:aspect-[16/9]"
                 >
                   <Image
                     src={projectImage}
-                    alt={project.title}
+                    alt=""
                     fill
                     sizes="(min-width: 1280px) 48vw, (min-width: 768px) 48vw, 94vw"
                     className="object-cover transition-transform duration-[1100ms] ease-out group-hover/visual:scale-[1.035]"
@@ -355,18 +387,11 @@ export default function CurrentProjectScene({
                       }}
                     >
                       {copy.project}{" "}
-                      {String(index + 1).padStart(
-                        2,
-                        "0",
-                      )}
+                      {String(index + 1).padStart(2, "0")}
                     </span>
 
                     <span className="text-[7px] uppercase tracking-[0.24em] text-white/[0.30]">
-                      {
-                        statusLabels[
-                          project.status
-                        ]
-                      }
+                      {statusLabels[project.status]}
                     </span>
                   </div>
 
@@ -386,14 +411,16 @@ export default function CurrentProjectScene({
                         className="h-px w-6 bg-white/[0.10]"
                       />
 
-                      <span className="text-[7px] uppercase tracking-[0.22em] text-white/[0.28]">
-                        {project.platform}
-                      </span>
+                      {platform ? (
+                        <span className="text-[7px] uppercase tracking-[0.22em] text-white/[0.28]">
+                          {platform}
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="flex items-end justify-between gap-6">
                       <h3 className="max-w-[78%] text-[clamp(2.5rem,5vw,5.3rem)] font-[430] uppercase leading-[0.84] tracking-[-0.07em] text-white">
-                        {project.title}
+                        {projectTitle}
                       </h3>
 
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/[0.13] bg-black/20 text-white/[0.46] backdrop-blur-sm transition-[border-color,color,transform,background-color] duration-300 group-hover/visual:-translate-y-0.5 group-hover/visual:border-[#ead39a]/45 group-hover/visual:bg-black/30 group-hover/visual:text-[#ead39a] sm:h-13 sm:w-13">
@@ -407,10 +434,9 @@ export default function CurrentProjectScene({
                   </div>
                 </Link>
 
-                {/* SAME INFORMATION STRUCTURE FOR EVERY PROJECT */}
                 <div className="flex flex-1 flex-col px-6 py-6 sm:px-8 sm:py-8">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    {project.book ? (
+                    {sourceAuthor ? (
                       <>
                         <span
                           aria-hidden="true"
@@ -421,15 +447,14 @@ export default function CurrentProjectScene({
                           href={AUTHOR_URL}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`${copy.authorAria}: ${project.book.author}`}
+                          aria-label={`${copy.authorAria}: ${sourceAuthor}`}
                           className="group/author inline-flex max-w-full items-center gap-2 rounded-sm outline-none transition-[color,transform] duration-300 hover:translate-x-0.5 focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
                           style={{
                             color: `${GOLD_LIGHT}a8`,
                           }}
                         >
                           <span className="truncate text-[7px] font-semibold uppercase tracking-[0.18em]">
-                            {copy.novel}{" "}
-                            {project.book.author}
+                            {copy.novel} {sourceAuthor}
                           </span>
 
                           <ArrowUpRight
@@ -462,19 +487,13 @@ export default function CurrentProjectScene({
 
                   <div className="mt-5 flex flex-1 flex-col gap-5">
                     <p className="max-w-2xl text-[11px] leading-6 text-white/[0.34] sm:text-[12px] sm:leading-7">
-                      {
-                        project.shortDescription
-                      }
+                      {projectDescription}
                     </p>
 
                     <div className="mt-auto flex items-end justify-between gap-5 pt-2">
                       <div className="flex flex-col gap-2">
                         <span className="text-[7px] uppercase tracking-[0.20em] text-white/[0.20]">
-                          {
-                            statusLabels[
-                              project.status
-                            ]
-                          }
+                          {statusLabels[project.status]}
                         </span>
 
                         <span
@@ -486,9 +505,11 @@ export default function CurrentProjectScene({
                       </div>
 
                       <Link
-                        href={hrefForProject(
-                          project.slug,
-                        )}
+                        href={projectHref}
+                        aria-label={
+                          projectTitle ||
+                          copy.enter
+                        }
                         className="group/cta inline-flex h-11 shrink-0 items-center gap-3 rounded-sm border px-5 text-[8px] font-semibold uppercase tracking-[0.24em] outline-none backdrop-blur-md transition-[border-color,color,transform,background-color] duration-300 hover:-translate-y-0.5 focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
                         style={{
                           borderColor: `${GOLD}42`,
@@ -511,7 +532,6 @@ export default function CurrentProjectScene({
           })}
         </div>
 
-        {/* FOOTER */}
         <motion.footer
           initial={{
             opacity: 0,

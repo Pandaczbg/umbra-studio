@@ -14,7 +14,7 @@ import UmbraImageTransition from "@/components/UmbraImageTransition";
 /* ==========================================================================
    UMBRA STUDIO
    ROOT LAYOUT
-   V5 FINAL SYSTEM
+   V6 FINAL SYSTEM
 
    Responsibilities
    --------------------------------------------------------------------------

@@ -139,6 +139,7 @@ export type ProjectContent =
     readonly status: ProjectStatus;
     readonly featured: boolean;
     readonly platform?: string;
+    readonly cover?: string;
     readonly source?: ProjectSource;
   };
 

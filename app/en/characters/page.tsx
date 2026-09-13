@@ -1,7 +1,12 @@
-
 import type { Metadata } from "next";
 
 import CharactersArchive from "@/components/CharactersArchive";
+
+import {
+  getCharacterMedia,
+  getCharacters,
+  getProjects,
+} from "@/lib/content/queries";
 
 export const metadata: Metadata = {
   title: "Characters — Umbra Studio",
@@ -19,5 +24,33 @@ export const metadata: Metadata = {
 };
 
 export default function EnglishCharactersPage() {
-  return <CharactersArchive locale="en" />;
+  const characters =
+    getCharacters();
+
+  const projects =
+    getProjects();
+
+  const characterImages =
+    Object.fromEntries(
+      characters.map((character) => {
+        const media =
+          getCharacterMedia(
+            character.id,
+          );
+
+        return [
+          character.id,
+          media[0]?.src ?? null,
+        ];
+      }),
+    );
+
+  return (
+    <CharactersArchive
+      locale="en"
+      characters={characters}
+      projects={projects}
+      characterImages={characterImages}
+    />
+  );
 }

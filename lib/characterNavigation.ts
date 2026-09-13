@@ -1,9 +1,20 @@
 import {
-  characters,
-  type Character,
-} from "@/data/characters";
+  getCharacterBySlug as getCanonicalCharacterBySlug,
+  getProjectById,
+  getProjectBySlug,
+  getProjectCharacters,
+} from "@/lib/content/queries";
 
-export type CharacterLocale = "sr" | "en";
+import type {
+  CharacterContent,
+} from "@/lib/content/types";
+
+export type CharacterLocale =
+  | "sr"
+  | "en";
+
+export type Character =
+  CharacterContent;
 
 export type CharacterNavigation = {
   current: Character;
@@ -14,23 +25,29 @@ export type CharacterNavigation = {
   projectCharacters: Character[];
 };
 
-function getProjectCharacters(
+function getProjectCharactersBySlug(
   projectSlug: string,
 ): Character[] {
-  return characters
-    .filter(
-      (character) =>
-        character.projectSlug === projectSlug,
-    )
-    .sort(
-      (a, b) => a.order - b.order,
+  const project =
+    getProjectBySlug(
+      projectSlug,
     );
+
+  if (!project) {
+    return [];
+  }
+
+  return [
+    ...getProjectCharacters(
+      project.id,
+    ),
+  ];
 }
 
 export function getCharactersForProject(
   projectSlug: string,
 ): Character[] {
-  return getProjectCharacters(
+  return getProjectCharactersBySlug(
     projectSlug,
   );
 }
@@ -38,18 +55,27 @@ export function getCharactersForProject(
 export function getCharacterBySlug(
   slug: string,
 ): Character | undefined {
-  return characters.find(
-    (character) => character.slug === slug,
+  return getCanonicalCharacterBySlug(
+    slug,
   );
 }
 
 export function getCharacterNavigation(
   character: Character,
 ): CharacterNavigation {
-  const projectCharacters =
-    getProjectCharacters(
-      character.projectSlug,
+  const project =
+    getProjectById(
+      character.projectId,
     );
+
+  const projectCharacters =
+    project
+      ? [
+          ...getProjectCharacters(
+            project.id,
+          ),
+        ]
+      : [];
 
   const currentIndex =
     projectCharacters.findIndex(

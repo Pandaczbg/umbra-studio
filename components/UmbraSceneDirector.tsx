@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import {
   useEffect,
@@ -8,7 +8,7 @@ import {
 /* ==========================================================================
    UMBRA STUDIO
    SCENE DIRECTOR
-   V5 FINAL SYSTEM — TYPECHECK / METRIC FIX
+   V6 FINAL SYSTEM — TYPECHECK / METRIC FIX
 
    SINGLE SCENE AUTHORITY
 
@@ -32,7 +32,7 @@ import {
    - support homepage scenes and deep-route scenes
    - recover cleanly from dynamic DOM changes
 
-   Important V5 correction
+   Important V6 correction
    --------------------------------------------------------------------------
    Scene index / total are based on the scenes currently present in the DOM.
 

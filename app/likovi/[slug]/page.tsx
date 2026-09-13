@@ -9,24 +9,19 @@ import {
 } from "lucide-react";
 
 import {
-  characters,
-} from "@/data/characters";
+  getCharacterBySlug,
+  getCharacterMedia,
+  getCharacterProject,
+  getProjectCharacters,
+  getProjects,
+} from "@/lib/content/queries";
 
-import {
-  getCharacterNavigation,
-  getCharactersForProject,
-} from "@/lib/characterNavigation";
-
-function getCharacterBySlug(
-  slug: string,
-) {
-  return characters.find(
-    (character) => character.slug === slug,
-  );
-}
+import type {
+  CharacterContent,
+} from "@/lib/content/types";
 
 function getCategoryLabel(
-  category: typeof characters[number]["category"],
+  category: CharacterContent["category"],
 ) {
   return category === "MAIN"
     ? "Glavni lik"
@@ -34,20 +29,40 @@ function getCategoryLabel(
 }
 
 function getGenderLabel(
-  gender: typeof characters[number]["gender"],
+  gender: CharacterContent["gender"],
 ) {
   switch (gender) {
     case "MALE":
       return "Muški";
+
     case "FEMALE":
       return "Ženski";
+
     default:
       return "—";
   }
 }
 
+function getCharacterImage(
+  character: CharacterContent,
+) {
+  const media =
+    getCharacterMedia(character.id);
+
+  return media[0]?.src ?? null;
+}
+
+function getProjectHref(
+  slug: string,
+) {
+  return `/serije/${slug}`;
+}
+
 export function generateStaticParams() {
-  return characters
+  return getProjects()
+    .flatMap((project) =>
+      getProjectCharacters(project.id),
+    )
     .filter(
       (character) =>
         character.profileAvailable,
@@ -63,19 +78,58 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+
   const character =
     getCharacterBySlug(slug);
 
-  if (!character) {
+  if (
+    !character ||
+    !character.profileAvailable
+  ) {
     return {
-      title: "Lik nije pronađen | Umbra Studio",
+      title:
+        "Lik nije pronađen | Umbra Studio",
     };
   }
 
+  const project =
+    getCharacterProject(character.id);
+
+  const title =
+    `${character.title.sr} | Umbra Studio`;
+
+  const description =
+    character.shortDescription?.sr ??
+    character.description?.sr ??
+    `Dosje lika ${character.title.sr} u okviru projekta ${
+      project?.title.sr ?? "Umbra Studio"
+    }.`;
+
+  const portrait =
+    getCharacterImage(character);
+
   return {
-    title: `${character.name} | Umbra Studio`,
-    description:
-      character.shortDescription,
+    title,
+    description,
+    alternates: {
+      canonical:
+        `/likovi/${character.slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      ...(portrait
+        ? {
+            images: [
+              {
+                url: portrait,
+                alt: `${character.title.sr} — Dosje lika`,
+              },
+            ],
+          }
+        : {}),
+    },
   };
 }
 
@@ -96,35 +150,70 @@ export default async function CharacterPage({
     notFound();
   }
 
-  const navigation =
-    getCharacterNavigation(
-      character,
-    );
+  const project =
+    getCharacterProject(character.id);
+
+  if (!project) {
+    notFound();
+  }
 
   const projectCharacters =
-    getCharactersForProject(
-      character.projectSlug,
+    getProjectCharacters(project.id);
+
+  const currentIndex =
+    projectCharacters.findIndex(
+      (item) => item.id === character.id,
     );
 
   const previous =
-    navigation.previous;
+    currentIndex > 0
+      ? projectCharacters[
+          currentIndex - 1
+        ]
+      : undefined;
 
   const next =
-    navigation.next;
+    currentIndex >= 0 &&
+    currentIndex <
+      projectCharacters.length - 1
+      ? projectCharacters[
+          currentIndex + 1
+        ]
+      : undefined;
+
+  const characterImage =
+    getCharacterImage(character);
+
+  const characterTitle =
+    character.title.sr;
+
+  const characterDescription =
+    character.shortDescription?.sr ??
+    character.description?.sr ??
+    "";
+
+  const projectTitle =
+    project.title.sr;
+
+  const navigationPosition =
+    currentIndex >= 0
+      ? currentIndex + 1
+      : 0;
+
+  const navigationTotal =
+    projectCharacters.length;
 
   return (
     <main
       data-umbra-scene="character-dossier"
       className="min-h-screen overflow-hidden bg-[var(--umbra-bg)] text-[#f1ede4]"
     >
-      {/* ================================================================ */}
-      {/* HERO                                                             */}
-      {/* ================================================================ */}
+      {/* HERO */}
 
       <section className="relative min-h-[100svh] overflow-hidden">
-        {character.image ? (
+        {characterImage ? (
           <Image
-            src={character.image}
+            src={characterImage}
             alt=""
             fill
             priority
@@ -142,24 +231,48 @@ export default async function CharacterPage({
           />
         )}
 
-        <div className="absolute inset-0 bg-[var(--umbra-bg)]/62" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[var(--umbra-bg)]/62"
+        />
 
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,5,.98)_0%,rgba(5,5,5,.9)_30%,rgba(5,5,5,.56)_66%,rgba(5,5,5,.86)_100%)]" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,5,.98)_0%,rgba(5,5,5,.9)_30%,rgba(5,5,5,.56)_66%,rgba(5,5,5,.86)_100%)]"
+        />
 
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(5,5,5,.99)_0%,rgba(5,5,5,.18)_46%,rgba(5,5,5,.56)_100%)]" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(0deg,rgba(5,5,5,.99)_0%,rgba(5,5,5,.18)_46%,rgba(5,5,5,.56)_100%)]"
+        />
 
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_38%,rgba(185,154,97,.11),transparent_34%)]" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_38%,rgba(185,154,97,.11),transparent_34%)]"
+        />
 
-        <div className="pointer-events-none absolute inset-5 border border-white/[0.07] sm:inset-7 lg:inset-10" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-5 border border-white/[0.07] sm:inset-7 lg:inset-10"
+        />
 
-        <div className="pointer-events-none absolute left-5 top-5 h-14 w-14 border-l border-t border-[#b99a61]/45 sm:left-7 sm:top-7 lg:left-10 lg:top-10" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-5 top-5 h-14 w-14 border-l border-t border-[#b99a61]/45 sm:left-7 sm:top-7 lg:left-10 lg:top-10"
+        />
 
-        <div className="pointer-events-none absolute bottom-5 right-5 h-14 w-14 border-b border-r border-[#b99a61]/30 sm:bottom-7 sm:right-7 lg:bottom-10 lg:right-10" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-5 right-5 h-14 w-14 border-b border-r border-[#b99a61]/30 sm:bottom-7 sm:right-7 lg:bottom-10 lg:right-10"
+        />
 
         <div className="relative mx-auto flex min-h-[100svh] max-w-[1440px] flex-col justify-between px-5 pb-12 pt-36 sm:px-8 sm:pb-16 lg:px-12 lg:pt-44">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="h-px w-9 bg-[#b99a61]/70" />
+              <span
+                aria-hidden="true"
+                className="h-px w-9 bg-[#b99a61]/70"
+              />
 
               <span className="text-[8px] uppercase tracking-[0.36em] text-white/45">
                 Umbra Studio / Lik
@@ -167,9 +280,9 @@ export default async function CharacterPage({
             </div>
 
             <span className="font-mono text-[7px] tracking-[0.24em] text-white/[0.22]">
-              CHARACTER /{" "}
+              LIK /{" "}
               {String(
-                character.order,
+                character.order ?? 0,
               ).padStart(2, "0")}
             </span>
           </div>
@@ -183,31 +296,30 @@ export default async function CharacterPage({
                   )}
                 </span>
 
-                <span className="h-px w-6 bg-white/[0.12]" />
+                <span
+                  aria-hidden="true"
+                  className="h-px w-6 bg-white/[0.12]"
+                />
 
                 <span>
-                  {character.projectTitle}
+                  {projectTitle}
                 </span>
               </div>
 
               <h1 className="max-w-[1000px] text-[clamp(4rem,10vw,9.5rem)] font-[440] leading-[0.8] tracking-[-0.075em]">
-                {character.name}
+                {characterTitle}
               </h1>
 
               <p className="mt-8 max-w-[720px] text-sm leading-7 text-white/44 sm:text-base sm:leading-8">
-                {
-                  character.shortDescription
-                }
+                {characterDescription}
               </p>
 
               <div className="mt-10 grid max-w-[720px] border-y border-white/[0.08] sm:grid-cols-3">
                 <CharacterStat
                   label="STATUS"
-                  value={
-                    getCategoryLabel(
-                      character.category,
-                    )
-                  }
+                  value={getCategoryLabel(
+                    character.category,
+                  )}
                 />
 
                 <CharacterStat
@@ -220,7 +332,8 @@ export default async function CharacterPage({
                 <CharacterStat
                   label="VISINA"
                   value={
-                    character.heightCm
+                    character.heightCm !==
+                    null
                       ? `${character.heightCm} cm`
                       : "—"
                   }
@@ -232,7 +345,7 @@ export default async function CharacterPage({
             <div className="hidden lg:block">
               <div className="border border-white/[0.08] bg-[#080808]/45 p-6 backdrop-blur-[2px]">
                 <div className="text-[7px] uppercase tracking-[0.3em] text-[#d6b776]">
-                  Dosije lika
+                  Dosje lika
                 </div>
 
                 <div className="mt-6 border-t border-white/[0.07] pt-5">
@@ -240,15 +353,29 @@ export default async function CharacterPage({
                     Projekat
                   </div>
 
-                  <div className="mt-2 text-sm tracking-[-0.02em] text-white/65">
-                    {character.projectTitle}
-                  </div>
+                  <Link
+                    href={getProjectHref(
+                      project.slug,
+                    )}
+                    className="group mt-2 inline-flex items-center gap-2 text-sm tracking-[-0.02em] text-white/65 transition-colors hover:text-white"
+                  >
+                    {projectTitle}
+
+                    <ArrowUpRight
+                      aria-hidden="true"
+                      size={12}
+                      strokeWidth={1.1}
+                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    />
+                  </Link>
                 </div>
 
-                {character.heightCm ? (
+                {character.heightCm !==
+                null ? (
                   <div className="mt-6 border-t border-white/[0.07] pt-5">
                     <div className="flex items-center gap-2 text-[7px] uppercase tracking-[0.25em] text-white/20">
                       <Ruler
+                        aria-hidden="true"
                         size={11}
                         strokeWidth={1}
                       />
@@ -263,16 +390,16 @@ export default async function CharacterPage({
 
                 <div className="mt-6 border-t border-white/[0.07] pt-5">
                   <div className="text-[7px] uppercase tracking-[0.25em] text-white/20">
-                    Dosije
+                    Dosje
                   </div>
 
                   <div className="mt-2 font-mono text-[8px] uppercase tracking-[0.18em] text-white/32">
                     {String(
-                      navigation.position,
+                      navigationPosition,
                     ).padStart(2, "0")}{" "}
                     /{" "}
                     {String(
-                      navigation.total,
+                      navigationTotal,
                     ).padStart(2, "0")}
                   </div>
                 </div>
@@ -283,42 +410,49 @@ export default async function CharacterPage({
           <div className="flex items-end justify-between">
             <div className="hidden sm:block">
               <div className="font-mono text-[6px] uppercase tracking-[0.24em] text-white/[0.18]">
-                CHARACTER / STORY / MEMORY
+                LIK / PRIČA / SEĆANJE
               </div>
 
-              <div className="mt-3 h-px w-24 bg-gradient-to-r from-[#b99a61]/50 to-transparent" />
+              <div
+                aria-hidden="true"
+                className="mt-3 h-px w-24 bg-gradient-to-r from-[#b99a61]/50 to-transparent"
+              />
             </div>
 
             <div className="ml-auto flex items-center gap-3 text-[7px] uppercase tracking-[0.28em] text-white/28">
-              <span className="h-5 w-px bg-white/[0.12]" />
-              Scroll to enter
+              <span
+                aria-hidden="true"
+                className="h-5 w-px bg-white/[0.12]"
+              />
+              Skroluj za nastavak
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================================================================ */}
-      {/* CHARACTER DOSSIER                                                */}
-      {/* ================================================================ */}
+      {/* DOSJE LIKA */}
 
       <section className="px-5 py-28 sm:px-8 sm:py-36 lg:px-12">
         <div className="mx-auto max-w-[1440px]">
           <div className="grid gap-16 lg:grid-cols-[200px_1fr]">
             <div className="lg:border-r lg:border-white/[0.07] lg:pr-10">
               <div className="flex items-center gap-3">
-                <span className="h-px w-8 bg-[#b99a61]/60" />
+                <span
+                  aria-hidden="true"
+                  className="h-px w-8 bg-[#b99a61]/60"
+                />
 
                 <span className="text-[7px] uppercase tracking-[0.3em] text-white/25">
-                  01 / Dosije
+                  01 / Dosje
                 </span>
               </div>
 
               <div className="mt-8 hidden font-mono text-[8px] uppercase leading-7 tracking-[0.22em] text-white/[0.16] lg:block">
                 UMBRA
                 <br />
-                CHARACTER
+                LIK
                 <br />
-                DOSSIER
+                DOSJE
               </div>
             </div>
 
@@ -328,17 +462,15 @@ export default async function CharacterPage({
               </div>
 
               <h2 className="mt-5 text-[clamp(2.7rem,5vw,5.8rem)] font-[430] leading-[0.9] tracking-[-0.06em]">
-                {character.name}
+                {characterTitle}
                 <br />
                 <span className="font-serif italic text-white/52">
-                  deo priče.
+                  deo priče
                 </span>
               </h2>
 
               <p className="mt-9 max-w-[780px] text-[15px] leading-8 text-white/42">
-                {
-                  character.shortDescription
-                }
+                {characterDescription}
               </p>
 
               <div className="mt-12 grid gap-0 border-y border-white/[0.07] sm:grid-cols-3">
@@ -359,7 +491,8 @@ export default async function CharacterPage({
                 <CharacterStat
                   label="VISINA"
                   value={
-                    character.heightCm
+                    character.heightCm !==
+                    null
                       ? `${character.heightCm} cm`
                       : "—"
                   }
@@ -371,19 +504,20 @@ export default async function CharacterPage({
         </div>
       </section>
 
-      {/* ================================================================ */}
-      {/* PROJECT CAST                                                     */}
-      {/* ================================================================ */}
+      {/* GLUMAČKA POSTAVA PROJEKTA */}
 
       <section className="border-y border-white/[0.07] bg-[#080808] px-5 py-24 sm:px-8 sm:py-32 lg:px-12">
         <div className="mx-auto max-w-[1440px]">
           <div className="flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
             <div>
               <div className="flex items-center gap-3">
-                <span className="h-px w-8 bg-[#b99a61]/70" />
+                <span
+                  aria-hidden="true"
+                  className="h-px w-8 bg-[#b99a61]/70"
+                />
 
                 <span className="text-[7px] uppercase tracking-[0.32em] text-[#d6b776]">
-                  Cast / Arhiva
+                  Postava / Arhiva
                 </span>
               </div>
 
@@ -398,7 +532,9 @@ export default async function CharacterPage({
               className="group inline-flex items-center gap-3 text-[7px] uppercase tracking-[0.28em] text-white/32 transition-colors hover:text-[#d6b776]"
             >
               Otvori arhivu
+
               <ArrowUpRight
+                aria-hidden="true"
                 size={14}
                 strokeWidth={1.15}
                 className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
@@ -429,7 +565,7 @@ export default async function CharacterPage({
                     <div className="flex items-start justify-between gap-4">
                       <span className="font-mono text-[7px] tracking-[0.2em] text-white/18">
                         {String(
-                          item.order,
+                          item.order ?? 0,
                         ).padStart(2, "0")}
                       </span>
 
@@ -437,6 +573,7 @@ export default async function CharacterPage({
                         <span className="h-1.5 w-1.5 rounded-full bg-[#d6b776]" />
                       ) : (
                         <ArrowUpRight
+                          aria-hidden="true"
                           size={14}
                           strokeWidth={1.1}
                           className="text-white/16 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#d6b776]"
@@ -446,7 +583,7 @@ export default async function CharacterPage({
 
                     <div className="mt-8">
                       <div className="text-base tracking-[-0.025em] text-white/68">
-                        {item.name}
+                        {item.title.sr}
                       </div>
 
                       <div className="mt-2 text-[6px] uppercase tracking-[0.25em] text-white/20">
@@ -463,9 +600,7 @@ export default async function CharacterPage({
         </div>
       </section>
 
-      {/* ================================================================ */}
-      {/* PREV / NEXT                                                       */}
-      {/* ================================================================ */}
+      {/* PRETHODNI / SLEDEĆI */}
 
       <section className="px-5 pb-28 pt-24 sm:px-8 sm:pb-36 lg:px-12">
         <div className="mx-auto max-w-[1440px] border-t border-white/[0.08] pt-8">
@@ -482,11 +617,12 @@ export default async function CharacterPage({
                   </div>
 
                   <div className="mt-3 text-xl tracking-[-0.04em] text-white/72">
-                    {previous.name}
+                    {previous.title.sr}
                   </div>
                 </div>
 
                 <ArrowLeft
+                  aria-hidden="true"
                   size={17}
                   strokeWidth={1.15}
                   className="text-white/28 transition-transform duration-500 group-hover:-translate-x-1 group-hover:text-[#d6b776]"
@@ -508,11 +644,12 @@ export default async function CharacterPage({
                   </div>
 
                   <div className="mt-3 text-xl tracking-[-0.04em] text-white/72">
-                    {next.name}
+                    {next.title.sr}
                   </div>
                 </div>
 
                 <ArrowUpRight
+                  aria-hidden="true"
                   size={17}
                   strokeWidth={1.15}
                   className="text-white/28 transition-all duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#d6b776]"

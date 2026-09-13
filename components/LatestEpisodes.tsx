@@ -7,8 +7,7 @@ import {
   useReducedMotion,
 } from "framer-motion";
 
-import { studioProfile } from "@/data/studio";
-import type { Locale } from "@/data/translations";
+type Locale = "sr" | "en";
 
 type StudioManifestoProps = {
   locale?: Locale;
@@ -24,6 +23,8 @@ const EASE = [
   0.36,
   1,
 ] as const;
+
+const STUDIO_SLOGAN = "Priče koje ostavljaju senku";
 
 const COPY = {
   sr: {
@@ -105,7 +106,7 @@ export default function StudioManifesto({
 
   const slogan =
     splitSlogan(
-      studioProfile.slogan,
+      STUDIO_SLOGAN,
     );
 
   return (
@@ -113,10 +114,6 @@ export default function StudioManifesto({
       data-umbra-prefooter
       className="relative overflow-hidden border-b border-white/[0.06] bg-[#040404]"
     >
-      {/* ====================================================================
-         ATMOSPHERE
-         ==================================================================== */}
-
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -152,34 +149,18 @@ export default function StudioManifesto({
         <div className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.006] blur-3xl" />
       </div>
 
-      {/* ====================================================================
-         EDITORIAL GUIDES
-         ==================================================================== */}
-
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
       >
         <div className="absolute left-[6%] top-0 h-full w-px bg-white/[0.011]" />
-
         <div className="absolute right-[6%] top-0 h-full w-px bg-white/[0.011]" />
-
         <div className="absolute left-1/2 top-0 hidden h-full w-px bg-white/[0.005] lg:block" />
-
         <div className="absolute inset-x-[6%] top-0 h-px bg-white/[0.025]" />
-
         <div className="absolute inset-x-[6%] bottom-0 h-px bg-white/[0.018]" />
       </div>
 
-      {/* ====================================================================
-         CONTENT
-         ==================================================================== */}
-
       <div className="relative mx-auto max-w-[1440px] px-6 py-24 sm:px-9 sm:py-28 lg:px-12 lg:py-36 xl:px-16">
-        {/* ==================================================================
-           TOP HEADER
-           ================================================================== */}
-
         <motion.div
           initial={
             reducedMotion
@@ -236,10 +217,6 @@ export default function StudioManifesto({
           </span>
         </motion.div>
 
-        {/* ==================================================================
-           STATEMENT
-           ================================================================== */}
-
         <div className="mt-16 lg:mt-20">
           <motion.div
             initial={
@@ -272,6 +249,7 @@ export default function StudioManifesto({
           >
             <div className="flex items-center gap-3">
               <span
+                aria-hidden="true"
                 className="h-[5px] w-[5px] rounded-full"
                 style={{
                   background:
@@ -288,7 +266,7 @@ export default function StudioManifesto({
 
             <h2
               aria-label={
-                studioProfile.slogan
+                STUDIO_SLOGAN
               }
               className="mt-7 max-w-[1160px] font-serif text-[clamp(3.2rem,6.55vw,7.5rem)] font-normal italic leading-[0.89] tracking-[-0.066em]"
             >
@@ -312,10 +290,6 @@ export default function StudioManifesto({
               </span>
             </h2>
           </motion.div>
-
-          {/* =================================================================
-             BODY + CTA
-             ================================================================= */}
 
           <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end lg:gap-20">
             <motion.div
@@ -380,9 +354,9 @@ export default function StudioManifesto({
                 reducedMotion
                   ? undefined
                   : {
-                      opacity: 1,
-                      y: 0,
-                    }
+                  opacity: 1,
+                  y: 0,
+                }
               }
               viewport={{
                 once: true,
@@ -452,10 +426,6 @@ export default function StudioManifesto({
           </div>
         </div>
 
-        {/* ==================================================================
-           SIGNATURE
-           ================================================================== */}
-
         <motion.div
           initial={
             reducedMotion
@@ -490,8 +460,6 @@ export default function StudioManifesto({
           }}
           className="relative mt-20 overflow-hidden border border-white/[0.065] bg-[#050505]"
         >
-          {/* optical circle */}
-
           <div
             aria-hidden="true"
             className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full border lg:block"
@@ -552,8 +520,6 @@ export default function StudioManifesto({
             </span>
           </div>
 
-          {/* bottom signal */}
-
           <span
             aria-hidden="true"
             className="pointer-events-none absolute bottom-0 left-0 h-px w-[36%]"
@@ -579,10 +545,6 @@ export default function StudioManifesto({
             }}
           />
         </motion.div>
-
-        {/* ==================================================================
-           META
-           ================================================================== */}
 
         <motion.div
           initial={{
@@ -636,10 +598,6 @@ export default function StudioManifesto({
           </span>
         </div>
       </div>
-
-      {/* ====================================================================
-         BOTTOM LINE
-         ==================================================================== */}
 
       <motion.div
         aria-hidden="true"

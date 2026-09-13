@@ -1,14 +1,14 @@
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import CharacterDossier from "@/components/CharacterDossier";
 import {
   getCharacterBySlug,
-  getCharactersForProject,
-} from "@/lib/characterNavigation";
-import { characters } from "@/data/characters";
-import { projects } from "@/data/projects";
+  getCharacterMedia,
+  getCharacterProject,
+  getCharacters,
+  getProjectCharacters,
+} from "@/lib/content/queries";
 
 type CharacterPageProps = {
   params: Promise<{
@@ -17,7 +17,7 @@ type CharacterPageProps = {
 };
 
 export function generateStaticParams() {
-  return characters.map((character) => ({
+  return getCharacters().map((character) => ({
     slug: character.slug,
   }));
 }
@@ -33,43 +33,43 @@ export async function generateMetadata({
     return {};
   }
 
-  const project = projects.find(
-    (item) => item.slug === character.projectSlug,
-  );
+  const project = getCharacterProject(character.id);
 
-  const projectTitle =
-    project?.title ??
-    character.projectTitle ??
-    "Umbra Studio";
+  if (!project) {
+    return {};
+  }
 
-  const description =
-    character.shortDescription.trim() ||
-    `Character dossier for ${character.name} within ${projectTitle}.`;
+  const characterName = character.title.en;
+  const characterDescription =
+    character.shortDescription?.en ??
+    character.description?.en ??
+    `Character dossier for ${characterName}`;
 
-  const title = `${character.name} — Character Dossier`;
+  const title = `${characterName} — Character Dossier`;
+
+  const characterMedia = getCharacterMedia(character.id);
 
   const portrait =
-    character.image ||
-    project?.book?.coverEn ||
-    project?.book?.coverSr ||
-    project?.cover;
+    characterMedia[0]?.src ??
+    project.source?.coverEn ??
+    project.source?.coverSr;
 
   return {
     title,
-    description,
+    description: characterDescription,
     alternates: {
       canonical: `/en/characters/${character.slug}`,
     },
     openGraph: {
       title,
-      description,
+      description: characterDescription,
       type: "website",
       ...(portrait
         ? {
             images: [
               {
                 url: portrait,
-                alt: `${character.name} — Character Dossier`,
+                alt: `${characterName} — Character Dossier`,
               },
             ],
           }
@@ -89,16 +89,42 @@ export default async function EnglishCharacterPage({
     notFound();
   }
 
-  const relatedCharacters = getCharactersForProject(
-    character.projectSlug,
-  ).filter(
-    (item) => item.slug !== character.slug,
+  const project = getCharacterProject(character.id);
+
+  if (!project) {
+    notFound();
+  }
+
+  const characters = getProjectCharacters(project.id);
+
+  const relatedCharacters = characters.filter(
+    (item) => item.id !== character.id,
+  );
+
+  const characterMedia = getCharacterMedia(character.id);
+
+  const characterImage =
+    characterMedia[0]?.src ?? null;
+
+  const relatedCharacterImages = Object.fromEntries(
+    relatedCharacters.map((related) => {
+      const media = getCharacterMedia(related.id);
+
+      return [
+        related.id,
+        media[0]?.src ?? null,
+      ];
+    }),
   );
 
   return (
     <CharacterDossier
       character={character}
       relatedCharacters={relatedCharacters}
+      characters={characters}
+      project={project}
+      characterImage={characterImage}
+      relatedCharacterImages={relatedCharacterImages}
     />
   );
 }

@@ -9,9 +9,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import {
-  projects,
-} from "@/lib/content";
+import { getProjects } from "@/lib/content/queries";
 import type {
   ProjectContent,
   ProjectStatus,
@@ -32,9 +30,7 @@ type ProjectsPageProps = {
   projectsData?: readonly ProjectContent[];
 };
 
-function getStatusLabel(
-  status: ProjectStatus,
-) {
+function getStatusLabel(status: ProjectStatus) {
   switch (status) {
     case "in-production":
       return "U produkciji";
@@ -50,9 +46,7 @@ function getStatusLabel(
   }
 }
 
-function getTypeLabel(
-  type: ProjectType,
-) {
+function getTypeLabel(type: ProjectType) {
   switch (type) {
     case "Serija":
       return "Serija";
@@ -65,9 +59,7 @@ function getTypeLabel(
   }
 }
 
-function getProjectImage(
-  project: ProjectContent,
-) {
+function getProjectImage(project: ProjectContent) {
   return (
     project.source?.coverSr ??
     project.source?.coverEn ??
@@ -75,15 +67,10 @@ function getProjectImage(
   );
 }
 
-function getProjectNumber(
-  id: string,
-) {
+function getProjectNumber(id: string) {
   const match = id.match(/(\d+)$/);
 
-  return (
-    match?.[1]?.padStart(2, "0") ??
-    "00"
-  );
+  return match?.[1]?.padStart(2, "0") ?? "00";
 }
 
 /**
@@ -105,9 +92,7 @@ function matchesFilter(
       return !project.source;
 
     case "adaptation":
-      return Boolean(
-        project.source,
-      );
+      return Boolean(project.source);
 
     case "series":
       return project.type === "Serija";
@@ -118,34 +103,7 @@ function matchesFilter(
   }
 }
 
-function resolveFilter(
-  vrsta?: string,
-  format?: string,
-): ProjectFilter {
-  if (
-    format === "serije"
-  ) {
-    return "series";
-  }
-
-  if (
-    vrsta === "originalne"
-  ) {
-    return "original";
-  }
-
-  if (
-    vrsta === "ekranizacije"
-  ) {
-    return "adaptation";
-  }
-
-  return "all";
-}
-
-function getFilterHref(
-  filter: ProjectFilter,
-) {
+function getFilterHref(filter: ProjectFilter) {
   switch (filter) {
     case "original":
       return "/serije?vrsta=originalne";
@@ -162,9 +120,7 @@ function getFilterHref(
   }
 }
 
-function getFilterLabel(
-  filter: ProjectFilter,
-) {
+function getFilterLabel(filter: ProjectFilter) {
   switch (filter) {
     case "original":
       return "Originalne priče";
@@ -185,37 +141,23 @@ function getFilterCount(
   projectsData: readonly ProjectContent[],
   filter: ProjectFilter,
 ) {
-  return projectsData.filter(
-    (project) =>
-      matchesFilter(
-        project,
-        filter,
-      ),
+  return projectsData.filter((project) =>
+    matchesFilter(project, filter),
   ).length;
 }
 
-function getProjectTitle(
-  project: ProjectContent,
-) {
+function getProjectTitle(project: ProjectContent) {
   return project.title.sr;
 }
 
-function getProjectDescription(
-  project: ProjectContent,
-) {
-  return (
-    project.shortDescription
-      ?.sr ??
-    project.description?.sr ??
-    ""
-  );
+function getProjectDescription(project: ProjectContent) {
+  return project.shortDescription?.sr ?? project.description?.sr ?? "";
 }
 
 export default function ProjectsArchive({
-  projectsData = projects,
+  projectsData = getProjects(),
 }: ProjectsPageProps) {
-  const allProjects =
-    projectsData;
+  const allProjects = projectsData;
 
   const filters: ProjectFilter[] = [
     "all",
@@ -233,14 +175,9 @@ export default function ProjectsArchive({
    */
   const activeFilter = "all";
 
-  const visibleProjects =
-    allProjects.filter(
-      (project) =>
-        matchesFilter(
-          project,
-          activeFilter,
-        ),
-    );
+  const visibleProjects = allProjects.filter((project) =>
+    matchesFilter(project, activeFilter),
+  );
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030303] text-[#f1ede4]">
@@ -269,16 +206,14 @@ export default function ProjectsArchive({
                 aria-hidden="true"
                 className="h-px w-8"
                 style={{
-                  background:
-                    `${GOLD}70`,
+                  background: `${GOLD}70`,
                 }}
               />
 
               <span
                 className="text-[7px] font-semibold uppercase tracking-[0.32em]"
                 style={{
-                  color:
-                    `${GOLD_LIGHT}78`,
+                  color: `${GOLD_LIGHT}78`,
                 }}
               >
                 Umbra Studio / Projekti
@@ -313,8 +248,7 @@ export default function ProjectsArchive({
               <div className="mt-7 flex items-center gap-4 border-t border-white/[0.065] pt-4">
                 <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.17]">
                   {visibleProjects.length}{" "}
-                  {visibleProjects.length ===
-                  1
+                  {visibleProjects.length === 1
                     ? "projekat"
                     : "projekta"}
                 </span>
@@ -325,9 +259,7 @@ export default function ProjectsArchive({
                 />
 
                 <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.20]">
-                  {getFilterLabel(
-                    activeFilter,
-                  )}
+                  {getFilterLabel(activeFilter)}
                 </span>
               </div>
             </div>
@@ -352,82 +284,60 @@ export default function ProjectsArchive({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {filters.map(
-                  (filter) => {
-                    const isActive =
-                      filter ===
-                      activeFilter;
+                {filters.map((filter) => {
+                  const isActive = filter === activeFilter;
 
-                    return (
-                      <Link
-                        key={filter}
-                        href={getFilterHref(
-                          filter,
-                        )}
-                        aria-current={
-                          isActive
-                            ? "page"
-                            : undefined
-                        }
-                        data-cursor-interactive
-                        className="group inline-flex items-center gap-3 border border-white/[0.075] px-4 py-2.5 outline-none transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#c7a96b]/34 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-                        style={
-                          isActive
-                            ? {
-                                borderColor:
-                                  `${GOLD}55`,
-                                background:
-                                  `${GOLD}08`,
-                              }
-                            : undefined
-                        }
-                      >
-                        <span
-                          className="text-[6px] uppercase tracking-[0.25em]"
-                          style={{
-                            color: isActive
-                              ? `${GOLD_LIGHT}90`
-                              : "rgba(255,255,255,.25)",
-                          }}
-                        >
-                          {getFilterLabel(
-                            filter,
-                          )}
-                        </span>
-
-                        <span
-                          className="font-mono text-[6px] tracking-[0.20em]"
-                          style={{
-                            color: isActive
-                              ? `${GOLD_LIGHT}58`
-                              : "rgba(255,255,255,.14)",
-                          }}
-                        >
-                          {getFilterCount(
-                            allProjects,
-                            filter,
-                          )
-                            .toString()
-                            .padStart(
-                              2,
-                              "0",
-                            )}
-                        </span>
-
-                        {isActive ? (
-                          <Check
-                            aria-hidden="true"
-                            size={11}
-                            strokeWidth={
-                              1.3
+                  return (
+                    <Link
+                      key={filter}
+                      href={getFilterHref(filter)}
+                      aria-current={isActive ? "page" : undefined}
+                      data-cursor-interactive
+                      className="group inline-flex items-center gap-3 border border-white/[0.075] px-4 py-2.5 outline-none transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#c7a96b]/34 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                      style={
+                        isActive
+                          ? {
+                              borderColor: `${GOLD}55`,
+                              background: `${GOLD}08`,
                             }
-                            className="text-[#ead39a]/70"
-                          />
-                        ) : null}
-                      </Link>
-                    );
-                  },
-                )}
+                          : undefined
+                      }
+                    >
+                      <span
+                        className="text-[6px] uppercase tracking-[0.25em]"
+                        style={{
+                          color: isActive
+                            ? `${GOLD_LIGHT}90`
+                            : "rgba(255,255,255,.25)",
+                        }}
+                      >
+                        {getFilterLabel(filter)}
+                      </span>
+
+                      <span
+                        className="font-mono text-[6px] tracking-[0.20em]"
+                        style={{
+                          color: isActive
+                            ? `${GOLD_LIGHT}58`
+                            : "rgba(255,255,255,.14)",
+                        }}
+                      >
+                        {getFilterCount(allProjects, filter)
+                          .toString()
+                          .padStart(2, "0")}
+                      </span>
+
+                      {isActive ? (
+                        <Check
+                          aria-hidden="true"
+                          size={11}
+                          strokeWidth={1.3}
+                          className="text-[#ead39a]/70"
+                        />
+                      ) : null}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </nav>
@@ -439,233 +349,195 @@ export default function ProjectsArchive({
         className="px-6 py-16 sm:px-9 sm:py-20 lg:px-12 lg:py-24 xl:px-16"
       >
         <div className="mx-auto max-w-[1480px]">
-          {visibleProjects.length >
-          0 ? (
+          {visibleProjects.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
-              {visibleProjects.map(
-                (
-                  project,
-                  index,
-                ) => {
-                  const title =
-                    getProjectTitle(
-                      project,
-                    );
+              {visibleProjects.map((project, index) => {
+                const title = getProjectTitle(project);
+                const shortDescription = getProjectDescription(project);
 
-                  const shortDescription =
-                    getProjectDescription(
-                      project,
-                    );
+                return (
+                  <Link
+                    key={project.id}
+                    href={`/serije/${project.slug}`}
+                    aria-label={`Otvori projekat ${title}`}
+                    data-cursor-interactive
+                    className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <Image
+                        src={getProjectImage(project)}
+                        alt={title}
+                        fill
+                        priority={index === 0}
+                        sizes="(min-width: 1024px) 47vw, 94vw"
+                        className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
+                      />
 
-                  return (
-                    <Link
-                      key={
-                        project.id
-                      }
-                      href={`/serije/${project.slug}`}
-                      aria-label={`Otvori projekat ${title}`}
-                      data-cursor-interactive
-                      className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-                    >
-                      <div className="relative aspect-[16/10] overflow-hidden">
-                        <Image
-                          src={getProjectImage(
-                            project,
-                          )}
-                          alt={title}
-                          fill
-                          priority={
-                            index ===
-                            0
-                          }
-                          sizes="(min-width: 1024px) 47vw, 94vw"
-                          className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
-                        />
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-black/[0.20]"
+                      />
 
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0 bg-black/[0.20]"
-                        />
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.08) 42%, rgba(0,0,0,.76) 100%)",
+                        }}
+                      />
 
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0"
-                          style={{
-                            background:
-                              "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.08) 42%, rgba(0,0,0,.76) 100%)",
-                          }}
-                        />
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-4 border border-white/[0.05] sm:inset-5"
+                      />
 
-                        <div
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-4 border border-white/[0.05] sm:inset-5"
-                        />
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
+                        style={{
+                          borderColor: `${GOLD_LIGHT}38`,
+                        }}
+                      />
 
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
+                        style={{
+                          borderColor: `${GOLD}2b`,
+                        }}
+                      />
+
+                      <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
                         <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
+                          className="text-[6px] font-semibold uppercase tracking-[0.28em]"
                           style={{
-                            borderColor:
-                              `${GOLD_LIGHT}38`,
+                            color: `${GOLD_LIGHT}72`,
                           }}
-                        />
+                        >
+                          Project
+                        </span>
 
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
-                          style={{
-                            borderColor:
-                              `${GOLD}2b`,
-                          }}
-                        />
-
-                        <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
-                          <span
-                            className="text-[6px] font-semibold uppercase tracking-[0.28em]"
-                            style={{
-                              color:
-                                `${GOLD_LIGHT}72`,
-                            }}
-                          >
-                            Project
-                          </span>
-
-                          <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
-                            {getProjectNumber(
-                              project.id,
-                            )}
-                          </span>
-                        </div>
-
-                        <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
-                          <div className="flex items-end justify-between gap-6">
-                            <div className="min-w-0">
-                              <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
-                                <span
-                                  style={{
-                                    color:
-                                      `${GOLD_LIGHT}82`,
-                                  }}
-                                >
-                                  {getTypeLabel(
-                                    project.type,
-                                  )}
-                                </span>
-
-                                <span
-                                  aria-hidden="true"
-                                  className="h-px w-4 bg-white/[0.16]"
-                                />
-
-                                <span className="text-white/[0.34]">
-                                  {getStatusLabel(
-                                    project.status,
-                                  )}
-                                </span>
-                              </div>
-
-                              <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
-                                {title}
-                              </h2>
-                            </div>
-
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
-                              <ArrowUpRight
-                                aria-hidden="true"
-                                className="h-3.5 w-3.5"
-                              />
-                            </span>
-                          </div>
-                        </div>
+                        <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
+                          {getProjectNumber(project.id)}
+                        </span>
                       </div>
 
-                      <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
-                        <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                          <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
-                            {shortDescription}
-                          </p>
+                      <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+                        <div className="flex items-end justify-between gap-6">
+                          <div className="min-w-0">
+                            <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
+                              <span
+                                style={{
+                                  color: `${GOLD_LIGHT}82`,
+                                }}
+                              >
+                                {getTypeLabel(project.type)}
+                              </span>
 
-                          <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
-                            <div>
-                              <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                                Status
-                              </div>
+                              <span
+                                aria-hidden="true"
+                                className="h-px w-4 bg-white/[0.16]"
+                              />
 
-                              <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                                {getStatusLabel(
-                                  project.status,
-                                )}
-                              </div>
+                              <span className="text-white/[0.34]">
+                                {getStatusLabel(project.status)}
+                              </span>
                             </div>
 
-                            <div>
-                              <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                                Platform
-                              </div>
-
-                              <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                                {project.platform ??
-                                  "Umbra Studio"}
-                              </div>
-                            </div>
+                            <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
+                              {title}
+                            </h2>
                           </div>
-                        </div>
 
-                        {project.source ? (
-                          <div className="mt-5 flex items-center gap-3">
-                            <span
-                              className="text-[7px] font-semibold uppercase tracking-[0.21em]"
-                              style={{
-                                color:
-                                  `${GOLD_LIGHT}78`,
-                              }}
-                            >
-                              Ekranizacija
-                            </span>
-
-                            <span
-                              aria-hidden="true"
-                              className="h-px w-6 bg-white/[0.10]"
-                            />
-
-                            <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
-                              {project.source
-                                .author ??
-                                project.source
-                                  .title}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
-                            Umbra Original
-                          </div>
-                        )}
-
-                        <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
-                          <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
-                            Umbra Studio
-                          </span>
-
-                          <span
-                            className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
-                            style={{
-                              color:
-                                `${GOLD_LIGHT}82`,
-                            }}
-                          >
-                            Otvori projekat
-
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
                             <ArrowUpRight
                               aria-hidden="true"
-                              className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                              className="h-3.5 w-3.5"
                             />
                           </span>
                         </div>
                       </div>
-                    </Link>
-                  );
-                },
-              )}
+                    </div>
+
+                    <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
+                      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                        <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
+                          {shortDescription}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
+                          <div>
+                            <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                              Status
+                            </div>
+
+                            <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                              {getStatusLabel(project.status)}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                              Platform
+                            </div>
+
+                            <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                              {project.platform ?? "Umbra Studio"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {project.source ? (
+                        <div className="mt-5 flex items-center gap-3">
+                          <span
+                            className="text-[7px] font-semibold uppercase tracking-[0.21em]"
+                            style={{
+                              color: `${GOLD_LIGHT}78`,
+                            }}
+                          >
+                            Ekranizacija
+                          </span>
+
+                          <span
+                            aria-hidden="true"
+                            className="h-px w-6 bg-white/[0.10]"
+                          />
+
+                          <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
+                            {project.source.author ?? project.source.title}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
+                          Umbra Original
+                        </div>
+                      )}
+
+                      <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
+                        <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
+                          Umbra Studio
+                        </span>
+
+                        <span
+                          className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
+                          style={{
+                            color: `${GOLD_LIGHT}82`,
+                          }}
+                        >
+                          Otvori projekat
+
+                          <ArrowUpRight
+                            aria-hidden="true"
+                            className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="border border-white/[0.065] bg-[#070707] px-6 py-16 sm:px-10 sm:py-20">
@@ -674,16 +546,14 @@ export default function ProjectsArchive({
                   aria-hidden="true"
                   className="h-px w-8"
                   style={{
-                    background:
-                      `${GOLD}70`,
+                    background: `${GOLD}70`,
                   }}
                 />
 
                 <span
                   className="text-[7px] font-semibold uppercase tracking-[0.28em]"
                   style={{
-                    color:
-                      `${GOLD_LIGHT}78`,
+                    color: `${GOLD_LIGHT}78`,
                   }}
                 >
                   Arhiva
@@ -697,12 +567,8 @@ export default function ProjectsArchive({
               </h2>
 
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/[0.30]">
-                Kategorija je spremna
-                za buduće projekte.
-                Vrati se na celu
-                arhivu da vidiš
-                sve što trenutno
-                stvaramo.
+                Kategorija je spremna za buduće projekte. Vrati se na celu
+                arhivu da vidiš sve što trenutno stvaramo.
               </p>
 
               <Link

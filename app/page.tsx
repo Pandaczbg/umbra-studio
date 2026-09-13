@@ -5,55 +5,48 @@ import StudioScene from "@/components/StudioScene";
 import WatchScene from "@/components/WatchScene";
 import StudioManifesto from "@/components/StudioManifesto";
 import Footer from "@/components/Footer";
-
-/* ==========================================================================
-   UMBRA STUDIO
-   HOME
-   V5 FINAL SYSTEM
-
-   Page composition
-   --------------------------------------------------------------------------
-   01. Hero
-   02. Current projects
-   03. Characters
-   04. Studio method
-   05. Watch
-   06. Closing manifesto
-   07. Footer
-
-   Architecture
-   --------------------------------------------------------------------------
-   The page is intentionally a composition layer only.
-
-   Global systems are owned by:
-   - layout
-   - UmbraMotionSystem
-   - UmbraSceneDirector
-   - UmbraAtmosphere
-   - Header
-   - UmbraScrollbar
-   - transition systems
-
-   Individual scenes own their own:
-   - content
-   - scene markers
-   - interaction
-   - responsive composition
-
-   The home page does not duplicate motion, scene tracking, or visual systems.
-   ========================================================================== */
+import {
+  getCharacterMedia,
+  getCharacters,
+  getProjects,
+} from "@/lib/content/queries";
 
 export default function HomePage() {
+  const characters = getCharacters();
+  const projects = getProjects();
+
+  const characterImages = Object.fromEntries(
+    characters.map((character) => {
+      const media = getCharacterMedia(character.id);
+
+      return [
+        character.id,
+        media[0]?.src ?? null,
+      ];
+    }),
+  );
+
   return (
     <main
       id="main-content"
       className="umbra-home min-h-screen overflow-x-clip"
     >
-      <HomeHero locale="sr" />
+      <HomeHero
+        locale="sr"
+        projects={projects}
+      />
 
-      <CurrentProjectScene locale="sr" />
+      <CurrentProjectScene
+        locale="sr"
+        projects={projects}
+      />
 
-      <CharactersScene locale="sr" />
+      <CharactersScene
+        locale="sr"
+        characters={characters}
+        projects={projects}
+        characterImages={characterImages}
+      />
 
       <StudioScene locale="sr" />
 

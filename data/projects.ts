@@ -1,70 +1,55 @@
-export type ProjectStatus =
-  | "in-production"
-  | "development"
-  | "upcoming";
+import type {
+  LocalizedText,
+  ProjectContent,
+} from "@/lib/content/types";
 
-export type ProjectBook = {
-  title: string;
-  author: string;
-  coverSr: string;
-  coverEn: string;
-  pdfSr: string;
-  pdfEn: string;
-  publicUrl?: string;
-};
+function localized(
+  sr: string,
+  en: string = sr,
+): LocalizedText {
+  return {
+    sr,
+    en,
+  };
+}
 
-export type Project = {
-  id: string;
-  slug: string;
-  title: string;
-  type: "Serija" | "Film" | "Projekat";
-  status: ProjectStatus;
-  shortDescription: string;
-  longDescription: string;
-  platform: string;
-  featured: boolean;
-
-  /**
-   * Project-level artwork for projects without a ProjectBook.
-   *
-   * All project-facing components should resolve artwork from this data
-   * model instead of hard-coding asset paths in individual components.
-   */
-  cover?: string;
-
-  book?: ProjectBook;
-};
-
-export const projects: Project[] = [
+export const projects: ProjectContent[] = [
   {
     id: "project-01",
     slug: "mrzim-svog-brata",
-    title: "MRZIM SVOG BRATA",
+    visibility: "public",
+
+    title: localized(
+      "MRZIM SVOG BRATA",
+    ),
+
+    shortDescription: localized(
+      "Prva serija Umbra Studija, filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića",
+    ),
+
+    description: localized(
+      "Prva serija Umbra Studija je filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića, razvijena kao epizodna ekranizacija sa fokusom na likove, atmosferu i filmsko pripovedanje.",
+    ),
+
+    contentType: "project",
+
     type: "Serija",
     status: "in-production",
-
-    shortDescription:
-      "Prva serija Umbra Studija, filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića",
-
-    longDescription:
-      "Prva serija Umbra Studija je filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića, razvijena kao epizodna ekranizacija sa fokusom na likove, atmosferu i filmsko pripovedanje.",
-
-    platform: "YouTube",
     featured: true,
 
-    book: {
+    platform: "YouTube",
+
+    source: {
       title: "MRZIM SVOG BRATA",
       author: "Branislav Bojčić",
-
-      // Fajlovi koji su trenutno u public/books/Mrzim-svog-brata/
-      coverSr: "/books/Mrzim-svog-brata/cover-sr.png",
-      coverEn: "/books/Mrzim-svog-brata/cover-en.jpg",
-
+      coverSr:
+        "/books/Mrzim-svog-brata/cover-sr.png",
+      coverEn:
+        "/books/Mrzim-svog-brata/cover-en.jpg",
       pdfSr:
         "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",
       pdfEn:
         "/books/Mrzim-svog-brata/mrzim-svog-brata-en.pdf",
-
       publicUrl:
         "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
     },
@@ -73,20 +58,28 @@ export const projects: Project[] = [
   {
     id: "project-02",
     slug: "biblija",
-    title: "BIBLIJA",
+    visibility: "public",
+
+    title: localized(
+      "BIBLIJA",
+    ),
+
+    shortDescription: localized(
+      "Samostalan storytelling univerzum Umbra Studija, zasnovan na biblijskim pričama.",
+    ),
+
+    description: localized(
+      "Umbra Studio razvija BIBLIJU kao zaseban storytelling univerzum zasnovan na biblijskim pričama.",
+    ),
+
+    contentType: "project",
+
     type: "Projekat",
     status: "development",
-
-    shortDescription:
-      "Samostalan storytelling univerzum Umbra Studija, zasnovan na biblijskim pričama.",
-
-    longDescription:
-      "Umbra Studio razvija BIBLIJU kao zaseban storytelling univerzum zasnovan na biblijskim pričama.",
-
-    platform: "Umbra Studio",
     featured: false,
 
-    // Stvarni projekat artwork: public/Biblija Cover.png
+    platform: "Umbra Studio",
+
     cover: "/Biblija Cover.png",
   },
 ];

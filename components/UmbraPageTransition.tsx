@@ -13,7 +13,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA PAGE TRANSITION — V5
+   UMBRA PAGE TRANSITION — V6
 
    Route-level transition only.
 

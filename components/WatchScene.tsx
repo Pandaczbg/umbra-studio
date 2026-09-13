@@ -6,7 +6,7 @@ import {
   Play,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import type { Locale } from "@/data/translations";
+type Locale = "sr" | "en";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";

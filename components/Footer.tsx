@@ -15,13 +15,13 @@ import {
   type MouseEvent,
 } from "react";
 
-import {
-  getTranslations,
-  type Locale,
-} from "@/data/translations";
+type Locale = "sr" | "en";
 
-const GOLD = "#c7a96b";
-const GOLD_LIGHT = "#ead39a";
+const GOLD =
+  "#c7a96b";
+
+const GOLD_LIGHT =
+  "#ead39a";
 
 const EASE = [
   0.22,
@@ -51,7 +51,8 @@ type NavigationItem = {
   href: string;
 };
 
-const NAVIGATION_SR: NavigationItem[] = [
+const NAVIGATION_SR:
+  NavigationItem[] = [
   {
     label: "Početna",
     href: "/",
@@ -74,7 +75,8 @@ const NAVIGATION_SR: NavigationItem[] = [
   },
 ];
 
-const NAVIGATION_EN: NavigationItem[] = [
+const NAVIGATION_EN:
+  NavigationItem[] = [
   {
     label: "Home",
     href: "/en",
@@ -165,6 +167,9 @@ const COPY = {
 
     end:
       "Završni kadar",
+
+    footerNote:
+      "Umbra Studio — 2026",
   },
 
   en: {
@@ -219,6 +224,9 @@ const COPY = {
 
     end:
       "Closing frame",
+
+    footerNote:
+      "Umbra Studio — 2026",
   },
 } as const;
 
@@ -299,12 +307,11 @@ function InteractiveCredit({
             className="pointer-events-none absolute inset-0"
             animate={{
               opacity:
-                active
-                  ? 1
-                  : 0,
+                active ? 1 : 0,
             }}
             transition={{
-              duration: 0.38,
+              duration:
+                0.38,
               ease: EASE,
             }}
             style={{
@@ -339,7 +346,8 @@ function InteractiveCredit({
                 active
                   ? 0.72
                   : 0,
-              ease: "easeInOut",
+              ease:
+                "easeInOut",
             }}
             style={{
               background: `
@@ -450,7 +458,8 @@ function InteractiveCredit({
                 active
                   ? 0
                   : Infinity,
-              ease: "easeInOut",
+              ease:
+                "easeInOut",
             }}
             style={{
               background:
@@ -539,54 +548,125 @@ function InteractiveCredit({
               </div>
 
               <div className="relative inline-block px-1 py-1">
-                {[
-                  "left-top",
-                  "right-top",
-                  "left-bottom",
-                  "right-bottom",
-                ].map((position) => (
-                  <span
-                    key={position}
-                    aria-hidden="true"
-                    className={[
-                      "pointer-events-none absolute h-[6px] w-[6px]",
-                      position === "left-top"
-                        ? "-left-2 -top-2 border-l border-t"
-                        : "",
-                      position === "right-top"
-                        ? "-right-2 -top-2 border-r border-t"
-                        : "",
-                      position === "left-bottom"
-                        ? "-bottom-2 -left-2 border-b border-l"
-                        : "",
-                      position === "right-bottom"
-                        ? "-bottom-2 -right-2 border-b border-r"
-                        : "",
-                    ].join(" ")}
-                    style={{
-                      borderColor:
-                        `${GOLD_LIGHT}88`,
-                      opacity:
-                        active
-                          ? 1
-                          : 0.3,
-                      transform:
-                        active
-                          ? "translate3d(0,0,0)"
-                          : position === "left-top"
-                            ? "translate3d(1px,1px,0)"
-                            : position === "right-top"
-                              ? "translate3d(-1px,1px,0)"
-                              : position === "left-bottom"
-                                ? "translate3d(1px,-1px,0)"
-                                : "translate3d(-1px,-1px,0)",
-                      transition:
-                        reducedMotion
-                          ? "none"
-                          : "opacity .28s ease, transform .28s ease",
-                    }}
-                  />
-                ))}
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -left-2 -top-2 h-[6px] w-[6px] border-l border-t"
+                  animate={{
+                    opacity:
+                      active
+                        ? 1
+                        : 0.3,
+                    x:
+                      active
+                        ? 0
+                        : 1,
+                    y:
+                      active
+                        ? 0
+                        : 1,
+                  }}
+                  transition={{
+                    duration:
+                      reducedMotion
+                        ? 0
+                        : 0.28,
+                    ease: EASE,
+                  }}
+                  style={{
+                    borderColor:
+                      `${GOLD_LIGHT}88`,
+                  }}
+                />
+
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-2 -top-2 h-[6px] w-[6px] border-r border-t"
+                  animate={{
+                    opacity:
+                      active
+                        ? 1
+                        : 0.3,
+                    x:
+                      active
+                        ? 0
+                        : -1,
+                    y:
+                      active
+                        ? 0
+                        : 1,
+                  }}
+                  transition={{
+                    duration:
+                      reducedMotion
+                        ? 0
+                        : 0.28,
+                    ease: EASE,
+                  }}
+                  style={{
+                    borderColor:
+                      `${GOLD_LIGHT}88`,
+                  }}
+                />
+
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-2 -left-2 h-[6px] w-[6px] border-b border-l"
+                  animate={{
+                    opacity:
+                      active
+                        ? 1
+                        : 0.3,
+                    x:
+                      active
+                        ? 0
+                        : 1,
+                    y:
+                      active
+                        ? 0
+                        : -1,
+                  }}
+                  transition={{
+                    duration:
+                      reducedMotion
+                        ? 0
+                        : 0.28,
+                    ease: EASE,
+                  }}
+                  style={{
+                    borderColor:
+                      `${GOLD_LIGHT}88`,
+                  }}
+                />
+
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-2 -right-2 h-[6px] w-[6px] border-b border-r"
+                  animate={{
+                    opacity:
+                      active
+                        ? 1
+                        : 0.3,
+                    x:
+                      active
+                        ? 0
+                        : -1,
+                    y:
+                      active
+                        ? 0
+                        : -1,
+                  }}
+                  transition={{
+                    duration:
+                      reducedMotion
+                        ? 0
+                        : 0.28,
+                    ease: EASE,
+                  }}
+                  style={{
+                    borderColor:
+                      `${GOLD_LIGHT}88`,
+                  }}
+                />
 
                 <motion.span
                   className="relative z-10 inline-block text-[9px] font-medium uppercase tracking-[0.17em]"
@@ -665,7 +745,9 @@ function InteractiveCredit({
                     }}
                     style={{
                       borderColor:
-                        `${GOLD_LIGHT}40`,
+                        active
+                          ? `${GOLD_LIGHT}70`
+                          : `${GOLD}30`,
                       boxShadow:
                         active
                           ? `0 0 13px ${GOLD}20, inset 0 0 10px ${GOLD}10`
@@ -696,7 +778,8 @@ function InteractiveCredit({
                       active
                         ? 0
                         : Infinity,
-                    ease: "easeInOut",
+                    ease:
+                      "easeInOut",
                   }}
                   style={{
                     background:
@@ -769,16 +852,20 @@ function InteractiveCredit({
               {!reducedMotion && (
                 <motion.span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-[-4px] rounded-full border"
+                  className="pointer-events-none absolute inset-[-4px] rounded-full border border-transparent"
                   animate={{
                     rotate:
                       active
                         ? -60
                         : 0,
-                    opacity:
+                    borderTopColor:
                       active
-                        ? 1
-                        : 0.25,
+                        ? "rgba(234,211,154,.42)"
+                        : "rgba(0,0,0,0)",
+                    borderRightColor:
+                      active
+                        ? "rgba(234,211,154,.08)"
+                        : "rgba(0,0,0,0)",
                   }}
                   transition={{
                     duration:
@@ -786,12 +873,6 @@ function InteractiveCredit({
                         ? 0
                         : 0.48,
                     ease: EASE,
-                  }}
-                  style={{
-                    borderColor:
-                      `${GOLD_LIGHT}40`,
-                    boxShadow:
-                      `0 0 0 0 ${GOLD}00`,
                   }}
                 />
               )}
@@ -813,7 +894,8 @@ function InteractiveCredit({
                     : 0,
               }}
               transition={{
-                duration: 0.4,
+                duration:
+                  0.4,
                 ease: EASE,
               }}
               style={{
@@ -854,9 +936,12 @@ function InteractiveCredit({
               amount: 0.5,
             }}
             transition={{
-              duration: 1.8,
-              delay: 0.25,
-              ease: "easeInOut",
+              duration:
+                1.8,
+              delay:
+                0.25,
+              ease:
+                "easeInOut",
             }}
             style={{
               background:
@@ -908,9 +993,6 @@ export default function Footer({
   const isEnglish =
     locale === "en";
 
-  const t =
-    getTranslations(locale);
-
   const navigation =
     isEnglish
       ? NAVIGATION_EN
@@ -920,9 +1002,7 @@ export default function Footer({
     COPY[locale];
 
   const scrollToTop = (
-    event: MouseEvent<
-      HTMLAnchorElement
-    >,
+    event: MouseEvent<HTMLAnchorElement>,
   ) => {
     event.preventDefault();
 
@@ -1010,11 +1090,7 @@ export default function Footer({
           <div className="flex flex-col gap-9 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <Link
-                href={
-                  isEnglish
-                    ? "/en"
-                    : "/"
-                }
+                href={isEnglish ? "/en" : "/"}
                 aria-label={
                   isEnglish
                     ? "Umbra Studio home"
@@ -1047,11 +1123,7 @@ export default function Footer({
               </Link>
 
               <Link
-                href={
-                  isEnglish
-                    ? "/en"
-                    : "/"
-                }
+                href={isEnglish ? "/en" : "/"}
                 aria-label={
                   isEnglish
                     ? "Return to Umbra Studio home"
@@ -1072,15 +1144,8 @@ export default function Footer({
                 </p>
 
                 <span className="mt-5 inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.3em] opacity-0 transition-[opacity,transform] duration-300 group-hover:translate-x-1 group-hover:opacity-100">
-                  <span
-                    style={{
-                      color:
-                        `${GOLD_LIGHT}9a`,
-                    }}
-                  >
-                    {isEnglish
-                      ? "Back to Umbra"
-                      : "Nazad na Umbra"}
+                  <span style={{ color: `${GOLD_LIGHT}9a` }}>
+                    {isEnglish ? "Back to Umbra" : "Nazad na Umbra"}
                   </span>
 
                   <ArrowUpRight
@@ -1088,8 +1153,7 @@ export default function Footer({
                     size={12}
                     strokeWidth={1.1}
                     style={{
-                      color:
-                        `${GOLD_LIGHT}70`,
+                      color: `${GOLD_LIGHT}70`,
                     }}
                   />
                 </span>
@@ -1179,11 +1243,7 @@ export default function Footer({
               }}
             >
               <Link
-                href={
-                  isEnglish
-                    ? "/en"
-                    : "/"
-                }
+                href={isEnglish ? "/en" : "/"}
                 aria-label={
                   isEnglish
                     ? "Umbra Studio home"
@@ -1197,7 +1257,6 @@ export default function Footer({
                     alt="Umbra Studio"
                     fill
                     sizes="36px"
-                    priority
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                   />
                 </div>
@@ -1416,7 +1475,7 @@ export default function Footer({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[7px] uppercase tracking-[0.18em] text-white/[0.21]">
               <span>
-                {t.footer.note}
+                {copy.footerNote}
               </span>
 
               <span className="hidden h-3 w-px bg-white/[0.08] sm:block" />

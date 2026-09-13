@@ -24,12 +24,11 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 
-import type { Character } from "@/data/characters";
-import {
-  getCharacterBySlug,
-  getCharacterHref,
-  getCharacterNavigation,
-} from "@/lib/characterNavigation";
+import type {
+  CharacterContent,
+  LocalizedText,
+  ProjectContent,
+} from "@/lib/content/types";
 
 const LAST_VISITED_KEY =
   "umbra-last-character";
@@ -176,8 +175,12 @@ const copyByLocale: Record<
 };
 
 type CharacterDossierProps = {
-  character: Character;
-  relatedCharacters: Character[];
+  character: CharacterContent;
+  relatedCharacters: readonly CharacterContent[];
+  characters: readonly CharacterContent[];
+  project: ProjectContent;
+  characterImage: string | null;
+  relatedCharacterImages: Record<string, string | null>;
 };
 
 type GalleryItem = {
@@ -197,8 +200,19 @@ function getLocale(
     : "sr";
 }
 
+function getLocalizedText(
+  text: LocalizedText | undefined,
+  locale: Locale,
+) {
+  if (!text) {
+    return "";
+  }
+
+  return text[locale] ?? text.sr;
+}
+
 function getGenderLabel(
-  gender: Character["gender"],
+  gender: CharacterContent["gender"],
   locale: Locale,
   copy: DossierCopy,
 ) {
@@ -218,7 +232,7 @@ function getGenderLabel(
 }
 
 function getCategoryLabel(
-  category: Character["category"],
+  category: CharacterContent["category"],
   locale: Locale,
 ) {
   if (category === "MAIN") {
@@ -241,16 +255,25 @@ function getProjectHref(
     : `/serije/${slug}`;
 }
 
+function getCharacterHref(
+  character: CharacterContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? `/en/characters/${character.slug}`
+    : `/likovi/${character.slug}`;
+}
+
 function CharacterBackdrop({
-  character,
+  image,
 }: {
-  character: Character;
+  image: string | null;
 }) {
   return (
     <>
-      {character.image ? (
+      {image ? (
         <Image
-          src={character.image}
+          src={image}
           alt=""
           fill
           priority
@@ -536,6 +559,10 @@ function CharacterNavigationCard({
 export default function CharacterDossier({
   character,
   relatedCharacters,
+  characters,
+  project,
+  characterImage,
+  relatedCharacterImages,
 }: CharacterDossierProps) {
   const pathname = usePathname();
   const locale = getLocale(pathname);
@@ -566,21 +593,89 @@ export default function CharacterDossier({
       : "/likovi";
 
   const projectHref = getProjectHref(
-    character.projectSlug,
+    project.slug,
     locale,
   );
 
-  const navigation =
-    getCharacterNavigation(character);
+  const characterName = getLocalizedText(
+    character.title,
+    locale,
+  );
+
+  const characterDescription =
+    getLocalizedText(
+      character.shortDescription ??
+        character.description,
+      locale,
+    ) ||
+    (locale === "en"
+      ? "Character dossier"
+      : "Dosije lika");
+
+  const projectTitle = getLocalizedText(
+    project.title,
+    locale,
+  );
+
+  const navigationCharacters = useMemo(() => {
+    const byId = new Map<string, CharacterContent>();
+
+    for (const item of [
+      ...relatedCharacters,
+      character,
+    ]) {
+      byId.set(item.id, item);
+    }
+
+    return [...byId.values()].sort(
+      (a, b) =>
+        (a.order ?? Number.POSITIVE_INFINITY) -
+        (b.order ?? Number.POSITIVE_INFINITY),
+    );
+  }, [character, relatedCharacters]);
+
+  const navigationIndex =
+    navigationCharacters.findIndex(
+      (item) => item.id === character.id,
+    );
+
+  const navigation = {
+    position:
+      navigationIndex >= 0
+        ? navigationIndex + 1
+        : 1,
+    total: navigationCharacters.length,
+    previous:
+      navigationIndex > 0
+        ? navigationCharacters[
+            navigationIndex - 1
+          ]
+        : null,
+    next:
+      navigationIndex >= 0 &&
+      navigationIndex < navigationCharacters.length - 1
+        ? navigationCharacters[
+            navigationIndex + 1
+          ]
+        : null,
+  };
+
+  const relatedVisible = useMemo(
+    () =>
+      relatedCharacters.filter(
+        (item) => item.id !== character.id,
+      ),
+    [character.id, relatedCharacters],
+  );
 
   const galleryItems = useMemo<GalleryItem[]>(
     () =>
-      character.image
+      characterImage
         ? [
             {
               id: `${character.id}-01`,
               number: "01",
-              image: character.image,
+              image: characterImage,
               label:
                 locale === "en"
                   ? "Portrait"
@@ -589,7 +684,7 @@ export default function CharacterDossier({
             },
           ]
         : [],
-    [character.id, character.image, locale],
+    [character.id, characterImage, locale],
   );
 
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
@@ -745,9 +840,9 @@ export default function CharacterDossier({
 
   const lastViewedCharacter =
     lastViewedSlug
-      ? getCharacterBySlug(
-          lastViewedSlug,
-        )
+      ? characters.find(
+          (item) => item.slug === lastViewedSlug,
+        ) ?? null
       : null;
 
   const reveal = {
@@ -805,11 +900,11 @@ export default function CharacterDossier({
             className="absolute inset-0"
           >
             <CharacterBackdrop
-              character={character}
+              image={characterImage}
             />
           </motion.div>
 
-          {!character.image ? (
+          {!characterImage ? (
             <CharacterPlaceholder
               copy={copy}
             />
@@ -850,7 +945,7 @@ export default function CharacterDossier({
                 <Link
                   href={projectHref}
                   className="group/project inline-flex items-center gap-4 rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
-                  aria-label={`${copy.project}: ${character.projectTitle}`}
+                  aria-label={`${copy.project}: ${projectTitle}`}
                 >
                   <span
                     aria-hidden="true"
@@ -867,7 +962,7 @@ export default function CharacterDossier({
                       color: `${GOLD_LIGHT}cc`,
                     }}
                   >
-                    {character.projectTitle}
+                    {projectTitle}
                   </span>
 
                   <ArrowUpRight
@@ -879,11 +974,11 @@ export default function CharacterDossier({
                 </Link>
 
                 <h1 className="mt-7 max-w-5xl text-[clamp(4rem,10vw,10rem)] font-[430] leading-[0.78] tracking-[-0.08em]">
-                  {character.name}
+                  {characterName}
                 </h1>
 
                 <p className="mt-9 max-w-2xl text-base leading-8 text-white/50 sm:text-lg">
-                  {character.shortDescription}
+                  {characterDescription}
                 </p>
               </motion.div>
 
@@ -930,7 +1025,7 @@ export default function CharacterDossier({
                       href={projectHref}
                       className="group mt-3 inline-flex items-center gap-2 rounded-sm text-sm text-white/[0.76] transition-colors duration-300 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                     >
-                      {character.projectTitle}
+                      {projectTitle}
 
                       <ArrowUpRight
                         aria-hidden="true"
@@ -985,7 +1080,7 @@ export default function CharacterDossier({
               <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-24">
                 <div>
                   <p className="max-w-3xl text-[clamp(1.35rem,2.25vw,2.15rem)] font-light leading-[1.38] tracking-[-0.035em] text-white/[0.78]">
-                    {character.shortDescription}
+                    {characterDescription}
                   </p>
                 </div>
 
@@ -1015,7 +1110,7 @@ export default function CharacterDossier({
                           )}
                           className="text-white/[0.76] underline decoration-white/10 underline-offset-4 transition-colors duration-300 hover:text-[#ead39a] hover:decoration-[#ead39a]/45 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                         >
-                          {lastViewedCharacter.name}
+                          {getLocalizedText(lastViewedCharacter.title, locale)}
                         </Link>
                       ) : (
                         <span className="text-white/[0.35]">
@@ -1127,7 +1222,7 @@ export default function CharacterDossier({
                               {copy.gallerySubject}
                             </p>
                             <p className="mt-2 text-[11px] uppercase tracking-[0.11em] text-white/[0.62]">
-                              {character.name}
+                              {characterName}
                             </p>
                           </div>
 
@@ -1136,7 +1231,7 @@ export default function CharacterDossier({
                               {copy.galleryProject}
                             </p>
                             <p className="mt-2 text-[11px] uppercase tracking-[0.11em] text-white/[0.62]">
-                              {character.projectTitle}
+                              {projectTitle}
                             </p>
                           </div>
                         </div>
@@ -1199,10 +1294,10 @@ export default function CharacterDossier({
                   <Link
                     href={projectHref}
                     className="group/project-title inline-flex rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
-                    aria-label={`${copy.project}: ${character.projectTitle}`}
+                    aria-label={`${copy.project}: ${projectTitle}`}
                   >
                     <h2 className="text-[clamp(2.2rem,4vw,4.4rem)] font-[430] leading-[0.9] tracking-[-0.06em] transition-colors duration-300 group-hover/project-title:text-white/[0.80]">
-                      {character.projectTitle}
+                      {projectTitle}
                     </h2>
                   </Link>
 
@@ -1240,8 +1335,12 @@ export default function CharacterDossier({
                 }
                 label={copy.previous}
                 name={
-                  navigation.previous?.name ??
-                  null
+                  navigation.previous
+                    ? getLocalizedText(
+                        navigation.previous.title,
+                        locale,
+                      )
+                    : null
                 }
                 direction="previous"
               />
@@ -1259,7 +1358,7 @@ export default function CharacterDossier({
                   </div>
 
                   <div className="mt-4 text-2xl font-[430] uppercase leading-none tracking-[-0.04em] text-white">
-                    {character.name}
+                    {characterName}
                   </div>
                 </div>
 
@@ -1281,8 +1380,12 @@ export default function CharacterDossier({
                 }
                 label={copy.next}
                 name={
-                  navigation.next?.name ??
-                  null
+                  navigation.next
+                    ? getLocalizedText(
+                        navigation.next.title,
+                        locale,
+                      )
+                    : null
                 }
                 direction="next"
               />
@@ -1291,7 +1394,7 @@ export default function CharacterDossier({
         </section>
 
         {/* RELATED */}
-        {relatedCharacters.length > 0 ? (
+        {relatedVisible.length > 0 ? (
           <section className="border-b border-white/[0.07] bg-[#030303] px-6 py-24 sm:px-10 lg:px-16 lg:py-30">
             <div className="mx-auto max-w-[1500px]">
               <motion.div
@@ -1320,7 +1423,7 @@ export default function CharacterDossier({
               </motion.div>
 
               <div className="grid gap-px border border-white/[0.07] bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-3">
-                {relatedCharacters
+                {relatedVisible
                   .slice(0, 3)
                   .map((related) => {
                     const relatedHref =
@@ -1328,6 +1431,8 @@ export default function CharacterDossier({
                         related,
                         locale,
                       );
+                    const relatedImage =
+                      relatedCharacterImages[related.id];
 
                     return (
                       <Link
@@ -1338,16 +1443,14 @@ export default function CharacterDossier({
                         aria-label={
                           locale ===
                           "en"
-                            ? `Open character ${related.name}`
-                            : `Otvori lik ${related.name}`
+                            ? `Open character ${getLocalizedText(related.title, locale)}`
+                            : `Otvori lik ${getLocalizedText(related.title, locale)}`
                         }
                         className="group relative min-h-[360px] overflow-hidden bg-[#070707] outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/55"
                       >
-                        {related.image ? (
+                        {relatedImage ? (
                           <Image
-                            src={
-                              related.image
-                            }
+                            src={relatedImage}
                             alt=""
                             fill
                             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -1389,7 +1492,7 @@ export default function CharacterDossier({
 
                           <div className="flex items-end justify-between gap-4">
                             <h3 className="text-[clamp(1.8rem,3vw,2.8rem)] font-[430] uppercase tracking-[-0.045em]">
-                              {related.name}
+                              {getLocalizedText(related.title, locale)}
                             </h3>
 
                             <ArrowUpRight
@@ -1465,7 +1568,7 @@ export default function CharacterDossier({
             className="fixed inset-0 z-[260] bg-[#020202]/[0.98]"
             role="dialog"
             aria-modal="true"
-            aria-label={`${copy.galleryViewer}: ${character.name}`}
+            aria-label={`${copy.galleryViewer}: ${characterName}`}
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) {
                 closeGallery();
@@ -1491,7 +1594,7 @@ export default function CharacterDossier({
                   </span>
                   <span className="hidden h-px w-8 bg-white/[0.09] sm:block" />
                   <span className="hidden font-mono text-[6px] uppercase tracking-[0.22em] text-white/[0.18] sm:block">
-                    {character.name}
+                    {characterName}
                   </span>
                 </div>
 
@@ -1537,8 +1640,8 @@ export default function CharacterDossier({
 
                       <div className="relative h-[60svh] min-h-[400px] max-h-[800px] w-full">
                         <Image
-                          src={selectedGalleryItem.image ?? character.image ?? ""}
-                          alt={`${character.name} — ${selectedGalleryItem.label}`}
+                          src={selectedGalleryItem.image ?? characterImage ?? ""}
+                          alt={`${characterName} — ${selectedGalleryItem.label}`}
                           fill
                           sizes="(min-width: 1280px) 980px, (min-width: 1024px) 70vw, 92vw"
                           className="object-contain"
@@ -1594,13 +1697,13 @@ export default function CharacterDossier({
                         </h3>
 
                         <p className="mt-5 text-[11px] leading-6 text-white/[0.28]">
-                          {character.name}
+                          {characterName}
                         </p>
 
                         <div className="mt-6 h-px w-8 bg-[#c7a96b]/35" />
 
                         <p className="mt-6 font-mono text-[6px] uppercase tracking-[0.24em] text-white/[0.15]">
-                          {character.projectTitle}
+                          {projectTitle}
                         </p>
                       </div>
 

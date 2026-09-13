@@ -1,7 +1,12 @@
-
 import type { Metadata } from "next";
 
 import CharactersArchive from "@/components/CharactersArchive";
+
+import {
+  getCharacterMedia,
+  getCharacters,
+  getProjects,
+} from "@/lib/content/queries";
 
 export const metadata: Metadata = {
   title: "Likovi — Umbra Studio",
@@ -19,5 +24,31 @@ export const metadata: Metadata = {
 };
 
 export default function CharactersPage() {
-  return <CharactersArchive locale="sr" />;
+  const characters =
+    getCharacters();
+
+  const projects =
+    getProjects();
+
+  const characterImages =
+    Object.fromEntries(
+      characters.map((character) => {
+        const media =
+          getCharacterMedia(character.id);
+
+        return [
+          character.id,
+          media[0]?.src ?? null,
+        ];
+      }),
+    );
+
+  return (
+    <CharactersArchive
+      locale="sr"
+      characters={characters}
+      projects={projects}
+      characterImages={characterImages}
+    />
+  );
 }

@@ -8,7 +8,7 @@ import {
 /* ==========================================================================
    UMBRA STUDIO
    MOTION SYSTEM
-   V5 FINAL SYSTEM
+   V6 FINAL SYSTEM
 
    SINGLE GLOBAL SCROLL SOURCE
 

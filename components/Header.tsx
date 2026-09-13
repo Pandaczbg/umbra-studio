@@ -20,10 +20,7 @@ import {
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-import {
-  type Locale,
-  getTranslations,
-} from "@/data/translations";
+type Locale = "sr" | "en";
 
 /* ==========================================================================
    UMBRA STUDIO
@@ -1215,8 +1212,6 @@ export default function Header() {
   const reducedMotion =
     useReducedMotion() ?? false;
 
-  const translations =
-    getTranslations(locale);
 
   const [
     mobileOpen,
@@ -1240,6 +1235,9 @@ export default function Header() {
 
   const activeRoute =
     getActiveRoute(pathname);
+
+  const navigationFollowLabel =
+    locale === "en" ? "FOLLOW ON YOUTUBE" : "PRATI NA YOUTUBE-U";
 
   const activeSection =
     isHomePath(
@@ -1815,9 +1813,7 @@ export default function Header() {
                 <div className="hidden lg:block">
                   <DesktopSubscribe
                     label={
-                      translations
-                        .navigation
-                        .follow
+                      navigationFollowLabel
                     }
                   />
                 </div>
@@ -1965,9 +1961,7 @@ export default function Header() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={
-                      translations
-                        .navigation
-                        .follow
+                      navigationFollowLabel
                     }
                     className="group relative mt-4 flex h-11 items-center justify-center gap-2 overflow-hidden border border-[#c7a96b55] text-[9px] font-semibold uppercase tracking-[0.22em] text-white/[0.9] transition-[border-color,background-color,color] duration-300 hover:border-[#ead39a] hover:bg-[#ead39a]/[0.035] hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
@@ -1980,9 +1974,7 @@ export default function Header() {
 
                     <span>
                       {
-                        translations
-                          .navigation
-                          .follow
+                        navigationFollowLabel
                       }
                     </span>
 

@@ -27,42 +27,53 @@ import {
   useSearchParams,
 } from "next/navigation";
 
-import {
-  characters,
-  type Character,
-  type CharacterCategory,
-  type CharacterGender,
-} from "@/data/characters";
-import { projects } from "@/data/projects";
-import { getCharacterHref } from "@/lib/characterNavigation";
+import type {
+  CharacterCategory,
+  CharacterContent,
+  CharacterGender,
+  ProjectContent,
+} from "@/lib/content/types";
 
 type Locale = "sr" | "en";
+
 type ProjectFilter = "all" | string;
-type CategoryFilter = "all" | CharacterCategory;
+
+type CategoryFilter =
+  | "all"
+  | CharacterCategory;
+
 type GenderFilter =
   | "all"
   | Exclude<CharacterGender, null>;
+
 type ViewMode = "grid" | "list";
+
+type CharacterImageMap =
+  Record<string, string | null>;
 
 type CharactersArchiveProps = {
   locale: Locale;
+  characters: readonly CharacterContent[];
+  projects: readonly ProjectContent[];
+  characterImages: CharacterImageMap;
 };
+
+type ArchiveCharacter = CharacterContent & {
+  project: ProjectContent | null;
+  image: string | null;
+};
+
+type ArchiveCopy = (typeof COPY)[Locale];
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
-const EASE = [0.22, 1, 0.36, 1] as const;
 
-const PROJECT_OPTIONS = projects.map((project) => ({
-  slug: project.slug,
-  title: project.title,
-}));
-
-const PROJECT_TITLE_BY_SLUG = new Map(
-  PROJECT_OPTIONS.map((project) => [
-    project.slug,
-    project.title,
-  ]),
-);
+const EASE = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
 
 const COPY = {
   sr: {
@@ -148,14 +159,14 @@ const COPY = {
   },
 } as const;
 
-type ArchiveCopy = (typeof COPY)[Locale];
-
 function getRoleLabel(
   category: CharacterCategory,
   locale: Locale,
 ) {
   if (category === "MAIN") {
-    return locale === "en" ? "Main" : "Glavni";
+    return locale === "en"
+      ? "Main"
+      : "Glavni";
   }
 
   return locale === "en"
@@ -171,25 +182,57 @@ function normalizeSearch(value: string) {
     .replace(/\p{Diacritic}/gu, "");
 }
 
-function getCanonicalProjectTitle(
-  character: Character,
+function getLocalizedTitle(
+  character: CharacterContent,
+  locale: Locale,
 ) {
-  return (
-    PROJECT_TITLE_BY_SLUG.get(
-      character.projectSlug,
-    ) ?? character.projectTitle
-  );
+  return locale === "en"
+    ? character.title.en
+    : character.title.sr;
+}
+
+function getLocalizedDescription(
+  character: CharacterContent,
+  locale: Locale,
+) {
+  const localized =
+    locale === "en"
+      ? character.shortDescription?.en ??
+        character.description?.en
+      : character.shortDescription?.sr ??
+        character.description?.sr;
+
+  return localized ?? "";
+}
+
+function getProjectTitle(
+  project: ProjectContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? project.title.en
+    : project.title.sr;
+}
+
+function getCharacterHref(
+  character: CharacterContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? `/en/characters/${character.slug}`
+    : `/likovi/${character.slug}`;
 }
 
 function getProjectFilter(
   searchParams: URLSearchParams,
+  projects: readonly ProjectContent[],
 ): ProjectFilter {
   const project =
     searchParams.get("project") ?? "all";
 
   if (
     project === "all" ||
-    PROJECT_OPTIONS.some(
+    projects.some(
       (item) => item.slug === project,
     )
   ) {
@@ -231,19 +274,80 @@ function getViewMode(
 
 export default function CharactersArchive({
   locale,
+  characters,
+  projects,
+  characterImages,
 }: CharactersArchiveProps) {
   const copy = COPY[locale];
+
   const reducedMotion =
     useReducedMotion() ?? false;
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const projectBySlug = useMemo(
+    () =>
+      new Map(
+        projects.map((project) => [
+          project.slug,
+          project,
+        ]),
+      ),
+    [projects],
+  );
+
+  const projectById = useMemo(
+    () =>
+      new Map(
+        projects.map((project) => [
+          project.id,
+          project,
+        ]),
+      ),
+    [projects],
+  );
+
+  const archiveCharacters =
+    useMemo<ArchiveCharacter[]>(
+      () =>
+        characters.map((character) => ({
+          ...character,
+          project:
+            projectById.get(
+              character.projectId,
+            ) ?? null,
+          image:
+            characterImages[
+              character.id
+            ] ?? null,
+        })),
+      [
+        characters,
+        characterImages,
+        projectById,
+      ],
+    );
+
+  const projectOptions = useMemo(
+    () =>
+      projects.map((project) => ({
+        id: project.id,
+        slug: project.slug,
+        title: project.title,
+      })),
+    [projects],
+  );
 
   const query =
     searchParams.get("q") ?? "";
 
   const projectFilter =
-    getProjectFilter(searchParams);
+    getProjectFilter(
+      searchParams,
+      projects,
+    );
 
   const categoryFilter =
     getCategoryFilter(searchParams);
@@ -302,7 +406,8 @@ export default function CharactersArchive({
       params.set("view", view);
     }
 
-    const queryString = params.toString();
+    const queryString =
+      params.toString();
 
     const safePathname =
       pathname ??
@@ -314,72 +419,128 @@ export default function CharactersArchive({
       queryString
         ? `${safePathname}?${queryString}`
         : safePathname,
-      { scroll: false },
+      {
+        scroll: false,
+      },
     );
   };
 
-  const filteredCharacters = useMemo(() => {
-    const normalizedQuery =
-      normalizeSearch(query);
+  const filteredCharacters =
+    useMemo(() => {
+      const normalizedQuery =
+        normalizeSearch(query);
 
-    return characters.filter((character) => {
-      if (
-        projectFilter !== "all" &&
-        character.projectSlug !== projectFilter
-      ) {
-        return false;
-      }
+      return archiveCharacters.filter(
+        (character) => {
+          if (
+            projectFilter !== "all" &&
+            character.projectId !==
+              projectBySlug.get(
+                projectFilter,
+              )?.id
+          ) {
+            return false;
+          }
 
-      if (
-        categoryFilter !== "all" &&
-        character.category !== categoryFilter
-      ) {
-        return false;
-      }
+          if (
+            categoryFilter !== "all" &&
+            character.category !==
+              categoryFilter
+          ) {
+            return false;
+          }
 
-      if (
-        genderFilter !== "all" &&
-        character.gender !== genderFilter
-      ) {
-        return false;
-      }
+          if (
+            genderFilter !== "all" &&
+            character.gender !==
+              genderFilter
+          ) {
+            return false;
+          }
 
-      if (normalizedQuery) {
-        const haystack = normalizeSearch(
-          [
-            character.name,
-            getCanonicalProjectTitle(
-              character,
-            ),
-            character.shortDescription,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        );
+          if (normalizedQuery) {
+            const projectTitle =
+              character.project
+                ? getProjectTitle(
+                    character.project,
+                    locale,
+                  )
+                : "";
 
-        if (
-          !haystack.includes(
-            normalizedQuery,
-          )
-        ) {
-          return false;
-        }
-      }
+            const currentTitle =
+              getLocalizedTitle(
+                character,
+                locale,
+              );
 
-      return true;
-    });
-  }, [
-    categoryFilter,
-    genderFilter,
-    projectFilter,
-    query,
-  ]);
+            const alternateTitle =
+              getLocalizedTitle(
+                character,
+                locale === "en"
+                  ? "sr"
+                  : "en",
+              );
+
+            const currentDescription =
+              getLocalizedDescription(
+                character,
+                locale,
+              );
+
+            const alternateDescription =
+              getLocalizedDescription(
+                character,
+                locale === "en"
+                  ? "sr"
+                  : "en",
+              );
+
+            const haystack =
+              normalizeSearch(
+                [
+                  currentTitle,
+                  alternateTitle,
+                  projectTitle,
+                  currentDescription,
+                  alternateDescription,
+                ]
+                  .filter(Boolean)
+                  .join(" "),
+              );
+
+            if (
+              !haystack.includes(
+                normalizedQuery,
+              )
+            ) {
+              return false;
+            }
+          }
+
+          return true;
+        },
+      );
+    }, [
+      archiveCharacters,
+      categoryFilter,
+      genderFilter,
+      locale,
+      projectBySlug,
+      projectFilter,
+      query,
+    ]);
 
   const activeFilterCount =
     Number(Boolean(query.trim())) +
-    Number(projectFilter !== "all") +
-    Number(categoryFilter !== "all") +
-    Number(genderFilter !== "all");
+    Number(
+      projectFilter !== "all",
+    ) +
+    Number(
+      categoryFilter !== "all",
+    ) +
+    Number(
+      genderFilter !== "all",
+    );
 
   const hasFilters =
     activeFilterCount > 0;
@@ -416,7 +577,9 @@ export default function CharactersArchive({
     });
   };
 
-  const setProject = (value: string) => {
+  const setProject = (
+    value: string,
+  ) => {
     updateUrl({
       project: value,
       role: categoryFilter,
@@ -447,7 +610,9 @@ export default function CharactersArchive({
     });
   };
 
-  const setView = (mode: ViewMode) => {
+  const setView = (
+    mode: ViewMode,
+  ) => {
     updateUrl({
       project: projectFilter,
       role: categoryFilter,
@@ -482,7 +647,9 @@ export default function CharactersArchive({
             y: 0,
           }}
           transition={{
-            duration: reducedMotion ? 0 : 0.7,
+            duration: reducedMotion
+              ? 0
+              : 0.7,
             ease: EASE,
           }}
           className="relative overflow-hidden border-b border-white/[0.07] pb-14 lg:pb-18"
@@ -504,7 +671,8 @@ export default function CharactersArchive({
                   aria-hidden="true"
                   className="h-px w-12"
                   style={{
-                    background: `linear-gradient(90deg, transparent, ${GOLD})`,
+                    background:
+                      `linear-gradient(90deg, transparent, ${GOLD})`,
                   }}
                 />
 
@@ -556,7 +724,7 @@ export default function CharactersArchive({
                   }}
                 >
                   {String(
-                    characters.length,
+                    archiveCharacters.length,
                   ).padStart(2, "0")}
                 </span>
 
@@ -604,8 +772,12 @@ export default function CharactersArchive({
                 id="character-archive-search"
                 type="search"
                 value={query}
-                onChange={handleSearchChange}
-                placeholder={copy.searchPlaceholder}
+                onChange={
+                  handleSearchChange
+                }
+                placeholder={
+                  copy.searchPlaceholder
+                }
                 inputMode="search"
                 enterKeyHint="search"
                 className="min-w-0 flex-1 bg-transparent px-4 py-5 text-sm text-white outline-none placeholder:text-white/[0.19] sm:text-[15px]"
@@ -615,7 +787,9 @@ export default function CharactersArchive({
                 <button
                   type="button"
                   onClick={clearSearch}
-                  aria-label={copy.clearSearch}
+                  aria-label={
+                    copy.clearSearch
+                  }
                   className="mr-2 flex h-9 w-9 shrink-0 items-center justify-center border border-white/[0.08] text-white/[0.28] transition-colors duration-300 hover:border-[#c7a96b]/35 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                 >
                   <X
@@ -641,12 +815,19 @@ export default function CharactersArchive({
                 options={[
                   {
                     value: "all",
-                    label: copy.allProjects,
+                    label:
+                      copy.allProjects,
                   },
-                  ...PROJECT_OPTIONS.map(
+                  ...projectOptions.map(
                     (project) => ({
-                      value: project.slug,
-                      label: project.title,
+                      value:
+                        project.slug,
+                      label:
+                        locale === "en"
+                          ? project.title
+                              .en
+                          : project.title
+                              .sr,
                     }),
                   ),
                 ]}
@@ -667,7 +848,8 @@ export default function CharactersArchive({
                   },
                   {
                     value: "SUPPORTING",
-                    label: copy.supporting,
+                    label:
+                      copy.supporting,
                   },
                 ]}
                 onChange={(value) =>
@@ -683,7 +865,8 @@ export default function CharactersArchive({
                 options={[
                   {
                     value: "all",
-                    label: copy.allGenders,
+                    label:
+                      copy.allGenders,
                   },
                   {
                     value: "MALE",
@@ -733,7 +916,9 @@ export default function CharactersArchive({
           <div className="lg:hidden">
             <button
               type="button"
-              aria-expanded={mobileFiltersOpen}
+              aria-expanded={
+                mobileFiltersOpen
+              }
               aria-controls="character-mobile-filters"
               onClick={() =>
                 setMobileFiltersOpen(
@@ -789,12 +974,20 @@ export default function CharactersArchive({
                     options={[
                       {
                         value: "all",
-                        label: copy.allProjects,
+                        label:
+                          copy.allProjects,
                       },
-                      ...PROJECT_OPTIONS.map(
+                      ...projectOptions.map(
                         (project) => ({
-                          value: project.slug,
-                          label: project.title,
+                          value:
+                            project.slug,
+                          label:
+                            locale ===
+                            "en"
+                              ? project
+                                  .title.en
+                              : project
+                                  .title.sr,
                         }),
                       ),
                     ]}
@@ -807,7 +1000,8 @@ export default function CharactersArchive({
                     options={[
                       {
                         value: "all",
-                        label: copy.allRoles,
+                        label:
+                          copy.allRoles,
                       },
                       {
                         value: "MAIN",
@@ -815,7 +1009,8 @@ export default function CharactersArchive({
                       },
                       {
                         value: "SUPPORTING",
-                        label: copy.supporting,
+                        label:
+                          copy.supporting,
                       },
                     ]}
                     onChange={(value) =>
@@ -831,7 +1026,8 @@ export default function CharactersArchive({
                     options={[
                       {
                         value: "all",
-                        label: copy.allGenders,
+                        label:
+                          copy.allGenders,
                       },
                       {
                         value: "MALE",
@@ -879,7 +1075,9 @@ export default function CharactersArchive({
 
         {hasFilters ? (
           <section
-            aria-label={copy.activeFilters}
+            aria-label={
+              copy.activeFilters
+            }
             className="border-b border-white/[0.055] py-4"
           >
             <div className="flex flex-wrap items-center gap-2">
@@ -894,12 +1092,20 @@ export default function CharactersArchive({
                 />
               ) : null}
 
-              {projectFilter !== "all" ? (
+              {projectFilter !==
+              "all" ? (
                 <FilterChip
                   label={
-                    PROJECT_TITLE_BY_SLUG.get(
+                    projectBySlug.get(
                       projectFilter,
-                    ) ?? projectFilter
+                    )
+                      ? getProjectTitle(
+                          projectBySlug.get(
+                            projectFilter,
+                          )!,
+                          locale,
+                        )
+                      : projectFilter
                   }
                   onRemove={() =>
                     setProject("all")
@@ -907,10 +1113,12 @@ export default function CharactersArchive({
                 />
               ) : null}
 
-              {categoryFilter !== "all" ? (
+              {categoryFilter !==
+              "all" ? (
                 <FilterChip
                   label={
-                    categoryFilter === "MAIN"
+                    categoryFilter ===
+                    "MAIN"
                       ? copy.main
                       : copy.supporting
                   }
@@ -920,10 +1128,12 @@ export default function CharactersArchive({
                 />
               ) : null}
 
-              {genderFilter !== "all" ? (
+              {genderFilter !==
+              "all" ? (
                 <FilterChip
                   label={
-                    genderFilter === "MALE"
+                    genderFilter ===
+                    "MALE"
                       ? copy.male
                       : copy.female
                   }
@@ -971,7 +1181,7 @@ export default function CharactersArchive({
 
             <p className="mb-1 text-[7px] uppercase tracking-[0.22em] text-white/[0.16]">
               {filteredCharacters.length ===
-              characters.length
+              archiveCharacters.length
                 ? copy.allCharacters
                 : `${copy.count} ${filteredCharacters.length}`}
             </p>
@@ -984,7 +1194,9 @@ export default function CharactersArchive({
 
             <div className="flex border border-white/[0.07]">
               <ViewButton
-                active={viewMode === "grid"}
+                active={
+                  viewMode === "grid"
+                }
                 label={copy.grid}
                 onClick={() =>
                   setView("grid")
@@ -998,7 +1210,9 @@ export default function CharactersArchive({
               </ViewButton>
 
               <ViewButton
-                active={viewMode === "list"}
+                active={
+                  viewMode === "list"
+                }
                 label={copy.list}
                 onClick={() =>
                   setView("list")
@@ -1014,25 +1228,36 @@ export default function CharactersArchive({
           </div>
         </section>
 
-        {filteredCharacters.length === 0 ? (
+        {filteredCharacters.length ===
+        0 ? (
           <EmptyState
             copy={copy}
             onReset={clearAll}
-            reducedMotion={reducedMotion}
+            reducedMotion={
+              reducedMotion
+            }
           />
-        ) : viewMode === "grid" ? (
+        ) : viewMode ===
+          "grid" ? (
           <motion.section
             layout
             className="mt-5 grid gap-px bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-3"
-            aria-label={copy.openArchive}
+            aria-label={
+              copy.openArchive
+            }
           >
             {filteredCharacters.map(
-              (character, index) => (
+              (
+                character,
+                index,
+              ) => (
                 <ArchiveCard
                   key={character.id}
                   character={character}
                   index={index}
-                  total={filteredCharacters.length}
+                  total={
+                    filteredCharacters.length
+                  }
                   locale={locale}
                   reducedMotion={
                     reducedMotion
@@ -1045,15 +1270,22 @@ export default function CharactersArchive({
           <motion.section
             layout
             className="mt-5 border-y border-white/[0.055]"
-            aria-label={copy.openArchive}
+            aria-label={
+              copy.openArchive
+            }
           >
             {filteredCharacters.map(
-              (character, index) => (
+              (
+                character,
+                index,
+              ) => (
                 <ArchiveListRow
                   key={character.id}
                   character={character}
                   index={index}
-                  total={filteredCharacters.length}
+                  total={
+                    filteredCharacters.length
+                  }
                   locale={locale}
                   reducedMotion={
                     reducedMotion
@@ -1078,13 +1310,16 @@ export default function CharactersArchive({
 
             <Link
               href={
-                locale === "en"
+                locale ===
+                "en"
                   ? "/en"
                   : "/"
               }
               className="group inline-flex items-center gap-3 font-mono text-[7px] uppercase tracking-[0.22em] text-white/[0.22] transition-colors duration-300 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
             >
-              {copy.previousWorld}
+              {
+                copy.previousWorld
+              }
 
               <ArrowUpRight
                 aria-hidden="true"
@@ -1112,7 +1347,9 @@ function DesktopFilter({
     value: string;
     label: string;
   }>;
-  onChange: (value: string) => void;
+  onChange: (
+    value: string,
+  ) => void;
 }) {
   return (
     <div className="border-r border-white/[0.055] px-5 py-5 first:pl-0 xl:px-7">
@@ -1121,29 +1358,37 @@ function DesktopFilter({
       </p>
 
       <div className="flex flex-wrap gap-1.5">
-        {options.map((option) => {
-          const active =
-            value === option.value;
+        {options.map(
+          (option) => {
+            const active =
+              value === option.value;
 
-          return (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={active}
-              onClick={() =>
-                onChange(option.value)
-              }
-              className={[
-                "min-h-9 border px-3 py-1.5 text-[7px] uppercase tracking-[0.17em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
-                active
-                  ? "border-[#c7a96b]/40 bg-[#c7a96b]/[0.06] text-[#ead39a]"
-                  : "border-white/[0.06] text-white/[0.24] hover:border-white/[0.13] hover:text-white/[0.58]",
-              ].join(" ")}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={
+                  active
+                }
+                onClick={() =>
+                  onChange(
+                    option.value,
+                  )
+                }
+                className={[
+                  "min-h-9 border px-3 py-1.5 text-[7px] uppercase tracking-[0.17em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
+                  active
+                    ? "border-[#c7a96b]/40 bg-[#c7a96b]/[0.06] text-[#ead39a]"
+                    : "border-white/[0.06] text-white/[0.24] hover:border-white/[0.13] hover:text-white/[0.58]",
+                ].join(" ")}
+              >
+                {
+                  option.label
+                }
+              </button>
+            );
+          },
+        )}
       </div>
     </div>
   );
@@ -1161,7 +1406,9 @@ function MobileFilter({
     value: string;
     label: string;
   }>;
-  onChange: (value: string) => void;
+  onChange: (
+    value: string,
+  ) => void;
 }) {
   return (
     <div>
@@ -1170,29 +1417,37 @@ function MobileFilter({
       </p>
 
       <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const active =
-            value === option.value;
+        {options.map(
+          (option) => {
+            const active =
+              value === option.value;
 
-          return (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={active}
-              onClick={() =>
-                onChange(option.value)
-              }
-              className={[
-                "min-h-9 border px-3 py-2 text-[7px] uppercase tracking-[0.17em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
-                active
-                  ? "border-[#c7a96b]/40 bg-[#c7a96b]/[0.06] text-[#ead39a]"
-                  : "border-white/[0.07] text-white/[0.28] hover:border-white/[0.14] hover:text-white/[0.6]",
-              ].join(" ")}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={
+                  active
+                }
+                onClick={() =>
+                  onChange(
+                    option.value,
+                  )
+                }
+                className={[
+                  "min-h-9 border px-3 py-2 text-[7px] uppercase tracking-[0.17em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
+                  active
+                    ? "border-[#c7a96b]/40 bg-[#c7a96b]/[0.06] text-[#ead39a]"
+                    : "border-white/[0.07] text-white/[0.28] hover:border-white/[0.14] hover:text-white/[0.6]",
+                ].join(" ")}
+              >
+                {
+                  option.label
+                }
+              </button>
+            );
+          },
+        )}
       </div>
     </div>
   );
@@ -1264,7 +1519,9 @@ function EmptyState({
     <motion.section
       initial={{
         opacity: 0,
-        y: reducedMotion ? 0 : 14,
+        y: reducedMotion
+          ? 0
+          : 14,
       }}
       animate={{
         opacity: 1,
@@ -1277,7 +1534,8 @@ function EmptyState({
           aria-hidden="true"
           className="mx-auto h-px w-14"
           style={{
-            background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)`,
+            background:
+              `linear-gradient(90deg, transparent, ${GOLD}, transparent)`,
           }}
         />
 
@@ -1313,41 +1571,67 @@ function ArchiveCard({
   locale,
   reducedMotion,
 }: {
-  character: Character;
+  character: ArchiveCharacter;
   index: number;
   total: number;
   locale: Locale;
   reducedMotion: boolean;
 }) {
-  const category = getRoleLabel(
-    character.category,
-    locale,
-  );
+  const category =
+    getRoleLabel(
+      character.category,
+      locale,
+    );
 
   const projectTitle =
-    getCanonicalProjectTitle(character);
+    character.project
+      ? getProjectTitle(
+          character.project,
+          locale,
+        )
+      : "—";
 
-  const href = getCharacterHref(
-    character,
-    locale,
-  );
+  const characterTitle =
+    getLocalizedTitle(
+      character,
+      locale,
+    );
+
+  const characterDescription =
+    getLocalizedDescription(
+      character,
+      locale,
+    );
+
+  const href =
+    getCharacterHref(
+      character,
+      locale,
+    );
 
   return (
     <motion.article
       layout
       initial={{
         opacity: 0,
-        y: reducedMotion ? 0 : 18,
+        y: reducedMotion
+          ? 0
+          : 18,
       }}
       animate={{
         opacity: 1,
         y: 0,
       }}
       transition={{
-        duration: reducedMotion ? 0 : 0.55,
+        duration: reducedMotion
+          ? 0
+          : 0.55,
         delay: reducedMotion
           ? 0
-          : Math.min(index * 0.035, 0.2),
+          : Math.min(
+              index * 0.035,
+              0.2,
+            ),
         ease: EASE,
       }}
       className="group relative min-h-[500px] overflow-hidden bg-[#070707]"
@@ -1356,8 +1640,8 @@ function ArchiveCard({
         href={href}
         aria-label={
           locale === "en"
-            ? `Open character ${character.name}`
-            : `Otvori lik ${character.name}`
+            ? `Open character ${characterTitle}`
+            : `Otvori lik ${characterTitle}`
         }
         className="absolute inset-0 z-20 block outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/70"
       >
@@ -1374,13 +1658,18 @@ function ArchiveCard({
                 : 1.04,
             }}
             transition={{
-              duration: reducedMotion ? 0 : 0.8,
+              duration:
+                reducedMotion
+                  ? 0
+                  : 0.8,
               ease: EASE,
             }}
             className="absolute inset-[-18px]"
           >
             <Image
-              src={character.image}
+              src={
+                character.image
+              }
               alt=""
               fill
               sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -1411,16 +1700,23 @@ function ArchiveCard({
               color: `${GOLD_LIGHT}72`,
             }}
           >
-            {String(index + 1).padStart(2, "0")}
+            {String(
+              index + 1,
+            ).padStart(2, "0")}
           </span>
 
           <span className="font-mono text-[7px] tracking-[0.2em] text-white/[0.22]">
-            {String(index + 1).padStart(
+            {String(
+              index + 1,
+            ).padStart(
               2,
               "0",
             )}{" "}
             /{" "}
-            {String(total).padStart(2, "0")}
+            {String(total).padStart(
+              2,
+              "0",
+            )}
           </span>
         </div>
 
@@ -1440,18 +1736,24 @@ function ArchiveCard({
             <span className="h-px w-5 bg-white/[0.11]" />
 
             <span className="max-w-[190px] truncate text-[7px] uppercase tracking-[0.22em] text-white/[0.28]">
-              {projectTitle}
+              {
+                projectTitle
+              }
             </span>
           </div>
 
           <div className="flex items-end justify-between gap-5">
             <div className="min-w-0">
               <h2 className="text-[clamp(2.2rem,4vw,4rem)] font-[430] uppercase leading-[0.86] tracking-[-0.06em] text-white transition-transform duration-500 group-hover:-translate-y-1">
-                {character.name}
+                {
+                  characterTitle
+                }
               </h2>
 
               <p className="mt-4 max-w-[360px] text-[10px] leading-5 text-white/[0.34] transition-colors duration-500 group-hover:text-white/[0.52]">
-                {character.shortDescription}
+                {
+                  characterDescription
+                }
               </p>
             </div>
 
@@ -1469,9 +1771,12 @@ function ArchiveCard({
             <span className="h-px w-8 bg-[#c7a96b]/35 transition-[width] duration-500 group-hover:w-14" />
 
             <span className="font-mono text-[7px] uppercase tracking-[0.22em] text-white/[0.2] transition-colors duration-300 group-hover:text-white/[0.4]">
-              {locale === "en"
-                ? "Open dossier"
-                : "Otvori dosije"}
+              {
+                locale ===
+                "en"
+                  ? "Open dossier"
+                  : "Otvori dosije"
+              }
             </span>
           </div>
         </div>
@@ -1492,38 +1797,67 @@ function ArchiveListRow({
   locale,
   reducedMotion,
 }: {
-  character: Character;
+  character: ArchiveCharacter;
   index: number;
   total: number;
   locale: Locale;
   reducedMotion: boolean;
 }) {
-  const href = getCharacterHref(
-    character,
-    locale,
-  );
+  const href =
+    getCharacterHref(
+      character,
+      locale,
+    );
 
-  const category = getRoleLabel(
-    character.category,
-    locale,
-  );
+  const category =
+    getRoleLabel(
+      character.category,
+      locale,
+    );
+
+  const characterTitle =
+    getLocalizedTitle(
+      character,
+      locale,
+    );
+
+  const characterDescription =
+    getLocalizedDescription(
+      character,
+      locale,
+    );
+
+  const projectTitle =
+    character.project
+      ? getProjectTitle(
+          character.project,
+          locale,
+        )
+      : "—";
 
   return (
     <motion.article
       layout
       initial={{
         opacity: 0,
-        y: reducedMotion ? 0 : 8,
+        y: reducedMotion
+          ? 0
+          : 8,
       }}
       animate={{
         opacity: 1,
         y: 0,
       }}
       transition={{
-        duration: reducedMotion ? 0 : 0.35,
+        duration: reducedMotion
+          ? 0
+          : 0.35,
         delay: reducedMotion
           ? 0
-          : Math.min(index * 0.018, 0.12),
+          : Math.min(
+              index * 0.018,
+              0.12,
+            ),
         ease: EASE,
       }}
       className="group border-b border-white/[0.05] last:border-b-0"
@@ -1532,8 +1866,8 @@ function ArchiveListRow({
         href={href}
         aria-label={
           locale === "en"
-            ? `Open character ${character.name}`
-            : `Otvori lik ${character.name}`
+            ? `Open character ${characterTitle}`
+            : `Otvori lik ${characterTitle}`
         }
         className="flex min-h-[94px] items-center gap-4 px-1 py-5 outline-none transition-colors duration-300 hover:bg-white/[0.015] focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/55 sm:px-2 lg:px-4"
       >
@@ -1543,13 +1877,20 @@ function ArchiveListRow({
             color: `${GOLD_LIGHT}42`,
           }}
         >
-          {String(index + 1).padStart(2, "0")}
+          {String(
+            index + 1,
+          ).padStart(
+            2,
+            "0",
+          )}
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="truncate text-[20px] font-[430] uppercase leading-none tracking-[-0.035em] text-white/[0.82] transition-colors duration-300 group-hover:text-white sm:text-[24px]">
-              {character.name}
+              {
+                characterTitle
+              }
             </h2>
 
             <span
@@ -1564,26 +1905,33 @@ function ArchiveListRow({
 
           <div className="mt-2 flex items-center gap-3">
             <span className="truncate text-[7px] uppercase tracking-[0.2em] text-white/[0.18]">
-              {getCanonicalProjectTitle(
-                character,
-              )}
+              {
+                projectTitle
+              }
             </span>
 
             <span className="hidden h-px w-5 bg-white/[0.08] sm:block" />
 
             <span className="hidden max-w-[460px] truncate text-[8px] leading-5 text-white/[0.18] md:block">
-              {character.shortDescription}
+              {
+                characterDescription
+              }
             </span>
           </div>
         </div>
 
         <span className="hidden w-[68px] shrink-0 text-right font-mono text-[7px] tracking-[0.16em] text-white/[0.14] sm:block">
-          {String(index + 1).padStart(
+          {String(
+            index + 1,
+          ).padStart(
             2,
             "0",
           )}{" "}
           /{" "}
-          {String(total).padStart(2, "0")}
+          {String(total).padStart(
+            2,
+            "0",
+          )}
         </span>
 
         <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.08] text-white/[0.24] transition-all duration-300 group-hover:border-[#c7a96b]/40 group-hover:text-[#ead39a]">

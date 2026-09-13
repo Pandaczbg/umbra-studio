@@ -3,7 +3,7 @@
  * Canonical content entry point
  *
  * Responsibilities:
- * - Adapt legacy V5 source data into canonical V6 content
+ * - Consume canonical V6 content registries directly
  * - Create the canonical in-memory registry
  * - Expose readonly collections and registry accessors
  *
@@ -11,15 +11,22 @@
  * - No UI logic
  * - No routing logic
  * - No validation side effects
- * - No direct legacy-data access outside adapters
+ * - No legacy adapters
+ * - No data transformation
  * - No slug-query logic
  */
 
 import {
-  adaptCharacters,
-  adaptEpisodes,
-  adaptProjects,
-} from "@/lib/content/adapters";
+  characters as sourceCharacters,
+} from "@/data/characters";
+
+import {
+  episodes as sourceEpisodes,
+} from "@/data/episodes";
+
+import {
+  projects as sourceProjects,
+} from "@/data/projects";
 
 import {
   createUmbraContentRegistry,
@@ -41,13 +48,13 @@ import type {
 /* -------------------------------------------------------------------------- */
 
 const projectContent: readonly ProjectContent[] =
-  adaptProjects();
+  sourceProjects;
 
 const characterContent: readonly CharacterContent[] =
-  adaptCharacters(projectContent);
+  sourceCharacters;
 
 const episodeContent: readonly EpisodeContent[] =
-  adaptEpisodes(projectContent);
+  sourceEpisodes;
 
 /*
  * These collections intentionally remain empty until

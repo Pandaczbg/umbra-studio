@@ -9,16 +9,17 @@ import {
 } from "lucide-react";
 
 import {
-  getProject,
-  projects,
-} from "@/lib/content";
+  getProjectBySlug,
+  getProjects,
+} from "@/lib/content/queries";
+
 import type {
   ProjectStatus,
   ProjectType,
 } from "@/lib/content/types";
 
 export function generateStaticParams() {
-  return projects.map((project) => ({
+  return getProjects().map((project) => ({
     slug: project.slug,
   }));
 }
@@ -29,9 +30,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = projects.find(
-    (item) => item.slug === slug,
-  );
+
+  const project =
+    getProjectBySlug(slug);
 
   if (!project) {
     return {
@@ -74,10 +75,13 @@ function getStatusLabel(
   switch (status) {
     case "in-production":
       return "U produkciji";
+
     case "development":
       return "U razvoju";
+
     case "upcoming":
       return "Uskoro";
+
     default:
       return status;
   }
@@ -89,22 +93,29 @@ function getTypeLabel(
   switch (type) {
     case "Serija":
       return "Serija";
+
     case "Film":
       return "Film";
+
     default:
       return "Projekat";
   }
 }
 
-function getProjectNumber(id: string) {
+function getProjectNumber(
+  id: string,
+) {
   const match = id.match(/(\d+)$/);
 
   return (
-    match?.[1]?.padStart(2, "0") ?? "00"
+    match?.[1]?.padStart(2, "0") ??
+    "00"
   );
 }
 
-function isBiblija(projectSlug: string) {
+function isBiblija(
+  projectSlug: string,
+) {
   return projectSlug === "biblija";
 }
 
@@ -115,51 +126,45 @@ export default async function ProjectPage({
 }) {
   const { slug } = await params;
 
-  const project = projects.find(
-    (item) => item.slug === slug,
-  );
+  const project =
+    getProjectBySlug(slug);
 
   if (!project) {
     notFound();
   }
 
-  const canonicalProject =
-    getProject(project.id);
-
-  if (!canonicalProject) {
-    notFound();
-  }
-
-  const source = canonicalProject.source;
+  const source = project.source;
   const hasSource = Boolean(source);
 
   const artwork =
     source?.coverSr ??
     source?.coverEn ??
-    (canonicalProject.slug === "biblija"
+    (project.slug === "biblija"
       ? "/Biblija Cover.png"
       : "/umbra-background.png");
 
-  const projectNumber = getProjectNumber(
-    canonicalProject.id,
-  );
+  const projectNumber =
+    getProjectNumber(project.id);
 
   const showBiblijaArtwork =
-    isBiblija(canonicalProject.slug);
+    isBiblija(project.slug);
 
   const projectTitle =
-    canonicalProject.title.sr;
+    project.title.sr;
 
   const projectDescription =
-    canonicalProject.description?.sr ??
-    canonicalProject.shortDescription?.sr ??
+    project.description?.sr ??
+    project.shortDescription?.sr ??
     "";
 
-  const sourceTitle = source?.title ?? "";
-  const sourceAuthor = source?.author ?? "";
+  const sourceTitle =
+    source?.title ?? "";
+
+  const sourceAuthor =
+    source?.author ?? "";
 
   const projectPlatform =
-    canonicalProject.platform ?? "Umbra Studio";
+    project.platform ?? "Umbra Studio";
 
   return (
     <main
@@ -240,9 +245,7 @@ export default async function ProjectPage({
             <div className="max-w-[1000px]">
               <div className="mb-6 flex flex-wrap items-center gap-4 text-[7px] uppercase tracking-[0.3em] text-white/34">
                 <span>
-                  {getTypeLabel(
-                    canonicalProject.type,
-                  )}
+                  {getTypeLabel(project.type)}
                 </span>
 
                 <span
@@ -251,9 +254,7 @@ export default async function ProjectPage({
                 />
 
                 <span>
-                  {getStatusLabel(
-                    canonicalProject.status,
-                  )}
+                  {getStatusLabel(project.status)}
                 </span>
               </div>
 
@@ -309,22 +310,16 @@ export default async function ProjectPage({
 
               <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-white/[0.09] pt-5 text-[7px] uppercase tracking-[0.27em] text-white/28">
                 <span>
-                  Platforma ·{" "}
-                  {projectPlatform}
+                  Platforma · {projectPlatform}
                 </span>
 
                 <span>
                   Status ·{" "}
-                  {getStatusLabel(
-                    canonicalProject.status,
-                  )}
+                  {getStatusLabel(project.status)}
                 </span>
 
                 <span>
-                  Format ·{" "}
-                  {getTypeLabel(
-                    canonicalProject.type,
-                  )}
+                  Format · {getTypeLabel(project.type)}
                 </span>
 
                 {source ? (
@@ -430,9 +425,7 @@ export default async function ProjectPage({
               <div className="mt-12 grid border-y border-white/[0.07] sm:grid-cols-4">
                 <ProjectStat
                   label="FORMAT"
-                  value={getTypeLabel(
-                    canonicalProject.type,
-                  )}
+                  value={getTypeLabel(project.type)}
                 />
 
                 <ProjectStat
@@ -442,9 +435,7 @@ export default async function ProjectPage({
 
                 <ProjectStat
                   label="STATUS"
-                  value={getStatusLabel(
-                    canonicalProject.status,
-                  )}
+                  value={getStatusLabel(project.status)}
                 />
 
                 <ProjectStat
@@ -523,9 +514,10 @@ export default async function ProjectPage({
                 <p className="mt-7 max-w-[680px] text-sm leading-7 text-white/40 sm:text-base sm:leading-8">
                   „{sourceTitle}“ autora{" "}
                   {sourceAuthor} predstavlja
-                  književnu osnovu ovog Umbra projekta.
-                  Ovde su dostupna izdanja koja su
-                  trenutno povezana sa projektom.
+                  književnu osnovu ovog Umbra
+                  projekta. Ovde su dostupna izdanja
+                  koja su trenutno povezana sa
+                  projektom.
                 </p>
 
                 <div className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -559,6 +551,7 @@ export default async function ProjectPage({
                     <ExternalLink
                       size={13}
                       strokeWidth={1.15}
+                      aria-hidden="true"
                     />
 
                     Otvori javni izvor
@@ -566,14 +559,14 @@ export default async function ProjectPage({
                     <ArrowUpRight
                       size={13}
                       strokeWidth={1.15}
+                      aria-hidden="true"
                       className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     />
                   </a>
                 ) : null}
 
                 <div className="mt-9 border-t border-white/[0.07] pt-4 text-[7px] uppercase tracking-[0.24em] text-white/[0.2]">
-                  {sourceAuthor} /{" "}
-                  {sourceTitle}
+                  {sourceAuthor} / {sourceTitle}
                 </div>
               </div>
             </div>
@@ -581,8 +574,7 @@ export default async function ProjectPage({
         </section>
       ) : null}
 
-      {canonicalProject.slug ===
-      "mrzim-svog-brata" ? (
+      {project.slug === "mrzim-svog-brata" ? (
         <section
           aria-labelledby="project-characters-title"
           className="px-5 py-28 sm:px-8 sm:py-36 lg:px-12"
@@ -617,6 +609,7 @@ export default async function ProjectPage({
                 <ArrowUpRight
                   size={14}
                   strokeWidth={1.15}
+                  aria-hidden="true"
                   className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                 />
               </Link>

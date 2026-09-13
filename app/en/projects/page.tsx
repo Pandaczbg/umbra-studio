@@ -5,7 +5,13 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-import { projects } from "@/data/projects";
+import {
+  getProjects,
+} from "@/lib/content/queries";
+
+import type {
+  ProjectContent,
+} from "@/lib/content/types";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
@@ -19,44 +25,51 @@ const STATUS_LABELS = {
 } as const;
 
 function getStatusLabel(
-  status: (typeof projects)[number]["status"],
+  status: ProjectContent["status"],
 ) {
   return STATUS_LABELS[status];
 }
 
 function getTypeLabel(
-  type: (typeof projects)[number]["type"],
+  type: ProjectContent["type"],
 ) {
   switch (type) {
     case "Serija":
       return "Series";
+
     case "Film":
       return "Film";
+
     default:
       return "Project";
   }
 }
 
 function resolveProjectImage(
-  project: (typeof projects)[number],
+  project: ProjectContent,
 ) {
   return (
-    project.book?.coverEn ||
-    project.book?.coverSr ||
-    project.cover ||
+    project.source?.coverEn ??
+    project.source?.coverSr ??
     FALLBACK_IMAGE
   );
 }
 
-function getProjectNumber(id: string) {
+function getProjectNumber(
+  id: string,
+) {
   const match = id.match(/(\d+)$/);
 
   return (
-    match?.[1]?.padStart(2, "0") ?? "00"
+    match?.[1]?.padStart(2, "0") ??
+    "00"
   );
 }
 
 export default function EnglishProjectsPage() {
+  const projects =
+    getProjects();
+
   return (
     <main
       data-umbra-scene="projects-archive"
@@ -111,7 +124,7 @@ export default function EnglishProjectsPage() {
             <div>
               <h1
                 id="projects-title"
-                className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.80] tracking-[-0.075em] text-white"
+                className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.8] tracking-[-0.075em] text-white"
               >
                 Worlds
                 <br />
@@ -144,7 +157,7 @@ export default function EnglishProjectsPage() {
                   className="h-px w-5 bg-white/[0.12]"
                 />
 
-                <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.20]">
+                <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.2]">
                   Explore
                 </span>
               </div>
@@ -159,208 +172,229 @@ export default function EnglishProjectsPage() {
         className="px-6 py-20 sm:px-9 sm:py-28 lg:px-12 lg:py-32 xl:px-16"
       >
         <div className="mx-auto max-w-[1480px]">
-          <h2 id="projects-archive-title" className="sr-only">
+          <h2
+            id="projects-archive-title"
+            className="sr-only"
+          >
             Umbra Studio projects
           </h2>
 
           <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
-            {projects.map((project) => {
-              const image =
-                resolveProjectImage(project);
+            {projects.map(
+              (project, index) => {
+                const image =
+                  resolveProjectImage(
+                    project,
+                  );
 
-              return (
-                <Link
-                  key={project.id}
-                  href={`/en/projects/${project.slug}`}
-                  aria-label={`Open ${project.title}`}
-                  data-cursor-interactive
-                  className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-                >
-                  {/* ARTWORK */}
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image
-                      src={image}
-                      alt={project.title}
-                      fill
-                      priority={project.id === projects[0]?.id}
-                      sizes="(min-width: 1024px) 47vw, 94vw"
-                      className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
-                    />
+                const title =
+                  project.title.en;
 
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 bg-black/[0.20]"
-                    />
+                const description =
+                  project.shortDescription
+                    ?.en ??
+                  project.description?.en ??
+                  "";
 
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.10) 42%, rgba(0,0,0,.72) 100%)",
-                      }}
-                    />
+                return (
+                  <Link
+                    key={project.id}
+                    href={`/en/projects/${project.slug}`}
+                    aria-label={`Open ${title}`}
+                    data-cursor-interactive
+                    className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                  >
+                    {/* ARTWORK */}
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        priority={
+                          index === 0
+                        }
+                        sizes="(min-width: 1024px) 47vw, 94vw"
+                        className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
+                      />
 
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-4 border border-white/[0.05] sm:inset-5"
-                    />
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-black/[0.2]"
+                      />
 
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
-                      style={{
-                        borderColor: `${GOLD_LIGHT}38`,
-                      }}
-                    />
-
-                    <span
-                      aria-hidden="true"
-                      className="absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
-                      style={{
-                        borderColor: `${GOLD}2b`,
-                      }}
-                    />
-
-                    <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
-                      <span
-                        className="text-[6px] font-semibold uppercase tracking-[0.28em]"
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0"
                         style={{
-                          color: `${GOLD_LIGHT}72`,
+                          background:
+                            "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.10) 42%, rgba(0,0,0,.72) 100%)",
                         }}
-                      >
-                        Project
-                      </span>
+                      />
 
-                      <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
-                        {getProjectNumber(
-                          project.id,
-                        )}
-                      </span>
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-4 border border-white/[0.05] sm:inset-5"
+                      />
+
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
+                        style={{
+                          borderColor: `${GOLD_LIGHT}38`,
+                        }}
+                      />
+
+                      <span
+                        aria-hidden="true"
+                        className="absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
+                        style={{
+                          borderColor: `${GOLD}2b`,
+                        }}
+                      />
+
+                      <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
+                        <span
+                          className="text-[6px] font-semibold uppercase tracking-[0.28em]"
+                          style={{
+                            color: `${GOLD_LIGHT}72`,
+                          }}
+                        >
+                          Project
+                        </span>
+
+                        <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
+                          {getProjectNumber(
+                            project.id,
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+                        <div className="flex items-end justify-between gap-6">
+                          <div className="min-w-0">
+                            <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
+                              <span
+                                style={{
+                                  color: `${GOLD_LIGHT}82`,
+                                }}
+                              >
+                                {getTypeLabel(
+                                  project.type,
+                                )}
+                              </span>
+
+                              <span
+                                aria-hidden="true"
+                                className="h-px w-4 bg-white/[0.16]"
+                              />
+
+                              <span className="text-white/[0.34]">
+                                {getStatusLabel(
+                                  project.status,
+                                )}
+                              </span>
+                            </div>
+
+                            <h3 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
+                              {title}
+                            </h3>
+                          </div>
+
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.4] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
+                            <ArrowUpRight
+                              aria-hidden="true"
+                              className="h-3.5 w-3.5"
+                            />
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
-                      <div className="flex items-end justify-between gap-6">
-                        <div className="min-w-0">
-                          <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
-                            <span
-                              style={{
-                                color: `${GOLD_LIGHT}82`,
-                              }}
-                            >
-                              {getTypeLabel(
-                                project.type,
-                              )}
-                            </span>
+                    {/* PROJECT INFORMATION */}
+                    <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
+                      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                        <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
+                          {description}
+                        </p>
 
-                            <span
-                              aria-hidden="true"
-                              className="h-px w-4 bg-white/[0.16]"
-                            />
+                        <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
+                          <div>
+                            <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                              Status
+                            </div>
 
-                            <span className="text-white/[0.34]">
+                            <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
                               {getStatusLabel(
                                 project.status,
                               )}
-                            </span>
+                            </div>
                           </div>
 
-                          <h3 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
-                            {project.title}
-                          </h3>
-                        </div>
+                          <div>
+                            <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
+                              Platform
+                            </div>
 
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.40] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
+                            <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
+                              {project.platform ??
+                                "Umbra Studio"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {project.source ? (
+                        <div className="mt-5 flex items-center gap-3">
+                          <span
+                            className="text-[7px] font-semibold uppercase tracking-[0.21em]"
+                            style={{
+                              color: `${GOLD_LIGHT}78`,
+                            }}
+                          >
+                            Novel by
+                          </span>
+
+                          <span
+                            aria-hidden="true"
+                            className="h-px w-6 bg-white/[0.1]"
+                          />
+
+                          <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
+                            {project.source
+                              .author ??
+                              "Original work"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
+                          Umbra Original
+                        </div>
+                      )}
+
+                      <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
+                        <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
+                          Umbra Studio
+                        </span>
+
+                        <span
+                          className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
+                          style={{
+                            color: `${GOLD_LIGHT}82`,
+                          }}
+                        >
+                          Open project
+
                           <ArrowUpRight
                             aria-hidden="true"
-                            className="h-3.5 w-3.5"
+                            className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                           />
                         </span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* PROJECT INFORMATION */}
-                  <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
-                    <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                      <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
-                        {project.shortDescription}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
-                        <div>
-                          <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                            Status
-                          </div>
-
-                          <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                            {getStatusLabel(
-                              project.status,
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                            Platform
-                          </div>
-
-                          <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                            {project.platform}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {project.book ? (
-                      <div className="mt-5 flex items-center gap-3">
-                        <span
-                          className="text-[7px] font-semibold uppercase tracking-[0.21em]"
-                          style={{
-                            color: `${GOLD_LIGHT}78`,
-                          }}
-                        >
-                          Novel by
-                        </span>
-
-                        <span
-                          aria-hidden="true"
-                          className="h-px w-6 bg-white/[0.10]"
-                        />
-
-                        <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
-                          {project.book.author}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
-                        Umbra Original
-                      </div>
-                    )}
-
-                    <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
-                      <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
-                        Umbra Studio
-                      </span>
-
-                      <span
-                        className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
-                        style={{
-                          color: `${GOLD_LIGHT}82`,
-                        }}
-                      >
-                        Open project
-
-                        <ArrowUpRight
-                          aria-hidden="true"
-                          className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                        />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              },
+            )}
           </div>
         </div>
       </section>
@@ -378,11 +412,11 @@ export default function EnglishProjectsPage() {
               className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
               <div>
-                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.2]">
                   Umbra Studio
                 </div>
 
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.7]">
                   Home
                 </div>
               </div>
@@ -399,18 +433,18 @@ export default function EnglishProjectsPage() {
               className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
             >
               <div>
-                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.20]">
+                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.2]">
                   Archive
                 </div>
 
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.70]">
+                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.7]">
                   Explore characters
                 </div>
               </div>
 
               <ArrowUpRight
                 aria-hidden="true"
-                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#d6b776]"
+                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#d6b776]"
               />
             </Link>
           </div>

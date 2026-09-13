@@ -26,24 +26,52 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import {
-  characters,
-  type Character,
-} from "@/data/characters";
-import { getCharacterHref } from "@/lib/characterNavigation";
+import type {
+  CharacterCategory,
+  CharacterContent,
+  CharacterGender,
+  ProjectContent,
+} from "@/lib/content/types";
 
 type ProjectFilter = "ALL" | string;
-type GenderFilter = "ALL" | "MALE" | "FEMALE";
-type CategoryFilter = "ALL" | "MAIN" | "SUPPORTING";
+type GenderFilter =
+  | "ALL"
+  | Exclude<CharacterGender, null>;
+type CategoryFilter =
+  | "ALL"
+  | CharacterCategory;
 type Locale = "sr" | "en";
 
-const LAST_VISITED_KEY = "umbra-last-character";
-const LAST_VISITED_EVENT = "umbra:last-character";
+type CharacterImageMap =
+  Record<string, string | null>;
+
+type CharactersPreviewProps = {
+  characters: readonly CharacterContent[];
+  projects: readonly ProjectContent[];
+  characterImages: CharacterImageMap;
+};
+
+type PreviewCharacter =
+  CharacterContent & {
+    project: ProjectContent | null;
+    image: string | null;
+  };
+
+const LAST_VISITED_KEY =
+  "umbra-last-character";
+
+const LAST_VISITED_EVENT =
+  "umbra:last-character";
 
 const GOLD = "#c7a96b";
 const GOLD_LIGHT = "#ead39a";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
 
 const COPY = {
   sr: {
@@ -69,9 +97,11 @@ const COPY = {
     fullArchive: "CELA ARHIVA",
     previous: "Prethodni lik",
     next: "Sledeći lik",
-    noMatch: "Nema likova koji odgovaraju filteru.",
+    noMatch:
+      "Nema likova koji odgovaraju filteru.",
     spatialIndex: "LIK / PROSTORNI INDEKS",
-    archiveSignal: "UMBRA STUDIO / ŽIVI ARHIV LIKOVA",
+    archiveSignal:
+      "UMBRA STUDIO / ŽIVI ARHIV LIKOVA",
     explore: "Istraži",
     portraitPending: "PORTRET / U RAZVOJU",
   },
@@ -99,16 +129,20 @@ const COPY = {
     fullArchive: "FULL ARCHIVE",
     previous: "Previous character",
     next: "Next character",
-    noMatch: "No characters match this filter.",
-    spatialIndex: "CHARACTER / SPATIAL INDEX",
-    archiveSignal: "UMBRA STUDIO / LIVING CHARACTER ARCHIVE",
+    noMatch:
+      "No characters match this filter.",
+    spatialIndex:
+      "CHARACTER / SPATIAL INDEX",
+    archiveSignal:
+      "UMBRA STUDIO / LIVING CHARACTER ARCHIVE",
     explore: "Explore",
-    portraitPending: "PORTRAIT / IN DEVELOPMENT",
+    portraitPending:
+      "PORTRAIT / IN DEVELOPMENT",
   },
 } as const;
 
 function getRoleLabel(
-  category: Character["category"],
+  category: CharacterCategory,
   locale: Locale,
 ) {
   return category === "MAIN"
@@ -118,6 +152,46 @@ function getRoleLabel(
     : locale === "en"
       ? "Supporting"
       : "Sporedni";
+}
+
+function getLocalizedTitle(
+  character: CharacterContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? character.title.en
+    : character.title.sr;
+}
+
+function getLocalizedDescription(
+  character: CharacterContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? character.shortDescription?.en ??
+        character.description?.en ??
+        ""
+    : character.shortDescription?.sr ??
+        character.description?.sr ??
+        "";
+}
+
+function getProjectTitle(
+  project: ProjectContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? project.title.en
+    : project.title.sr;
+}
+
+function getCharacterHref(
+  character: CharacterContent,
+  locale: Locale,
+) {
+  return locale === "en"
+    ? `/en/characters/${character.slug}`
+    : `/likovi/${character.slug}`;
 }
 
 function getProjectHref(
@@ -195,7 +269,11 @@ function useLastVisited() {
   );
 }
 
-export default function CharactersPreview() {
+export default function CharactersPreview({
+  characters,
+  projects,
+  characterImages,
+}: CharactersPreviewProps) {
   const pathname = usePathname();
 
   const locale: Locale =
@@ -205,6 +283,7 @@ export default function CharactersPreview() {
       : "sr";
 
   const copy = COPY[locale];
+
   const reducedMotion =
     useReducedMotion() ?? false;
 
@@ -300,30 +379,79 @@ export default function CharactersPreview() {
       : [-12, 12],
   );
 
+  const projectById =
+    useMemo(
+      () =>
+        new Map(
+          projects.map(
+            (project) => [
+              project.id,
+              project,
+            ],
+          ),
+        ),
+      [projects],
+    );
+
+  const previewCharacters =
+    useMemo<PreviewCharacter[]>(
+      () =>
+        characters.map(
+          (character) => ({
+            ...character,
+            project:
+              projectById.get(
+                character.projectId,
+              ) ?? null,
+            image:
+              characterImages[
+                character.id
+              ] ?? null,
+          }),
+        ),
+      [
+        characters,
+        characterImages,
+        projectById,
+      ],
+    );
+
   const charactersByProject =
     useMemo(
       () =>
         Array.from(
           new Map(
-            characters.map(
-              (character) => [
-                character.projectSlug,
-                character.projectTitle,
-              ],
-            ),
+            previewCharacters
+              .filter(
+                (character) =>
+                  character.project,
+              )
+              .map(
+                (character) => [
+                  character.project!.slug,
+                  getProjectTitle(
+                    character.project!,
+                    locale,
+                  ),
+                ],
+              ),
           ),
         ),
-      [],
+      [
+        locale,
+        previewCharacters,
+      ],
     );
 
   const filteredCharacters =
     useMemo(
       () =>
-        characters.filter(
+        previewCharacters.filter(
           (character) => {
             const matchesProject =
-              projectFilter === "ALL" ||
-              character.projectSlug ===
+              projectFilter ===
+                "ALL" ||
+              character.project?.slug ===
                 projectFilter;
 
             const matchesGender =
@@ -332,7 +460,8 @@ export default function CharactersPreview() {
                 genderFilter;
 
             const matchesCategory =
-              categoryFilter === "ALL" ||
+              categoryFilter ===
+                "ALL" ||
               character.category ===
                 categoryFilter;
 
@@ -346,6 +475,7 @@ export default function CharactersPreview() {
       [
         categoryFilter,
         genderFilter,
+        previewCharacters,
         projectFilter,
       ],
     );
@@ -390,8 +520,8 @@ export default function CharactersPreview() {
       return filteredCharacters
         .filter(
           (character) =>
-            character.projectSlug ===
-              activeCharacter.projectSlug &&
+            character.projectId ===
+              activeCharacter.projectId &&
             character.id !==
               activeCharacter.id,
         )
@@ -402,7 +532,7 @@ export default function CharactersPreview() {
     ]);
 
   const rememberCharacter = (
-    character: Character,
+    character: CharacterContent,
   ) => {
     try {
       window.localStorage.setItem(
@@ -421,7 +551,7 @@ export default function CharactersPreview() {
   };
 
   const selectCharacter = (
-    character: Character,
+    character: CharacterContent,
   ) => {
     const exists =
       filteredCharacters.some(
@@ -502,6 +632,7 @@ export default function CharactersPreview() {
     setActiveCharacterId(
       previous.id,
     );
+
     rememberCharacter(previous);
   };
 
@@ -547,7 +678,7 @@ export default function CharactersPreview() {
 
   const lastVisitedCharacter =
     lastVisited
-      ? characters.find(
+      ? previewCharacters.find(
           (character) =>
             character.slug ===
             lastVisited,
@@ -607,7 +738,9 @@ export default function CharactersPreview() {
         <motion.div
           initial={{
             opacity: 0,
-            y: reducedMotion ? 0 : 20,
+            y: reducedMotion
+              ? 0
+              : 20,
           }}
           animate={
             inView
@@ -618,7 +751,10 @@ export default function CharactersPreview() {
               : undefined
           }
           transition={{
-            duration: reducedMotion ? 0 : 0.8,
+            duration:
+              reducedMotion
+                ? 0
+                : 0.8,
             ease: EASE,
           }}
           className="mb-12 flex flex-col gap-8 border-b border-white/[0.07] pb-8 lg:flex-row lg:items-end lg:justify-between"
@@ -668,7 +804,7 @@ export default function CharactersPreview() {
                 ).padStart(2, "0")}{" "}
                 /{" "}
                 {String(
-                  characters.length,
+                  previewCharacters.length,
                 ).padStart(2, "0")}
               </p>
             </div>
@@ -691,7 +827,12 @@ export default function CharactersPreview() {
                 </p>
 
                 <p className="mt-2 max-w-[140px] truncate text-[10px] uppercase tracking-[0.04em] text-white/34 transition-colors duration-300 group-hover:text-white/68">
-                  {lastVisitedCharacter.name}
+                  {
+                    getLocalizedTitle(
+                      lastVisitedCharacter,
+                      locale,
+                    )
+                  }
                 </p>
               </Link>
             ) : null}
@@ -710,24 +851,40 @@ export default function CharactersPreview() {
               : undefined
           }
           transition={{
-            delay: reducedMotion ? 0 : 0.12,
-            duration: reducedMotion ? 0 : 0.7,
+            delay:
+              reducedMotion
+                ? 0
+                : 0.12,
+            duration:
+              reducedMotion
+                ? 0
+                : 0.7,
           }}
           className="mb-8 flex flex-col gap-5 border-b border-white/[0.055] pb-6 xl:flex-row xl:items-center xl:justify-between"
         >
           <div
             className="flex flex-wrap gap-2"
             role="group"
-            aria-label={copy.allProjects}
+            aria-label={
+              copy.allProjects
+            }
           >
             {filterButtons.map(
               (filter) => (
                 <FilterButton
-                  key={filter.key}
-                  active={filter.active}
-                  onClick={filter.onClick}
+                  key={
+                    filter.key
+                  }
+                  active={
+                    filter.active
+                  }
+                  onClick={
+                    filter.onClick
+                  }
                 >
-                  {filter.label}
+                  {
+                    filter.label
+                  }
                 </FilterButton>
               ),
             )}
@@ -762,7 +919,8 @@ export default function CharactersPreview() {
                 >
                   {value === "ALL"
                     ? copy.all
-                    : value === "MALE"
+                    : value ===
+                        "MALE"
                       ? copy.male
                       : copy.female}
                 </FilterButton>
@@ -797,7 +955,8 @@ export default function CharactersPreview() {
                 >
                   {value === "ALL"
                     ? copy.all
-                    : value === "MAIN"
+                    : value ===
+                        "MAIN"
                       ? copy.main
                       : copy.supporting}
                 </FilterButton>
@@ -811,7 +970,9 @@ export default function CharactersPreview() {
             <motion.div
               initial={{
                 opacity: 0,
-                y: reducedMotion ? 0 : 30,
+                y: reducedMotion
+                  ? 0
+                  : 30,
               }}
               animate={
                 inView
@@ -822,8 +983,14 @@ export default function CharactersPreview() {
                   : undefined
               }
               transition={{
-                delay: reducedMotion ? 0 : 0.15,
-                duration: reducedMotion ? 0 : 0.95,
+                delay:
+                  reducedMotion
+                    ? 0
+                    : 0.15,
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.95,
                 ease: EASE,
               }}
               className="relative min-h-[670px] overflow-hidden border border-white/[0.08] bg-[#060606]"
@@ -842,22 +1009,28 @@ export default function CharactersPreview() {
                     activeCharacter,
                     locale,
                   )}
-                  aria-label={`${copy.openDossier}: ${activeCharacter.name}`}
+                  aria-label={`${copy.openDossier}: ${getLocalizedTitle(
+                    activeCharacter,
+                    locale,
+                  )}`}
                   className="group/portrait absolute inset-0 z-[5] block outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/65"
                 >
                   <motion.div
                     style={{
                       x: portraitX,
                       y: portraitY,
-                      scale: reducedMotion
-                        ? 1
-                        : 1.025,
+                      scale:
+                        reducedMotion
+                          ? 1
+                          : 1.025,
                     }}
                     className="absolute inset-[-28px]"
                   >
                     {activeCharacter.image ? (
                       <motion.div
-                        key={activeCharacter.id}
+                        key={
+                          activeCharacter.id
+                        }
                         initial={{
                           opacity: 0,
                           scale: 1.035,
@@ -959,7 +1132,9 @@ export default function CharactersPreview() {
                           color: `${GOLD_LIGHT}cc`,
                         }}
                       >
-                        {copy.livingArchive}
+                        {
+                          copy.livingArchive
+                        }
                       </span>
                     </div>
 
@@ -1000,7 +1175,8 @@ export default function CharactersPreview() {
                     <div
                       className="h-px w-full"
                       style={{
-                        background: `linear-gradient(90deg, ${GOLD}28, rgba(255,255,255,.07), transparent)`,
+                        background:
+                          `linear-gradient(90deg, ${GOLD}28, rgba(255,255,255,.07), transparent)`,
                       }}
                     />
 
@@ -1016,7 +1192,9 @@ export default function CharactersPreview() {
                         />
 
                         <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/18">
-                          {copy.spatialIndex}
+                          {
+                            copy.spatialIndex
+                          }
                         </span>
                       </div>
 
@@ -1036,35 +1214,46 @@ export default function CharactersPreview() {
                   key={activeCharacter.id}
                   initial={{
                     opacity: 0,
-                    y: reducedMotion ? 0 : 24,
+                    y: reducedMotion
+                      ? 0
+                      : 24,
                   }}
                   animate={{
                     opacity: 1,
                     y: 0,
                   }}
                   transition={{
-                    duration: reducedMotion
-                      ? 0
-                      : 0.64,
+                    duration:
+                      reducedMotion
+                        ? 0
+                        : 0.64,
                     ease: EASE,
                   }}
                   className="pointer-events-none absolute inset-x-7 bottom-10 z-10 sm:inset-x-10 sm:bottom-10"
                 >
                   <div className="mb-5 flex select-none items-center gap-4">
-                    <Link
-                      href={getProjectHref(
-                        activeCharacter.projectSlug,
-                        locale,
-                      )}
-                      className="pointer-events-auto font-mono text-[7px] uppercase tracking-[0.3em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
-                      style={{
-                        color: `${GOLD_LIGHT}c4`,
-                      }}
-                    >
-                      {
-                        activeCharacter.projectTitle
-                      }
-                    </Link>
+                    {activeCharacter.project ? (
+                      <Link
+                        href={getProjectHref(
+                          activeCharacter
+                            .project
+                            .slug,
+                          locale,
+                        )}
+                        className="pointer-events-auto font-mono text-[7px] uppercase tracking-[0.3em] outline-none transition-colors duration-300 hover:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                        style={{
+                          color: `${GOLD_LIGHT}c4`,
+                        }}
+                      >
+                        {
+                          getProjectTitle(
+                            activeCharacter
+                              .project,
+                            locale,
+                          )
+                        }
+                      </Link>
+                    ) : null}
 
                     <span
                       aria-hidden="true"
@@ -1084,12 +1273,18 @@ export default function CharactersPreview() {
                       activeCharacter,
                       locale,
                     )}
-                    aria-label={`${copy.openDossier}: ${activeCharacter.name}`}
+                    aria-label={`${copy.openDossier}: ${getLocalizedTitle(
+                      activeCharacter,
+                      locale,
+                    )}`}
                     className="pointer-events-auto group/name block w-fit max-w-4xl outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <h3 className="select-none text-[clamp(3.8rem,7.6vw,8rem)] font-[430] leading-[0.79] tracking-[-0.075em] text-white transition-transform duration-500 group-hover/portrait:-translate-y-1 group-hover/name:text-white/92">
                       {
-                        activeCharacter.name
+                        getLocalizedTitle(
+                          activeCharacter,
+                          locale,
+                        )
                       }
                     </h3>
                   </Link>
@@ -1097,7 +1292,10 @@ export default function CharactersPreview() {
                   <div className="mt-7 flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
                     <p className="max-w-xl text-[13px] leading-7 text-white/44 sm:text-[14px]">
                       {
-                        activeCharacter.shortDescription
+                        getLocalizedDescription(
+                          activeCharacter,
+                          locale,
+                        )
                       }
                     </p>
 
@@ -1172,7 +1370,10 @@ export default function CharactersPreview() {
                                   related,
                                 )
                               }
-                              aria-label={`${copy.selectCharacter}: ${related.name}`}
+                              aria-label={`${copy.selectCharacter}: ${getLocalizedTitle(
+                                related,
+                                locale,
+                              )}`}
                               className="group flex items-center gap-3 outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                             >
                               <span className="relative flex h-2.5 w-2.5 items-center justify-center">
@@ -1195,7 +1396,10 @@ export default function CharactersPreview() {
 
                               <span className="whitespace-nowrap border-b border-white/[0.08] pb-1 text-[8px] uppercase tracking-[0.2em] text-white/30 transition-colors duration-300 group-hover:text-white/72">
                                 {
-                                  related.name
+                                  getLocalizedTitle(
+                                    related,
+                                    locale,
+                                  )
                                 }
                               </span>
                             </button>
@@ -1211,7 +1415,9 @@ export default function CharactersPreview() {
             <motion.aside
               initial={{
                 opacity: 0,
-                x: reducedMotion ? 0 : 20,
+                x: reducedMotion
+                  ? 0
+                  : 20,
               }}
               animate={
                 inView
@@ -1222,12 +1428,20 @@ export default function CharactersPreview() {
                   : undefined
               }
               transition={{
-                delay: reducedMotion ? 0 : 0.24,
-                duration: reducedMotion ? 0 : 0.82,
+                delay:
+                  reducedMotion
+                    ? 0
+                    : 0.24,
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.82,
                 ease: EASE,
               }}
               className="flex flex-col border border-white/[0.07] bg-black/20 p-5 backdrop-blur-xl"
-              aria-label={copy.castIndex}
+              aria-label={
+                copy.castIndex
+              }
             >
               <div className="mb-7 flex select-none items-center justify-between">
                 <div>
@@ -1241,7 +1455,9 @@ export default function CharactersPreview() {
                   </div>
 
                   <div className="mt-2 text-[9px] uppercase tracking-[0.18em] text-white/20">
-                    {copy.selectCharacter}
+                    {
+                      copy.selectCharacter
+                    }
                   </div>
                 </div>
 
@@ -1265,14 +1481,18 @@ export default function CharactersPreview() {
 
                     return (
                       <button
-                        key={character.id}
+                        key={
+                          character.id
+                        }
                         type="button"
                         onClick={() =>
                           selectCharacter(
                             character,
                           )
                         }
-                        aria-pressed={active}
+                        aria-pressed={
+                          active
+                        }
                         className={[
                           "group relative w-full overflow-hidden border px-4 py-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55",
                           active
@@ -1307,7 +1527,10 @@ export default function CharactersPreview() {
                               ].join(" ")}
                             >
                               {
-                                character.name
+                                getLocalizedTitle(
+                                  character,
+                                  locale,
+                                )
                               }
                             </span>
                           </div>
@@ -1326,9 +1549,12 @@ export default function CharactersPreview() {
                         </div>
 
                         <div className="mt-2 pl-7 text-[6px] uppercase tracking-[0.27em] text-white/16">
-                          {
-                            character.projectTitle
-                          }
+                          {character.project
+                            ? getProjectTitle(
+                                character.project,
+                                locale,
+                              )
+                            : "—"}
                         </div>
 
                         <span
@@ -1371,7 +1597,9 @@ export default function CharactersPreview() {
                     onClick={
                       previousCharacter
                     }
-                    aria-label={copy.previous}
+                    aria-label={
+                      copy.previous
+                    }
                     className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#c7a96b]/30 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <ArrowLeft
@@ -1384,8 +1612,12 @@ export default function CharactersPreview() {
 
                   <button
                     type="button"
-                    onClick={nextCharacter}
-                    aria-label={copy.next}
+                    onClick={
+                      nextCharacter
+                    }
+                    aria-label={
+                      copy.next
+                    }
                     className="group flex h-10 flex-1 items-center justify-center border border-white/[0.07] text-white/26 transition-all duration-300 hover:border-[#c7a96b]/30 hover:text-[#ead39a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                   >
                     <ArrowRight
@@ -1399,14 +1631,17 @@ export default function CharactersPreview() {
 
                 <Link
                   href={
-                    locale === "en"
+                    locale ===
+                    "en"
                       ? "/en/characters"
                       : "/likovi"
                   }
                   className="group mt-3 flex h-11 items-center justify-between border border-white/[0.07] px-4 text-[7px] font-semibold uppercase tracking-[0.27em] text-white/28 transition-all duration-300 hover:border-white/[0.15] hover:text-white/68 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
                 >
                   <span>
-                    {copy.fullArchive}
+                    {
+                      copy.fullArchive
+                    }
                   </span>
 
                   <ArrowUpRight
@@ -1439,8 +1674,14 @@ export default function CharactersPreview() {
               : undefined
           }
           transition={{
-            delay: reducedMotion ? 0 : 0.55,
-            duration: reducedMotion ? 0 : 0.75,
+            delay:
+              reducedMotion
+                ? 0
+                : 0.55,
+            duration:
+              reducedMotion
+                ? 0
+                : 0.75,
           }}
           className="mt-14 flex select-none items-center justify-between border-t border-white/[0.055] pt-5"
         >
@@ -1452,13 +1693,16 @@ export default function CharactersPreview() {
 
           <Link
             href={
-              locale === "en"
+              locale ===
+              "en"
                 ? "/en/characters"
                 : "/likovi"
             }
             className="group hidden items-center gap-3 font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.14] transition-colors duration-300 hover:text-white/55 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 sm:flex"
           >
-            <span>{copy.explore}</span>
+            <span>
+              {copy.explore}
+            </span>
 
             <span
               aria-hidden="true"

@@ -8,7 +8,7 @@ import {
 /* ==========================================================================
    UMBRA STUDIO
    ATMOSPHERE
-   V5 FINAL SYSTEM
+   V6 FINAL SYSTEM
 
    Global, lightweight visual atmosphere.
 
