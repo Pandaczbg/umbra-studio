@@ -1,7 +1,49 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+} from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function NotFound() {
+  const pathname = usePathname();
+  const isEnglish = pathname === "/en" || pathname.startsWith("/en/");
+
+  const copy = isEnglish
+    ? {
+        eyebrow: "Umbra Archive",
+        frame: "Archive / Missing frame",
+        title: "This page could not be found",
+        description:
+          "The address you opened does not exist in the current Umbra archive or is no longer part of the studio's public space.",
+        home: "Home",
+        projects: "Projects",
+        characters: "Characters",
+        return: "Return to the story",
+        footer: "Stories that leave a shadow",
+        homeHref: "/en",
+        projectsHref: "/en/projects",
+        charactersHref: "/en/characters",
+      }
+    : {
+        eyebrow: "Umbra Archive",
+        frame: "Archive / Missing frame",
+        title: "Ova stranica nije pronađena",
+        description:
+          "Adresa koju si otvorio ne postoji u trenutnoj Umbra arhivi ili više nije deo javno dostupnog prostora studija.",
+        home: "Početna",
+        projects: "Projekti",
+        characters: "Likovi",
+        return: "Vrati se u priču",
+        footer: "Priče koje ostavljaju senku",
+        homeHref: "/",
+        projectsHref: "/serije",
+        charactersHref: "/likovi",
+      };
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--umbra-bg)] text-[#F1EDE4]">
       {/* =========================================================
@@ -37,7 +79,7 @@ export default function NotFound() {
           <span className="h-px w-10 bg-[#C7A96B]/60" />
 
           <span className="text-[8px] font-medium uppercase tracking-[0.42em] text-[#C7A96B]">
-            Umbra Archive
+            {copy.eyebrow}
           </span>
 
           <span className="h-px w-10 bg-[#C7A96B]/60" />
@@ -57,24 +99,23 @@ export default function NotFound() {
             <span className="h-1.5 w-1.5 rounded-full bg-[#C7A96B] shadow-[0_0_12px_rgba(199,169,107,0.65)]" />
 
             <span className="text-[7px] uppercase tracking-[0.3em] text-white/18">
-              Archive / Missing frame
+              {copy.frame}
             </span>
           </div>
 
           <h1 className="text-[clamp(2rem,4vw,4rem)] font-medium tracking-[-0.045em]">
-            Ova stranica nije pronađena
+            {copy.title}
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/30 sm:text-[15px]">
-            Adresa koju si otvorio ne postoji u trenutnoj Umbra arhivi ili više
-            nije deo javno dostupnog prostora studija.
+            {copy.description}
           </p>
         </div>
 
         {/* NAVIGATION */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/"
+            href={copy.homeHref}
             className="group inline-flex items-center gap-4 bg-[#C7A96B] px-6 py-4 text-[8px] font-semibold uppercase tracking-[0.25em] text-black transition-colors duration-300 hover:bg-[#DFBD78]"
           >
             <ArrowLeft
@@ -82,14 +123,14 @@ export default function NotFound() {
               className="transition-transform duration-300 group-hover:-translate-x-1"
             />
 
-            Početna
+            {copy.home}
           </Link>
 
           <Link
-            href="/serije"
+            href={copy.projectsHref}
             className="group inline-flex items-center gap-4 border border-white/[0.12] px-6 py-4 text-[8px] font-semibold uppercase tracking-[0.25em] text-white/43 transition-all duration-300 hover:border-[#C7A96B]/35 hover:text-[#C7A96B]"
           >
-            Projekti
+            {copy.projects}
 
             <ArrowUpRight
               size={12}
@@ -98,10 +139,10 @@ export default function NotFound() {
           </Link>
 
           <Link
-            href="/likovi"
+            href={copy.charactersHref}
             className="group inline-flex items-center gap-4 border border-white/[0.12] px-6 py-4 text-[8px] font-semibold uppercase tracking-[0.25em] text-white/43 transition-all duration-300 hover:border-[#C7A96B]/35 hover:text-[#C7A96B]"
           >
-            Likovi
+            {copy.characters}
 
             <ArrowUpRight
               size={12}
@@ -131,16 +172,16 @@ export default function NotFound() {
 
           <span className="h-px w-7 bg-white/[0.08]" />
 
-          <span>Priče koje ostavljaju senku</span>
+          <span>{copy.footer}</span>
         </div>
 
         {/* MICRO NAV */}
         <div className="mt-8">
           <Link
-            href="/"
+            href={copy.homeHref}
             className="group inline-flex items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.26em] text-white/16 transition-colors duration-300 hover:text-[#C7A96B]"
           >
-            Vrati se u priču
+            {copy.return}
 
             <ArrowRight
               size={11}

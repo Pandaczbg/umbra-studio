@@ -10,10 +10,14 @@ import {
   getCharacters,
   getProjects,
 } from "@/lib/content/queries";
+import {
+  getLatestPublishedContent,
+} from "@/lib/content/latest";
 
 export default function HomePage() {
   const characters = getCharacters();
   const projects = getProjects();
+  const latestContent = getLatestPublishedContent(2);
 
   const characterImages = Object.fromEntries(
     characters.map((character) => {
@@ -33,7 +37,7 @@ export default function HomePage() {
     >
       <HomeHero
         locale="sr"
-        projects={projects}
+        latestContent={latestContent}
       />
 
       <CurrentProjectScene

@@ -1,54 +1,58 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   UMBRA STUDIO
-   GLOBAL DESIGN SYSTEM
-   Cinematic / Editorial / Minimal / Luxury
+   UMBRA STUDIO — V7 ULTRA GLOBAL DESIGN SYSTEM
+   Editorial / Cinematic / Luxury / Content-first
 
-   V5 FINAL SYSTEM
-
-   Architecture
-   --------------------------------------------------------------------------
-   01. Theme tokens
-   02. Runtime state
-   03. Base
-   04. Global primitives
-   05. Responsive
-   06. Reduced motion
-   07. Forced colors
-   08. Print
-
-   System principles
-   --------------------------------------------------------------------------
-   - One visual language across every route.
-   - Components own behavior; globals own the visual contract.
-   - Motion is progressive enhancement, never a requirement for usability.
-   - Gold is a signal, not a fill color.
-   - Decorative layers never become interaction surfaces.
-   ========================================================================== */
-
-
-/* ==========================================================================
-   01. THEME TOKENS
+   System rules:
+   - Less interface. More world.
+   - Header V7 ULTRA defines the visual scale.
+   - Gold is a signal, never a surface.
+   - Real content and imagery carry hierarchy.
+   - Global motion is owned by UmbraMotionSystem / UmbraSceneDirector.
+   - This file owns tokens, global primitives and shared visual behavior only.
    ========================================================================== */
 
 @theme {
-  --color-umbra-background: #030303;
-  --color-umbra-background-deep: #020202;
-  --color-umbra-surface: #070707;
-  --color-umbra-surface-elevated: #0b0b0a;
+  /* ------------------------------------------------------------------------
+     Brand / surfaces
+     ------------------------------------------------------------------------ */
+  --color-umbra-background: #060605;
+  --color-umbra-background-deep: #030302;
+  --color-umbra-surface: #090908;
+  --color-umbra-surface-elevated: #0d0d0b;
+  --color-umbra-surface-glass: #0a0a09;
 
-  --color-umbra-text-primary: #f1ede4;
-  --color-umbra-text-secondary: rgba(241, 237, 228, 0.58);
-  --color-umbra-text-muted: rgba(241, 237, 228, 0.34);
-  --color-umbra-text-faint: rgba(241, 237, 228, 0.16);
+  /* ------------------------------------------------------------------------
+     Type / ink
+     ------------------------------------------------------------------------ */
+  --color-umbra-text-primary: #eee9de;
+  --color-umbra-text-secondary: #c2bcaf;
+  --color-umbra-text-muted: #969084;
+  --color-umbra-text-faint: #666158;
+  --color-umbra-platinum: #f7f3ea;
 
-  --color-umbra-gold: #c7a96b;
-  --color-umbra-gold-light: #ead39a;
-  --color-umbra-gold-dark: #8f7142;
+  /* ------------------------------------------------------------------------
+     Luxury accent — warm champagne, restrained by design
+     ------------------------------------------------------------------------ */
+  --color-umbra-gold: #c4a56b;
+  --color-umbra-gold-light: #dfc88f;
+  --color-umbra-gold-dark: #8d6f43;
+  --color-umbra-champagne: #d5bd85;
+  --color-umbra-champagne-soft: #b8a074;
 
-  --color-umbra-platinum: #fbf8f1;
+  /* ------------------------------------------------------------------------
+     Lines / utility surfaces
+     ------------------------------------------------------------------------ */
+  --color-umbra-line: rgba(255, 255, 255, 0.075);
+  --color-umbra-line-strong: rgba(255, 255, 255, 0.12);
+  --color-umbra-line-soft: rgba(255, 255, 255, 0.045);
+  --color-umbra-line-faint: rgba(255, 255, 255, 0.024);
+  --color-umbra-line-gold: rgba(196, 165, 107, 0.28);
 
+  /* ------------------------------------------------------------------------
+     Typography
+     ------------------------------------------------------------------------ */
   --font-umbra-sans:
     var(--font-geist-sans),
     "Helvetica Neue",
@@ -71,62 +75,128 @@
     "Liberation Mono",
     monospace;
 
-  --ease-umbra-out:
-    cubic-bezier(0.22, 1, 0.36, 1);
+  /* ------------------------------------------------------------------------
+     Motion
+     ------------------------------------------------------------------------ */
+  --ease-umbra-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-umbra-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-umbra-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
 
-  --ease-umbra-smooth:
-    cubic-bezier(0.16, 1, 0.3, 1);
+  --umbra-duration-instant: 140ms;
+  --umbra-duration-fast: 240ms;
+  --umbra-duration: 400ms;
+  --umbra-duration-reveal: 650ms;
+  --umbra-duration-cinematic: 900ms;
+  --umbra-duration-slow: 1200ms;
 
-  --ease-umbra-soft:
-    cubic-bezier(0.25, 0.1, 0.25, 1);
+  /* ------------------------------------------------------------------------
+     Layout
+     ------------------------------------------------------------------------ */
+  --umbra-content-max: 1360px;
+  --umbra-hero-max: 1540px;
+  --umbra-content-padding: 18px;
+  --umbra-section-space: clamp(64px, 7vw, 112px);
+
+  /* ------------------------------------------------------------------------
+     Semantic type utilities for Tailwind consumers
+     ------------------------------------------------------------------------ */
+  --text-umbra-meta: 0.625rem;
+  --text-umbra-meta--line-height: 1.15;
+  --text-umbra-meta--font-weight: 600;
+  --text-umbra-meta--letter-spacing: 0.18em;
+
+  --text-umbra-body: 0.9375rem;
+  --text-umbra-body--line-height: 1.7;
+
+  --text-umbra-lead: 1.05rem;
+  --text-umbra-lead--line-height: 1.6;
+
+  /* ------------------------------------------------------------------------
+     Shared radii / shadows / blur
+     ------------------------------------------------------------------------ */
+  --radius-umbra-sm: 4px;
+  --radius-umbra-md: 8px;
+  --radius-umbra-lg: 14px;
+
+  --shadow-umbra-soft: 0 14px 36px rgba(0, 0, 0, 0.16);
+  --shadow-umbra-deep: 0 22px 58px rgba(0, 0, 0, 0.34);
+  --shadow-umbra-floating: 0 16px 44px rgba(0, 0, 0, 0.24);
 }
-
-
-/* ==========================================================================
-   02. RUNTIME STATE
-   ========================================================================== */
 
 :root {
   color-scheme: dark;
 
-  --umbra-bg: #030303;
-  --umbra-bg-deep: #020202;
-  --umbra-obsidian: #030303;
+  /* ------------------------------------------------------------------------
+     Semantic surfaces
+     ------------------------------------------------------------------------ */
+  --umbra-bg: #060605;
+  --umbra-bg-deep: #030302;
+  --umbra-obsidian: #030302;
+  --umbra-surface: #090908;
+  --umbra-surface-raised: #0d0d0b;
+  --umbra-surface-glass: rgba(255, 255, 255, 0.010);
+  --umbra-surface-glass-strong: rgba(255, 255, 255, 0.016);
 
-  --umbra-surface: #070707;
-  --umbra-surface-raised: #0b0b0a;
+  /* ------------------------------------------------------------------------
+     Semantic ink
+     ------------------------------------------------------------------------ */
+  --umbra-ink: #eee9de;
+  --umbra-ink-soft: rgba(238, 233, 222, 0.72);
+  --umbra-ink-muted: rgba(238, 233, 222, 0.46);
+  --umbra-ink-faint: rgba(238, 233, 222, 0.24);
+  --umbra-platinum: #f7f3ea;
 
-  --umbra-ink: #f1ede4;
-  --umbra-ink-soft: rgba(241, 237, 228, 0.58);
-  --umbra-ink-muted: rgba(241, 237, 228, 0.34);
-  --umbra-ink-faint: rgba(241, 237, 228, 0.16);
+  /* ------------------------------------------------------------------------
+     Accent
+     ------------------------------------------------------------------------ */
+  --umbra-gold: #c4a56b;
+  --umbra-gold-light: #dfc88f;
+  --umbra-gold-dark: #8d6f43;
+  --umbra-champagne: #d5bd85;
+  --umbra-champagne-soft: #b8a074;
 
-  --umbra-platinum: #fbf8f1;
+  --umbra-gold-subtle: rgba(196, 165, 107, 0.075);
+  --umbra-gold-soft: rgba(196, 165, 107, 0.145);
+  --umbra-gold-medium: rgba(196, 165, 107, 0.26);
+  --umbra-gold-strong: rgba(223, 200, 143, 0.68);
 
-  --umbra-gold: #c7a96b;
-  --umbra-gold-light: #ead39a;
-  --umbra-gold-dark: #8f7142;
+  /* ------------------------------------------------------------------------
+     Borders
+     ------------------------------------------------------------------------ */
+  --umbra-line: rgba(255, 255, 255, 0.075);
+  --umbra-line-strong: rgba(255, 255, 255, 0.12);
+  --umbra-line-soft: rgba(255, 255, 255, 0.045);
+  --umbra-line-faint: rgba(255, 255, 255, 0.024);
+  --umbra-line-gold: rgba(196, 165, 107, 0.28);
 
-  --umbra-line: rgba(255, 255, 255, 0.085);
-  --umbra-line-strong: rgba(255, 255, 255, 0.13);
-  --umbra-line-soft: rgba(255, 255, 255, 0.048);
-  --umbra-line-faint: rgba(255, 255, 255, 0.026);
-  --umbra-line-gold: rgba(199, 169, 107, 0.34);
+  /* ------------------------------------------------------------------------
+     Glass
+     ------------------------------------------------------------------------ */
+  --umbra-glass-fill: rgba(8, 8, 7, 0.88);
+  --umbra-glass-fill-deep: rgba(4, 4, 4, 0.95);
+  --umbra-glass-highlight: rgba(255, 255, 255, 0.04);
+  --umbra-glass-reflection: rgba(255, 255, 255, 0.018);
 
-  --umbra-content-max: 1500px;
-  --umbra-hero-max: 1680px;
-  --umbra-content-padding: 24px;
+  /* ------------------------------------------------------------------------
+     Shadows
+     ------------------------------------------------------------------------ */
+  --umbra-shadow-soft: 0 14px 36px rgba(0, 0, 0, 0.16);
+  --umbra-shadow-deep: 0 22px 58px rgba(0, 0, 0, 0.34);
+  --umbra-shadow-floating: 0 16px 44px rgba(0, 0, 0, 0.24);
+  --umbra-shadow-gold: 0 0 14px rgba(196, 165, 107, 0.065);
+  --umbra-shadow-gold-active: 0 0 20px rgba(223, 200, 143, 0.10);
 
-  --umbra-section-space: clamp(104px, 12vw, 176px);
+  /* ------------------------------------------------------------------------
+     Layout
+     ------------------------------------------------------------------------ */
+  --umbra-content-max: 1360px;
+  --umbra-hero-max: 1540px;
+  --umbra-content-padding: 18px;
+  --umbra-section-space: clamp(64px, 7vw, 112px);
 
-  --umbra-duration-instant: 180ms;
-  --umbra-duration-fast: 300ms;
-  --umbra-duration: 500ms;
-  --umbra-duration-reveal: 800ms;
-  --umbra-duration-cinematic: 1050ms;
-  --umbra-duration-slow: 1500ms;
-
-  /* Written by UmbraMotionSystem */
+  /* ------------------------------------------------------------------------
+     Motion runtime — owned by UmbraMotionSystem
+     ------------------------------------------------------------------------ */
   --umbra-scroll-y: 0px;
   --umbra-scroll-progress: 0;
   --umbra-scroll-velocity: 0;
@@ -134,42 +204,36 @@
   --umbra-scroll-speed: 0;
   --umbra-scroll-velocity-normalized: 0;
   --umbra-scroll-energy: 0;
-
   --umbra-viewport-height: 100vh;
   --umbra-document-height: 100vh;
   --umbra-motion-sign: 0;
 
-  /* Written by UmbraSceneDirector */
+  /* ------------------------------------------------------------------------
+     Scene runtime — owned by UmbraSceneDirector
+     ------------------------------------------------------------------------ */
   --umbra-scene-progress: 0;
   --umbra-scene-visibility: 1;
   --umbra-scene-index: 1;
   --umbra-scene-total: 5;
   --umbra-scene-accent-opacity: 1;
-
   --umbra-header-progress: 0;
 
-  /* Written by UmbraAtmosphere */
+  /* ------------------------------------------------------------------------
+     Pointer runtime — owned by UmbraAtmosphere
+     ------------------------------------------------------------------------ */
   --umbra-pointer-x: 68%;
   --umbra-pointer-y: 28%;
 }
-
-
-/* ==========================================================================
-   03. BASE
-   ========================================================================== */
 
 @layer base {
   html {
     min-height: 100%;
     margin: 0;
-
     background: var(--umbra-bg-deep);
     color: var(--umbra-ink);
-
     overflow-x: clip;
     scroll-behavior: auto;
     text-rendering: optimizeLegibility;
-
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -179,31 +243,15 @@
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
-
     overflow-x: clip;
     overscroll-behavior-x: none;
-
     background:
-      radial-gradient(
-        circle at 50% -18%,
-        rgba(199, 169, 107, 0.028),
-        transparent 34%
-      ),
-      radial-gradient(
-        circle at 100% 0%,
-        rgba(255, 255, 255, 0.014),
-        transparent 26%
-      ),
-      linear-gradient(
-        180deg,
-        var(--umbra-bg) 0%,
-        var(--umbra-surface) 46%,
-        #040404 100%
-      );
-
+      radial-gradient(circle at 50% -18%, rgba(223, 200, 143, 0.02), transparent 30%),
+      linear-gradient(180deg, var(--umbra-bg) 0%, var(--umbra-surface) 58%, #040404 100%);
     color: var(--umbra-ink);
     font-family: var(--font-umbra-sans);
     font-synthesis: none;
+    line-height: 1.55;
   }
 
   *,
@@ -240,6 +288,11 @@
     max-width: 100%;
   }
 
+  img,
+  video {
+    height: auto;
+  }
+
   img {
     color: transparent;
   }
@@ -249,13 +302,23 @@
     text-decoration: none;
   }
 
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+  }
+
   ::selection {
-    background: rgba(234, 211, 154, 0.20);
-    color: #ffffff;
+    background: rgba(223, 200, 143, 0.16);
+    color: #fff;
   }
 
   :focus-visible {
-    outline: 1px solid rgba(234, 211, 154, 0.78);
+    outline: 1px solid rgba(223, 200, 143, 0.84);
     outline-offset: 4px;
   }
 
@@ -271,21 +334,14 @@
   }
 }
 
-
-/* ==========================================================================
-   04. GLOBAL PRIMITIVES
-   ========================================================================== */
-
 @layer components {
   /* ------------------------------------------------------------------------
-     ATMOSPHERE
+     Atmosphere
      ------------------------------------------------------------------------ */
-
   .umbra-atmosphere {
     position: fixed;
     inset: 0;
     z-index: 0;
-
     overflow: hidden;
     pointer-events: none;
     isolation: isolate;
@@ -300,80 +356,51 @@
   }
 
   .umbra-atmosphere__aurora {
-    opacity: 0.72;
-
+    opacity: 0.54;
     background:
       radial-gradient(
-        620px circle at
-          var(--umbra-pointer-x)
-          var(--umbra-pointer-y),
-        rgba(234, 211, 154, 0.046),
+        560px circle at var(--umbra-pointer-x) var(--umbra-pointer-y),
+        rgba(223, 200, 143, 0.03),
         transparent 44%
       ),
       radial-gradient(
-        52vw 38vw at 84% 12%,
-        rgba(199, 169, 107, 0.026),
+        46vw 34vw at 84% 10%,
+        rgba(196, 165, 107, 0.016),
         transparent 72%
       );
-
-    transition:
-      opacity var(--umbra-duration) var(--ease-umbra-smooth);
+    transition: opacity var(--umbra-duration) var(--ease-umbra-smooth);
   }
 
   .umbra-atmosphere__beam {
-    opacity: 0.18;
-
+    opacity: 0.08;
     background:
       linear-gradient(
         116deg,
-        transparent 38%,
-        rgba(234, 211, 154, 0.010) 49%,
-        transparent 60%
+        transparent 39%,
+        rgba(223, 200, 143, 0.006) 50%,
+        transparent 61%
       );
-
-    transform: translate3d(
-      calc(var(--umbra-scroll-progress) * 5vw),
-      0,
-      0
-    );
-
+    transform: translate3d(calc(var(--umbra-scroll-progress) * 3vw), 0, 0);
     will-change: transform;
   }
 
   .umbra-atmosphere__grid {
-    opacity: 0.032;
-
+    opacity: 0.01;
     background-image:
-      linear-gradient(
-        rgba(255, 255, 255, 0.014) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.010) 1px,
-        transparent 1px
-      );
-
-    background-size: 120px 120px;
-
-    mask-image: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.2),
-      transparent 58%
-    );
-
+      linear-gradient(rgba(255, 255, 255, 0.008) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.006) 1px, transparent 1px);
+    background-size: 140px 140px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 58%);
     -webkit-mask-image: linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0.08),
       transparent 58%
     );
   }
 
-
   /* ------------------------------------------------------------------------
-     SITE LAYERS
+     Site shell
      ------------------------------------------------------------------------ */
-
   .umbra-home {
     position: relative;
     min-height: 100vh;
@@ -394,24 +421,16 @@
     scroll-margin-top: 72px;
   }
 
-
-  /* ------------------------------------------------------------------------
-     HEADER
-     ------------------------------------------------------------------------ */
-
   .umbra-site-header {
     position: fixed;
     inset-inline: 0;
     top: 0;
     z-index: 500;
-
     isolation: isolate;
     width: 100%;
-
     pointer-events: none;
     visibility: visible;
     opacity: 1;
-
     mix-blend-mode: normal;
   }
 
@@ -419,11 +438,9 @@
     isolation: isolate;
   }
 
-
   /* ------------------------------------------------------------------------
-     TYPOGRAPHY
+     Typography primitives
      ------------------------------------------------------------------------ */
-
   .umbra-serif {
     font-family: var(--font-umbra-serif);
   }
@@ -433,31 +450,31 @@
   }
 
   .umbra-label {
-    font-size: 9px;
-    line-height: 1;
+    font-size: 10px;
+    line-height: 1.15;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.26em;
-    color: rgba(234, 211, 154, 0.64);
+    letter-spacing: 0.18em;
+    color: rgba(223, 200, 143, 0.64);
   }
 
   .umbra-code {
     font-family: var(--font-umbra-mono);
-    font-size: 7px;
-    line-height: 1.2;
+    font-size: 8px;
+    line-height: 1.35;
     text-transform: uppercase;
-    letter-spacing: 0.24em;
-    color: rgba(255, 255, 255, 0.23);
+    letter-spacing: 0.18em;
+    color: rgba(255, 255, 255, 0.26);
   }
 
   .umbra-display {
-    letter-spacing: -0.075em;
-    line-height: 0.80;
+    letter-spacing: -0.05em;
+    line-height: 0.92;
   }
 
   .umbra-display-tight {
-    letter-spacing: -0.055em;
-    line-height: 0.90;
+    letter-spacing: -0.038em;
+    line-height: 0.97;
   }
 
   .umbra-home p {
@@ -474,11 +491,9 @@
     outline-offset: 5px;
   }
 
-
   /* ------------------------------------------------------------------------
-     LAYOUT
+     Containers / sections
      ------------------------------------------------------------------------ */
-
   .umbra-container {
     width: min(
       calc(100% - (var(--umbra-content-padding) * 2)),
@@ -504,11 +519,9 @@
     padding-block: var(--umbra-section-space);
   }
 
-
   /* ------------------------------------------------------------------------
-     LINES
+     Lines / editorial rules
      ------------------------------------------------------------------------ */
-
   .umbra-hairline,
   .umbra-gold-line,
   .umbra-gold-line-center {
@@ -520,7 +533,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.09),
       transparent
     );
   }
@@ -529,7 +542,7 @@
     background: linear-gradient(
       90deg,
       var(--umbra-gold),
-      rgba(199, 169, 107, 0.22),
+      rgba(196, 165, 107, 0.16),
       transparent
     );
   }
@@ -538,29 +551,27 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(199, 169, 107, 0.07) 18%,
-      rgba(234, 211, 154, 0.62) 50%,
-      rgba(199, 169, 107, 0.07) 82%,
+      rgba(196, 165, 107, 0.035) 24%,
+      rgba(223, 200, 143, 0.36) 50%,
+      rgba(196, 165, 107, 0.035) 76%,
       transparent
     );
   }
 
-
   /* ------------------------------------------------------------------------
-     CINEMATIC
+     Image treatment
      ------------------------------------------------------------------------ */
-
   .umbra-vignette {
     position: absolute;
     inset: 0;
     pointer-events: none;
-
-    background: radial-gradient(
-      ellipse at center,
-      transparent 30%,
-      rgba(0, 0, 0, 0.10) 62%,
-      rgba(0, 0, 0, 0.42) 100%
-    );
+    background:
+      radial-gradient(
+        ellipse at center,
+        transparent 34%,
+        rgba(0, 0, 0, 0.08) 68%,
+        rgba(0, 0, 0, 0.28) 100%
+      );
   }
 
   .umbra-grain,
@@ -572,43 +583,34 @@
   }
 
   .umbra-grain {
-    opacity: 0.014;
-
+    opacity: 0.008;
     background-image: repeating-linear-gradient(
       0deg,
-      rgba(255, 255, 255, 0.22) 0px,
-      rgba(255, 255, 255, 0.22) 1px,
+      rgba(255, 255, 255, 0.15) 0,
+      rgba(255, 255, 255, 0.15) 1px,
       transparent 1px,
-      transparent 4px
+      transparent 5px
     );
-
     mix-blend-mode: screen;
   }
 
   .umbra-grain-fine {
-    opacity: 0.007;
-
+    opacity: 0.004;
     background-image: repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.14) 0px,
-      rgba(255, 255, 255, 0.14) 1px,
+      rgba(255, 255, 255, 0.09) 0,
+      rgba(255, 255, 255, 0.09) 1px,
       transparent 1px,
-      transparent 5px
+      transparent 6px
     );
-
     mix-blend-mode: soft-light;
   }
-
-
-  /* ------------------------------------------------------------------------
-     IMAGE TREATMENT
-     ------------------------------------------------------------------------ */
 
   .umbra-image-fade {
     background: linear-gradient(
       180deg,
-      transparent 42%,
-      rgba(0, 0, 0, 0.76) 100%
+      transparent 44%,
+      rgba(0, 0, 0, 0.7) 100%
     );
   }
 
@@ -616,19 +618,17 @@
     background: linear-gradient(
       180deg,
       rgba(0, 0, 0, 0.04) 0%,
-      rgba(0, 0, 0, 0.88) 100%
+      rgba(0, 0, 0, 0.84) 100%
     );
   }
 
   .umbra-image-shade {
-    background: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.1);
   }
 
-
   /* ------------------------------------------------------------------------
-     FRAME
+     Surfaces / material system
      ------------------------------------------------------------------------ */
-
   .umbra-focus-frame {
     position: relative;
     border: 1px solid var(--umbra-line);
@@ -638,57 +638,108 @@
   .umbra-focus-frame::after {
     content: "";
     position: absolute;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
   }
 
   .umbra-focus-frame::before {
     left: -1px;
     top: -1px;
-    border-left: 1px solid rgba(199, 169, 107, 0.24);
-    border-top: 1px solid rgba(199, 169, 107, 0.24);
+    border-left: 1px solid rgba(196, 165, 107, 0.18);
+    border-top: 1px solid rgba(196, 165, 107, 0.18);
   }
 
   .umbra-focus-frame::after {
     right: -1px;
     bottom: -1px;
-    border-right: 1px solid rgba(199, 169, 107, 0.18);
-    border-bottom: 1px solid rgba(199, 169, 107, 0.18);
+    border-right: 1px solid rgba(196, 165, 107, 0.14);
+    border-bottom: 1px solid rgba(196, 165, 107, 0.14);
   }
-
-
-  /* ------------------------------------------------------------------------
-     SURFACES
-     ------------------------------------------------------------------------ */
 
   .umbra-surface {
     border: 1px solid var(--umbra-line-soft);
-    background: rgba(255, 255, 255, 0.012);
+    background: var(--umbra-surface-glass);
   }
 
   .umbra-surface-hover {
     transition:
-      border-color 350ms var(--ease-umbra-out),
-      background-color 350ms var(--ease-umbra-out),
-      transform 350ms var(--ease-umbra-out),
-      box-shadow 350ms var(--ease-umbra-out);
+      border-color var(--umbra-duration-fast) var(--ease-umbra-out),
+      background-color var(--umbra-duration-fast) var(--ease-umbra-out),
+      transform var(--umbra-duration-fast) var(--ease-umbra-out),
+      box-shadow var(--umbra-duration-fast) var(--ease-umbra-out);
   }
 
   .umbra-surface-hover:hover {
-    border-color: rgba(234, 211, 154, 0.15);
-    background: rgba(255, 255, 255, 0.016);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
-    transform: translateY(-2px);
+    border-color: rgba(223, 200, 143, 0.1);
+    background: var(--umbra-surface-glass-strong);
+    box-shadow: var(--umbra-shadow-soft);
+    transform: translateY(-1px);
   }
 
+  .umbra-glass {
+    border: 1px solid var(--umbra-line-soft);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.012),
+        rgba(255, 255, 255, 0.006)
+      ),
+      var(--umbra-glass-fill);
+    box-shadow:
+      0 16px 42px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 var(--umbra-glass-highlight);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .umbra-glass-deep {
+    border: 1px solid rgba(255, 255, 255, 0.052);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.01),
+        rgba(255, 255, 255, 0.004)
+      ),
+      var(--umbra-glass-fill-deep);
+    box-shadow:
+      0 22px 58px rgba(0, 0, 0, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.026);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .umbra-material-highlight {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.055) 28%,
+        rgba(223, 200, 143, 0.14) 50%,
+        rgba(255, 255, 255, 0.055) 72%,
+        transparent
+      );
+  }
+
+  .umbra-champagne-signal {
+    color: var(--umbra-gold-light);
+  }
+
+  .umbra-champagne-dot {
+    background: var(--umbra-gold);
+    box-shadow: 0 0 7px rgba(196, 165, 107, 0.18);
+  }
 
   /* ------------------------------------------------------------------------
-     SCENE STATE
+     Scene state
      ------------------------------------------------------------------------ */
-
   html[data-umbra-scene="hero"] {
-    --umbra-scene-accent-opacity: 0.86;
+    --umbra-scene-accent-opacity: 0.82;
   }
 
   html[data-umbra-scene="project"] {
@@ -696,19 +747,19 @@
   }
 
   html[data-umbra-scene="characters"] {
-    --umbra-scene-accent-opacity: 0.90;
+    --umbra-scene-accent-opacity: 0.88;
   }
 
   html[data-umbra-scene="studio"] {
-    --umbra-scene-accent-opacity: 0.92;
+    --umbra-scene-accent-opacity: 0.86;
   }
 
   html[data-umbra-scene="watch"] {
-    --umbra-scene-accent-opacity: 1;
+    --umbra-scene-accent-opacity: 0.96;
   }
 
   html[data-umbra-scene="projects-archive"] {
-    --umbra-scene-accent-opacity: 0.94;
+    --umbra-scene-accent-opacity: 0.9;
   }
 
   html[data-umbra-scene="project-detail"] {
@@ -716,17 +767,12 @@
   }
 
   html[data-umbra-scene="characters-archive"] {
-    --umbra-scene-accent-opacity: 0.92;
+    --umbra-scene-accent-opacity: 0.88;
   }
 
   html[data-umbra-scene="character-dossier"] {
-    --umbra-scene-accent-opacity: 0.96;
+    --umbra-scene-accent-opacity: 0.92;
   }
-
-
-  /* ------------------------------------------------------------------------
-     MOTION STATE
-     ------------------------------------------------------------------------ */
 
   html[data-umbra-scroll-direction="down"],
   html[data-umbra-scene-direction="down"] {
@@ -743,11 +789,6 @@
     --umbra-motion-sign: 0;
   }
 
-
-  /* ------------------------------------------------------------------------
-     INTERACTION
-     ------------------------------------------------------------------------ */
-
   [data-cursor-interactive] {
     cursor: pointer;
   }
@@ -757,75 +798,55 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-
-  /* ------------------------------------------------------------------------
-     SCROLLBAR CONTRACT
-     ------------------------------------------------------------------------ */
-
   .umbra-scrollbar {
     pointer-events: auto;
     user-select: none;
   }
 
-
-  /* ------------------------------------------------------------------------
-     FOOTER
-     ------------------------------------------------------------------------ */
-
   #footer {
     position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
   }
-
-
-  /* ------------------------------------------------------------------------
-     TRANSITION FRAMES
-     ------------------------------------------------------------------------ */
 
   .umbra-transition-frame {
     position: absolute;
     pointer-events: none;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .umbra-transition-corner {
     position: absolute;
-    width: 38px;
-    height: 38px;
+    width: 28px;
+    height: 28px;
   }
 
   .umbra-transition-corner.top-left {
     left: -1px;
     top: -1px;
-    border-left: 1px solid rgba(199, 169, 107, 0.19);
-    border-top: 1px solid rgba(199, 169, 107, 0.19);
+    border-left: 1px solid rgba(196, 165, 107, 0.15);
+    border-top: 1px solid rgba(196, 165, 107, 0.15);
   }
 
   .umbra-transition-corner.top-right {
     right: -1px;
     top: -1px;
-    border-right: 1px solid rgba(255, 255, 255, 0.045);
-    border-top: 1px solid rgba(255, 255, 255, 0.045);
+    border-right: 1px solid rgba(255, 255, 255, 0.036);
+    border-top: 1px solid rgba(255, 255, 255, 0.036);
   }
 
   .umbra-transition-corner.bottom-left {
     left: -1px;
     bottom: -1px;
-    border-left: 1px solid rgba(255, 255, 255, 0.032);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.032);
+    border-left: 1px solid rgba(255, 255, 255, 0.026);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.026);
   }
 
   .umbra-transition-corner.bottom-right {
     right: -1px;
     bottom: -1px;
-    border-right: 1px solid rgba(199, 169, 107, 0.15);
-    border-bottom: 1px solid rgba(199, 169, 107, 0.15);
+    border-right: 1px solid rgba(196, 165, 107, 0.12);
+    border-bottom: 1px solid rgba(196, 165, 107, 0.12);
   }
-
-
-  /* ------------------------------------------------------------------------
-     HIDDEN SCROLL
-     ------------------------------------------------------------------------ */
 
   .umbra-scroll-hidden {
     -ms-overflow-style: none;
@@ -837,27 +858,19 @@
   }
 }
 
-
-/* ==========================================================================
-   05. RESPONSIVE
-   ========================================================================== */
-
 @layer components {
+  /* Responsive container scale */
   @media (min-width: 640px) {
     :root {
-      --umbra-content-padding: 32px;
+      --umbra-content-padding: 24px;
     }
   }
 
   @media (min-width: 1024px) {
     :root {
-      --umbra-content-padding: 48px;
+      --umbra-content-padding: 34px;
     }
 
-    /*
-      Desktop uses the Umbra custom scrollbar. The native scrollbar is hidden
-      only from desktop upward; touch layouts retain native scrolling UI.
-    */
     html {
       scrollbar-width: none;
     }
@@ -870,29 +883,35 @@
 
   @media (min-width: 1440px) {
     :root {
-      --umbra-content-padding: 56px;
+      --umbra-content-padding: 44px;
     }
   }
 
   @media (max-width: 639px) {
     .umbra-grain,
     .umbra-grain-fine {
-      opacity: 0.005;
+      opacity: 0.002;
     }
 
     .umbra-focus-frame::before,
     .umbra-focus-frame::after {
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
     }
 
     .umbra-atmosphere__grid {
-      opacity: 0.020;
-      background-size: 72px 72px;
+      opacity: 0.008;
+      background-size: 84px 84px;
     }
 
     [data-umbra-scene] {
       scroll-margin-top: 62px;
+    }
+
+    .umbra-glass,
+    .umbra-glass-deep {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
   }
 
@@ -908,11 +927,6 @@
     }
   }
 }
-
-
-/* ==========================================================================
-   06. REDUCED MOTION
-   ========================================================================== */
 
 @layer base {
   @media (prefers-reduced-motion: reduce) {
@@ -938,21 +952,17 @@
       transform: none;
       will-change: auto;
     }
+
+    .umbra-glass,
+    .umbra-glass-deep {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 }
 
-
-/* ==========================================================================
-   07. FORCED COLORS
-   ========================================================================== */
-
 @layer components {
   @media (forced-colors: active) {
-    /*
-      Deliberately do not opt the system out of forced-color painting.
-      Browser/system colors should remain authoritative for accessibility.
-    */
-
     .umbra-atmosphere,
     .umbra-transition-frame,
     .umbra-grain,
@@ -965,24 +975,21 @@
     .umbra-scrollbar {
       forced-color-adjust: auto;
     }
+
+    .umbra-glass,
+    .umbra-glass-deep {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 }
 
-
-/* ==========================================================================
-   08. PRINT
-   ========================================================================== */
-
 @layer base {
   @media print {
-    html {
-      background: #ffffff;
-      color: #000000;
-    }
-
+    html,
     body {
-      background: #ffffff;
-      color: #000000;
+      background: #fff;
+      color: #000;
     }
   }
 }
@@ -993,6 +1000,12 @@
     .umbra-scrollbar,
     .umbra-transition-frame {
       display: none !important;
+    }
+
+    .umbra-glass,
+    .umbra-glass-deep {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
   }
 }

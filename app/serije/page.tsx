@@ -1,22 +1,40 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
   ArrowUpRight,
   Check,
-  SlidersHorizontal,
 } from "lucide-react";
 
-import {
-  getProjects,
-} from "@/lib/content/queries";
+import { getProjects } from "@/lib/content/queries";
+import type { ProjectContent } from "@/lib/content/types";
 
-import type {
-  ProjectContent,
-} from "@/lib/content/types";
+export const metadata: Metadata = {
+  title: "Projekti — Umbra Studio",
+  description:
+    "Projekti Umbra Studija — priče, ekranizacije i produkcije koje nastaju iz ideje.",
+  alternates: {
+    canonical: "/serije",
+  },
+  openGraph: {
+    title: "Projekti — Umbra Studio",
+    description:
+      "Projekti Umbra Studija — priče, ekranizacije i produkcije koje nastaju iz ideje.",
+    type: "website",
+    locale: "sr_RS",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Projekti — Umbra Studio",
+    description:
+      "Projekti Umbra Studija — priče, ekranizacije i produkcije koje nastaju iz ideje.",
+  },
+};
 
-const GOLD = "#c7a96b";
-const GOLD_LIGHT = "#ead39a";
+const GOLD = "#c4a56b";
+const GOLD_LIGHT = "#dfc88f";
+
 const FALLBACK_IMAGE = "/umbra-background.png";
 
 type ProjectFilter =
@@ -32,42 +50,31 @@ type ProjectsPageProps = {
   }>;
 };
 
-function getStatusLabel(
-  status: ProjectContent["status"],
-) {
+function getStatusLabel(status: ProjectContent["status"]) {
   switch (status) {
     case "in-production":
       return "U produkciji";
-
     case "development":
       return "U razvoju";
-
     case "upcoming":
       return "Uskoro";
-
     default:
       return status;
   }
 }
 
-function getTypeLabel(
-  type: ProjectContent["type"],
-) {
+function getTypeLabel(type: ProjectContent["type"]) {
   switch (type) {
     case "Serija":
       return "Serija";
-
     case "Film":
       return "Film";
-
     default:
       return "Projekat";
   }
 }
 
-function getProjectImage(
-  project: ProjectContent,
-) {
+function getProjectImage(project: ProjectContent) {
   return (
     project.source?.coverSr ??
     project.source?.coverEn ??
@@ -75,15 +82,9 @@ function getProjectImage(
   );
 }
 
-function getProjectNumber(
-  id: string,
-) {
+function getProjectNumber(id: string) {
   const match = id.match(/(\d+)$/);
-
-  return (
-    match?.[1]?.padStart(2, "0") ??
-    "00"
-  );
+  return match?.[1]?.padStart(2, "0") ?? "00";
 }
 
 function matchesFilter(
@@ -93,13 +94,10 @@ function matchesFilter(
   switch (filter) {
     case "original":
       return !project.source;
-
     case "adaptation":
       return Boolean(project.source);
-
     case "series":
       return project.type === "Serija";
-
     case "all":
     default:
       return true;
@@ -125,38 +123,28 @@ function resolveFilter(
   return "all";
 }
 
-function getFilterHref(
-  filter: ProjectFilter,
-) {
+function getFilterHref(filter: ProjectFilter) {
   switch (filter) {
     case "original":
       return "/serije?vrsta=originalne";
-
     case "adaptation":
       return "/serije?vrsta=ekranizacije";
-
     case "series":
       return "/serije?format=serije";
-
     case "all":
     default:
       return "/serije";
   }
 }
 
-function getFilterLabel(
-  filter: ProjectFilter,
-) {
+function getFilterLabel(filter: ProjectFilter) {
   switch (filter) {
     case "original":
       return "Originalne priče";
-
     case "adaptation":
       return "Ekranizacije";
-
     case "series":
       return "Serije";
-
     case "all":
     default:
       return "Svi projekti";
@@ -172,27 +160,170 @@ function getFilterCount(
   ).length;
 }
 
+function ProjectCard({
+  project,
+  number,
+}: {
+  project: ProjectContent;
+  number: string;
+}) {
+  const title = project.title.sr;
+  const shortDescription =
+    project.shortDescription?.sr ??
+    project.description?.sr ??
+    "";
+  const image = getProjectImage(project);
+
+  return (
+    <article className="group relative">
+      <Link
+        href={`/serije/${project.slug}`}
+        aria-label={`Otvori projekat ${title}`}
+        className="block rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#dfc88f]/80"
+      >
+        <div className="overflow-hidden border border-white/[0.065] bg-[var(--umbra-surface)] transition-[border-color,transform,box-shadow] duration-500 group-hover:-translate-y-0.5 group-hover:border-[#c4a56b]/35 group-hover:shadow-[0_22px_60px_rgba(0,0,0,.24)]">
+          <div className="relative aspect-[16/10] overflow-hidden bg-[#050504]">
+            <Image
+              src={image}
+              alt={title}
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover transition-[transform,filter] duration-[1000ms] ease-out group-hover:scale-[1.018] group-hover:brightness-[1.025]"
+            />
+
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.03)_36%,rgba(0,0,0,.76)_100%)]"
+            />
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-4 border border-white/[0.045] sm:inset-5"
+            />
+
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t sm:left-5 sm:top-5 sm:h-9 sm:w-9"
+              style={{ borderColor: `${GOLD_LIGHT}42` }}
+            />
+
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-4 right-4 h-7 w-7 border-b border-r sm:bottom-5 sm:right-5 sm:h-8 sm:w-8"
+              style={{ borderColor: `${GOLD}2e` }}
+            />
+
+            <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
+              <span className="umbra-code" style={{ color: `${GOLD_LIGHT}70` }}>
+                {getTypeLabel(project.type)}
+              </span>
+              <span className="umbra-code text-white/[0.24]">
+                {number}
+              </span>
+            </div>
+
+            <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
+              <div className="mb-3 flex items-center gap-3">
+                <span
+                  className="umbra-code"
+                  style={{ color: `${GOLD_LIGHT}82` }}
+                >
+                  {getStatusLabel(project.status)}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="h-px w-5 bg-white/[0.18]"
+                />
+                <span className="umbra-code text-white/[0.28]">
+                  {project.platform ?? "Umbra Studio"}
+                </span>
+              </div>
+
+              <h2 className="max-w-[720px] text-[clamp(2rem,4.7vw,4.8rem)] font-[430] uppercase leading-[0.84] tracking-[-0.065em] text-[var(--umbra-platinum)]">
+                {title}
+              </h2>
+
+              <div className="mt-5 flex items-center justify-between gap-5">
+                <span className="umbra-code text-white/[0.11]">
+                  UMBRA / PROJECT
+                </span>
+
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.12] bg-black/25 text-white/[0.42] backdrop-blur-md transition-[border-color,color,transform,background-color] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#dfc88f]/40 group-hover:bg-black/35 group-hover:text-[#dfc88f] sm:h-11 sm:w-11">
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    size={15}
+                    strokeWidth={1.05}
+                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-6 border-t border-white/[0.055] px-5 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-8 sm:px-6 sm:py-6">
+            <p className="max-w-[680px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
+              {shortDescription}
+            </p>
+
+            <div className="flex min-w-[160px] flex-col justify-end gap-3 sm:text-right">
+              {project.source ? (
+                <div className="flex items-center gap-3 sm:justify-end">
+                  <span
+                    className="umbra-code"
+                    style={{ color: `${GOLD_LIGHT}76` }}
+                  >
+                    EKRANIZACIJA
+                  </span>
+
+                  <span
+                    aria-hidden="true"
+                    className="h-px w-5 bg-white/[0.1]"
+                  />
+
+                  <span className="umbra-code text-white/[0.22]">
+                    {project.source.author ?? "Izvorno delo"}
+                  </span>
+                </div>
+              ) : (
+                <span className="umbra-code text-white/[0.24]">
+                  UMBRA ORIGINAL
+                </span>
+              )}
+
+              <span
+                className="inline-flex items-center gap-2 self-start text-[7px] font-semibold uppercase tracking-[0.22em] sm:self-end"
+                style={{ color: `${GOLD_LIGHT}82` }}
+              >
+                Otvori projekat
+                <ArrowUpRight
+                  aria-hidden="true"
+                  size={12}
+                  strokeWidth={1.05}
+                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
 export default async function ProjectsPage({
   searchParams,
 }: ProjectsPageProps) {
   const projects = getProjects();
+  const resolvedSearchParams = await searchParams;
 
-  const resolvedSearchParams =
-    await searchParams;
+  const activeFilter = resolveFilter(
+    resolvedSearchParams?.vrsta,
+    resolvedSearchParams?.format,
+  );
 
-  const activeFilter =
-    resolveFilter(
-      resolvedSearchParams?.vrsta,
-      resolvedSearchParams?.format,
-    );
-
-  const visibleProjects =
-    projects.filter((project) =>
-      matchesFilter(
-        project,
-        activeFilter,
-      ),
-    );
+  const visibleProjects = projects.filter((project) =>
+    matchesFilter(project, activeFilter),
+  );
 
   const filters: ProjectFilter[] = [
     "all",
@@ -202,164 +333,144 @@ export default async function ProjectsPage({
   ];
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030303] text-[#f1ede4]">
-      {/* INTRO */}
+    <main className="min-h-screen overflow-x-clip bg-[var(--umbra-bg)] text-[var(--umbra-ink)]">
       <section
         aria-labelledby="projects-title"
-        className="relative scroll-mt-[150px] border-b border-white/[0.055] px-6 pb-14 pt-36 sm:px-9 sm:pb-16 lg:px-12 lg:pb-20 lg:pt-44 xl:px-16"
+        className="relative overflow-hidden border-b border-white/[0.055] pt-32 sm:pt-36 lg:pt-40"
       >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 72% 26%, rgba(199,169,107,.055), transparent 30%)",
+              "radial-gradient(circle at 78% 14%, rgba(196,165,107,.055), transparent 28%), radial-gradient(circle at 16% 82%, rgba(255,255,255,.018), transparent 24%)",
           }}
         />
 
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.07]"
-        />
+        <div className="absolute inset-x-0 top-0 h-px bg-white/[0.055]" />
 
-        <div className="relative mx-auto max-w-[1480px]">
+        <div className="umbra-container relative">
           <div className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <span
                 aria-hidden="true"
                 className="h-px w-8"
                 style={{
-                  background: `${GOLD}70`,
+                  background:
+                    `linear-gradient(90deg, transparent, ${GOLD_LIGHT}78)`,
                 }}
               />
-
               <span
-                className="text-[7px] font-semibold uppercase tracking-[0.32em]"
-                style={{
-                  color: `${GOLD_LIGHT}78`,
-                }}
+                className="umbra-code"
+                style={{ color: `${GOLD_LIGHT}76` }}
               >
-                Umbra Studio / Projekti
+                UMBRA STUDIO / PROJEKTI
               </span>
             </div>
 
-            <span className="hidden font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.15] sm:block">
-              Archive
+            <span className="hidden umbra-code sm:block">
+              ARCHIVE / 01
             </span>
           </div>
 
-          <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] lg:items-end lg:gap-20">
+          <div className="mt-10 grid gap-10 lg:mt-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(280px,.55fr)] lg:items-end lg:gap-20">
             <div>
+              <p
+                className="umbra-code"
+                style={{ color: `${GOLD_LIGHT}52` }}
+              >
+                PRIČE / EKRANIZACIJE / PRODUKCIJE
+              </p>
+
               <h1
                 id="projects-title"
-                className="max-w-[1050px] text-[clamp(3.9rem,9vw,9.5rem)] font-[430] uppercase leading-[0.8] tracking-[-0.075em] text-white"
+                className="mt-5 max-w-[900px] text-[clamp(3rem,7vw,6.7rem)] font-[430] uppercase leading-[0.86] tracking-[-0.07em] text-[var(--umbra-platinum)]"
               >
-                Svetovi
-                <br />
-                <span className="font-serif italic normal-case text-white/[0.58]">
-                  koje stvaramo
-                </span>
+                Projekti
               </h1>
             </div>
 
-            <div className="max-w-[430px] lg:pb-2">
-              <p className="text-sm leading-7 text-white/[0.38] sm:text-[15px] sm:leading-8">
-                Projekti Umbra Studija okupljeni na
-                jednom mestu — priče, svetovi i
-                produkcije u nastajanju.
+            <div className="max-w-[430px] lg:pb-1">
+              <p className="text-[12px] leading-6 text-[var(--umbra-ink-muted)] sm:text-[13px] sm:leading-7">
+                Projekti Umbra Studija — priče, ekranizacije i produkcije koje nastaju iz ideje.
               </p>
 
-              <div className="mt-7 flex items-center gap-4 border-t border-white/[0.065] pt-4">
-                <span className="font-mono text-[6px] uppercase tracking-[0.25em] text-white/[0.17]">
+              <div className="mt-6 flex items-center gap-3 border-t border-white/[0.055] pt-4">
+                <span className="umbra-code">
                   {visibleProjects.length}{" "}
                   {visibleProjects.length === 1
-                    ? "projekat"
-                    : "projekta"}
+                    ? "PROJEKAT"
+                    : "PROJEKATA"}
                 </span>
 
                 <span
                   aria-hidden="true"
-                  className="h-px w-5 bg-white/[0.12]"
+                  className="h-px w-5 bg-white/[0.11]"
                 />
 
-                <span className="text-[7px] uppercase tracking-[0.25em] text-white/[0.2]">
-                  {getFilterLabel(
-                    activeFilter,
-                  )}
+                <span className="umbra-code text-white/[0.20]">
+                  {getFilterLabel(activeFilter)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* ARCHIVE FILTER */}
           <nav
             aria-label="Filtriraj projekte"
-            className="mt-12 border-t border-white/[0.055] pt-5"
+            className="mt-10 border-t border-white/[0.055] py-5"
           >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <SlidersHorizontal
-                  aria-hidden="true"
-                  size={13}
-                  strokeWidth={1.15}
-                  className="text-[#ead39a]/55"
-                />
-
-                <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-white/[0.2]">
-                  Pregled arhive
-                </span>
-              </div>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <span className="umbra-code text-white/[0.18]">
+                ARHIVA / FILTER
+              </span>
 
               <div className="flex flex-wrap gap-2">
                 {filters.map((filter) => {
-                  const isActive =
-                    filter === activeFilter;
+                  const isActive = filter === activeFilter;
 
                   return (
                     <Link
                       key={filter}
                       href={getFilterHref(filter)}
                       aria-current={
-                        isActive
-                          ? "page"
-                          : undefined
+                        isActive ? "page" : undefined
                       }
-                      data-cursor-interactive
-                      className="group inline-flex items-center gap-3 border border-white/[0.075] px-4 py-2.5 outline-none transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#c7a96b]/34 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+                      className="inline-flex min-h-9 items-center gap-3 rounded-sm border px-4 py-2.5 outline-none transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-px focus-visible:ring-1 focus-visible:ring-[#dfc88f]/75"
                       style={
                         isActive
                           ? {
-                              borderColor: `${GOLD}55`,
-                              background: `${GOLD}08`,
+                              borderColor: `${GOLD}56`,
+                              background:
+                                `linear-gradient(180deg, ${GOLD}0d, rgba(255,255,255,.012))`,
                             }
-                          : undefined
+                          : {
+                              borderColor:
+                                "rgba(255,255,255,.075)",
+                              background:
+                                "rgba(255,255,255,.008)",
+                            }
                       }
                     >
                       <span
-                        className="text-[6px] uppercase tracking-[0.25em]"
+                        className="text-[7px] uppercase tracking-[0.24em]"
                         style={{
                           color: isActive
-                            ? `${GOLD_LIGHT}90`
-                            : "rgba(255,255,255,.25)",
+                            ? `${GOLD_LIGHT}92`
+                            : "rgba(255,255,255,.30)",
                         }}
                       >
-                        {getFilterLabel(
-                          filter,
-                        )}
+                        {getFilterLabel(filter)}
                       </span>
 
                       <span
-                        className="font-mono text-[6px] tracking-[0.2em]"
+                        className="umbra-code"
                         style={{
                           color: isActive
                             ? `${GOLD_LIGHT}58`
                             : "rgba(255,255,255,.14)",
                         }}
                       >
-                        {getFilterCount(
-                          projects,
-                          filter,
-                        )
+                        {getFilterCount(projects, filter)
                           .toString()
                           .padStart(2, "0")}
                       </span>
@@ -368,8 +479,8 @@ export default async function ProjectsPage({
                         <Check
                           aria-hidden="true"
                           size={11}
-                          strokeWidth={1.3}
-                          className="text-[#ead39a]/70"
+                          strokeWidth={1.25}
+                          className="text-[#dfc88f]/72"
                         />
                       ) : null}
                     </Link>
@@ -381,328 +492,95 @@ export default async function ProjectsPage({
         </div>
       </section>
 
-      {/* PROJECT ARCHIVE */}
       <section
         aria-label="Arhiva projekata"
-        className="px-6 py-16 sm:px-9 sm:py-20 lg:px-12 lg:py-24 xl:px-16"
+        className="umbra-container py-14 sm:py-18 lg:py-24"
       >
-        <div className="mx-auto max-w-[1480px]">
-          {visibleProjects.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
-              {visibleProjects.map(
-                (project, index) => {
-                  const title =
-                    project.title.sr;
-
-                  const shortDescription =
-                    project.shortDescription
-                      ?.sr ??
-                    project.description
-                      ?.sr ??
-                    "";
-
-                  return (
-                    <Link
-                      key={project.id}
-                      href={`/serije/${project.slug}`}
-                      aria-label={`Otvori projekat ${title}`}
-                      data-cursor-interactive
-                      className="group block overflow-hidden border border-white/[0.065] bg-[#070707] outline-none transition-[border-color,transform] duration-500 hover:-translate-y-0.5 hover:border-[#c7a96b]/32 focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-                    >
-                      {/* VISUAL */}
-                      <div className="relative aspect-[16/10] overflow-hidden">
-                        <Image
-                          src={getProjectImage(
-                            project,
-                          )}
-                          alt={title}
-                          fill
-                          priority={
-                            index === 0
-                          }
-                          sizes="(min-width: 1024px) 47vw, 94vw"
-                          className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.025]"
-                        />
-
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0 bg-black/[0.2]"
-                        />
-
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0"
-                          style={{
-                            background:
-                              "linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.08) 42%, rgba(0,0,0,.76) 100%)",
-                          }}
-                        />
-
-                        <div
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-4 border border-white/[0.05] sm:inset-5"
-                        />
-
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute left-4 top-4 h-9 w-9 border-l border-t sm:left-5 sm:top-5"
-                          style={{
-                            borderColor: `${GOLD_LIGHT}38`,
-                          }}
-                        />
-
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute bottom-4 right-4 h-9 w-9 border-b border-r sm:bottom-5 sm:right-5"
-                          style={{
-                            borderColor: `${GOLD}2b`,
-                          }}
-                        />
-
-                        <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-4 sm:inset-x-6 sm:top-6">
-                          <span
-                            className="text-[6px] font-semibold uppercase tracking-[0.28em]"
-                            style={{
-                              color: `${GOLD_LIGHT}72`,
-                            }}
-                          >
-                            Project
-                          </span>
-
-                          <span className="font-mono text-[6px] tracking-[0.22em] text-white/[0.22]">
-                            {getProjectNumber(
-                              project.id,
-                            )}
-                          </span>
-                        </div>
-
-                        <div className="absolute inset-x-5 bottom-5 sm:inset-x-6 sm:bottom-6">
-                          <div className="flex items-end justify-between gap-6">
-                            <div className="min-w-0">
-                              <div className="mb-3 flex flex-wrap items-center gap-3 text-[7px] font-semibold uppercase tracking-[0.27em]">
-                                <span
-                                  style={{
-                                    color: `${GOLD_LIGHT}82`,
-                                  }}
-                                >
-                                  {getTypeLabel(
-                                    project.type,
-                                  )}
-                                </span>
-
-                                <span
-                                  aria-hidden="true"
-                                  className="h-px w-4 bg-white/[0.16]"
-                                />
-
-                                <span className="text-white/[0.34]">
-                                  {getStatusLabel(
-                                    project.status,
-                                  )}
-                                </span>
-                              </div>
-
-                              <h2 className="text-[clamp(2.2rem,4.8vw,5rem)] font-[430] uppercase leading-[0.82] tracking-[-0.065em] text-white">
-                                {title}
-                              </h2>
-                            </div>
-
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/[0.14] bg-black/20 text-white/[0.4] backdrop-blur-sm transition-[border-color,color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:border-[#ead39a]/40 group-hover:text-[#ead39a] sm:h-11 sm:w-11">
-                              <ArrowUpRight
-                                aria-hidden="true"
-                                className="h-3.5 w-3.5"
-                              />
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* INFORMATION */}
-                      <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
-                        <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                          <p className="max-w-[600px] text-[11px] leading-6 text-white/[0.32] sm:text-[12px] sm:leading-7">
-                            {
-                              shortDescription
-                            }
-                          </p>
-
-                          <div className="grid grid-cols-2 gap-x-7 gap-y-3 text-right sm:min-w-[190px]">
-                            <div>
-                              <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                                Status
-                              </div>
-
-                              <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                                {getStatusLabel(
-                                  project.status,
-                                )}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-[6px] uppercase tracking-[0.23em] text-white/[0.17]">
-                                Platform
-                              </div>
-
-                              <div className="mt-1 text-[7px] uppercase tracking-[0.16em] text-white/[0.42]">
-                                {project.platform ??
-                                  "Umbra Studio"}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {project.source ? (
-                          <div className="mt-5 flex items-center gap-3">
-                            <span
-                              className="text-[7px] font-semibold uppercase tracking-[0.21em]"
-                              style={{
-                                color: `${GOLD_LIGHT}78`,
-                              }}
-                            >
-                              Ekranizacija
-                            </span>
-
-                            <span
-                              aria-hidden="true"
-                              className="h-px w-6 bg-white/[0.1]"
-                            />
-
-                            <span className="truncate text-[7px] uppercase tracking-[0.18em] text-white/[0.25]">
-                              {project.source
-                                .author ??
-                                "Izvorno delo"}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="mt-5 text-[7px] font-semibold uppercase tracking-[0.21em] text-white/[0.26]">
-                            Umbra Original
-                          </div>
-                        )}
-
-                        <div className="mt-7 flex items-center justify-between border-t border-white/[0.055] pt-4">
-                          <span className="text-[6px] uppercase tracking-[0.25em] text-white/[0.18]">
-                            Umbra Studio
-                          </span>
-
-                          <span
-                            className="inline-flex items-center gap-2 text-[6px] font-semibold uppercase tracking-[0.22em]"
-                            style={{
-                              color: `${GOLD_LIGHT}82`,
-                            }}
-                          >
-                            Otvori projekat
-
-                            <ArrowUpRight
-                              aria-hidden="true"
-                              className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                            />
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                },
-              )}
-            </div>
-          ) : (
-            <div className="border border-white/[0.065] bg-[#070707] px-6 py-16 sm:px-10 sm:py-20">
-              <div className="flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="h-px w-8"
-                  style={{
-                    background: `${GOLD}70`,
-                  }}
-                />
-
-                <span
-                  className="text-[7px] font-semibold uppercase tracking-[0.28em]"
-                  style={{
-                    color: `${GOLD_LIGHT}78`,
-                  }}
-                >
-                  Arhiva
-                </span>
-              </div>
-
-              <h2 className="mt-6 max-w-2xl text-[clamp(2rem,5vw,4.5rem)] font-[430] uppercase leading-[0.86] tracking-[-0.06em] text-white">
-                Nema projekata
-                <br />
-                u ovoj kategoriji
-              </h2>
-
-              <p className="mt-5 max-w-xl text-sm leading-7 text-white/[0.3]">
-                Kategorija je spremna za buduće
-                projekte. Vrati se na celu arhivu
-                da vidiš sve što trenutno stvaramo.
-              </p>
-
-              <Link
-                href="/serije"
-                data-cursor-interactive
-                className="group mt-8 inline-flex items-center gap-3 border border-white/[0.08] px-5 py-3 text-[7px] font-semibold uppercase tracking-[0.24em] text-white/[0.45] outline-none transition-[border-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/40 hover:text-[#ead39a] focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
-              >
-                Svi projekti
-
-                <ArrowUpRight
-                  aria-hidden="true"
-                  size={13}
-                  strokeWidth={1.15}
-                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                />
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* LOWER NAVIGATION */}
-      <section className="px-6 pb-24 pt-2 sm:px-9 sm:pb-32 lg:px-12 xl:px-16">
-        <div className="mx-auto max-w-[1480px] border-t border-white/[0.065] pt-8">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Link
-              href="/"
-              data-cursor-interactive
-              className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
-            >
-              <div>
-                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.2]">
-                  Umbra Studio
-                </div>
-
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.7]">
-                  Početna
-                </div>
-              </div>
-
-              <ArrowLeft
-                aria-hidden="true"
-                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-x-1 group-hover:text-[#d6b776]"
+        {visibleProjects.length > 0 ? (
+          <div className="grid gap-7 md:grid-cols-2 lg:gap-8">
+            {visibleProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                number={getProjectNumber(project.id)}
               />
-            </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="border border-white/[0.065] bg-[var(--umbra-surface)] px-6 py-16 sm:px-10 sm:py-20">
+            <span
+              className="umbra-code"
+              style={{ color: `${GOLD_LIGHT}76` }}
+            >
+              ARHIVA
+            </span>
+
+            <h2 className="mt-5 max-w-[720px] text-[clamp(2.2rem,5vw,4.4rem)] font-[430] uppercase leading-[0.88] tracking-[-0.06em] text-[var(--umbra-platinum)]">
+              Nema projekata u ovoj kategoriji
+            </h2>
+
+            <p className="mt-5 max-w-[560px] text-[12px] leading-6 text-white/[0.30] sm:text-[13px] sm:leading-7">
+              Kategorija je spremna za buduće projekte. Vrati se na celu arhivu da vidiš trenutno dostupne naslove.
+            </p>
 
             <Link
-              href="/likovi"
-              data-cursor-interactive
-              className="group flex min-h-[100px] items-center justify-between border border-white/[0.065] bg-white/[0.012] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c7a96b]/30 hover:bg-[#c7a96b]/[0.025] focus-visible:ring-1 focus-visible:ring-[#ead39a]/65 sm:px-8"
+              href="/serije"
+              className="mt-7 inline-flex min-h-10 items-center gap-3 border border-white/[0.08] px-5 py-3 text-[7px] font-semibold uppercase tracking-[0.24em] text-white/[0.42] outline-none transition-[border-color,color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[#dfc88f]/40 hover:bg-[#c4a56b]/[0.02] hover:text-[#dfc88f] focus-visible:ring-1 focus-visible:ring-[#dfc88f]/75"
             >
-              <div>
-                <div className="text-[7px] font-semibold uppercase tracking-[0.27em] text-white/[0.2]">
-                  Arhiva
-                </div>
-
-                <div className="mt-3 text-xl tracking-[-0.04em] text-white/[0.7]">
-                  Istraži likove
-                </div>
-              </div>
-
+              Svi projekti
               <ArrowUpRight
                 aria-hidden="true"
-                className="h-[18px] w-[18px] text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#d6b776]"
+                size={13}
+                strokeWidth={1.1}
               />
             </Link>
           </div>
+        )}
+      </section>
+
+      <section className="umbra-container border-t border-white/[0.055] pb-24 pt-8 sm:pb-28">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/"
+            className="group flex min-h-[92px] items-center justify-between border border-white/[0.065] bg-[rgba(255,255,255,.008)] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c4a56b]/30 hover:bg-[#c4a56b]/[0.018] focus-visible:ring-1 focus-visible:ring-[#dfc88f]/75 sm:px-8"
+          >
+            <span>
+              <span className="umbra-code text-white/[0.18]">
+                UMBRA STUDIO
+              </span>
+              <span className="mt-2 block text-[16px] tracking-[-0.025em] text-white/[0.66]">
+                Početna
+              </span>
+            </span>
+
+            <ArrowLeft
+              aria-hidden="true"
+              size={18}
+              strokeWidth={1.05}
+              className="text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-x-1 group-hover:text-[#dfc88f]"
+            />
+          </Link>
+
+          <Link
+            href="/likovi"
+            className="group flex min-h-[92px] items-center justify-between border border-white/[0.065] bg-[rgba(255,255,255,.008)] px-6 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-[#c4a56b]/30 hover:bg-[#c4a56b]/[0.018] focus-visible:ring-1 focus-visible:ring-[#dfc88f]/75 sm:px-8"
+          >
+            <span>
+              <span className="umbra-code text-white/[0.18]">
+                ARHIVA
+              </span>
+              <span className="mt-2 block text-[16px] tracking-[-0.025em] text-white/[0.66]">
+                Istraži likove
+              </span>
+            </span>
+
+            <ArrowUpRight
+              aria-hidden="true"
+              size={18}
+              strokeWidth={1.05}
+              className="text-white/[0.26] transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#dfc88f]"
+            />
+          </Link>
         </div>
       </section>
     </main>

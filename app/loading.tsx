@@ -1,10 +1,28 @@
+"use client";
+
 import { LoaderCircle } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Loading() {
+  const pathname = usePathname();
+  const isEnglish = pathname === "/en" || pathname.startsWith("/en/");
+
+  const copy = isEnglish
+    ? {
+        ariaLabel: "Umbra Studio loading",
+        tagline: "Stories that leave a shadow",
+        archive: "Loading archive",
+      }
+    : {
+        ariaLabel: "Umbra Studio učitavanje",
+        tagline: "Priče koje ostavljaju senku",
+        archive: "Učitavanje arhive",
+      };
+
   return (
     <main
       className="fixed inset-0 z-[300] flex min-h-screen items-center justify-center overflow-hidden bg-[var(--umbra-bg)] text-[#F1EDE4]"
-      aria-label="Umbra Studio učitavanje"
+      aria-label={copy.ariaLabel}
     >
       {/* ATMOSPHERE */}
       <div className="pointer-events-none absolute inset-0">
@@ -38,7 +56,7 @@ export default function Loading() {
         </div>
 
         <p className="mt-3 text-[7px] uppercase tracking-[0.3em] text-white/16">
-          Priče koje ostavljaju senku
+          {copy.tagline}
         </p>
       </div>
 
@@ -49,7 +67,7 @@ export default function Loading() {
         </div>
 
         <div className="mt-3 flex items-center justify-between text-[6px] uppercase tracking-[0.28em] text-white/10">
-          <span>Loading archive</span>
+          <span>{copy.archive}</span>
           <span>Umbra / 001</span>
         </div>
       </div>

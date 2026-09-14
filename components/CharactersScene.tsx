@@ -3,17 +3,25 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
-import {
   ArrowDown,
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   Images,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 
 import type {
   CharacterContent,
@@ -23,9 +31,10 @@ import type {
 
 type Locale = "sr" | "en";
 
-const GOLD = "#c7a96b";
-const GOLD_LIGHT = "#ead39a";
-const GOLD_DARK = "#8f7142";
+const GOLD = "#c4a56b";
+const GOLD_LIGHT = "#dfc88f";
+const GOLD_DARK = "#8d6f43";
+const IVORY = "#f3eee4";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -38,23 +47,22 @@ const copyByLocale = {
       "Svaku priču nose ljudi. Njihovi odnosi, odluke i tišina oblikuju svet Umbre.",
     archive: "ARHIVA LIKOVA",
     archiveDescription:
-      "Kompletna postava i dosijei likova unutar Umbra univerzuma.",
+      "Postava i dosijei likova unutar Umbra univerzuma.",
     openArchive: "OTVORI ARHIVU",
     cast: "POSTAVA",
-    selected: "IZABRANO",
+    selected: "TRENUTNI LIK",
     select: "IZABERI LIK",
     dossier: "OTVORI DOSIJE",
-    gallery: "OTVORI GALERIJU",
+    gallery: "GALERIJA",
     galleryLabel: "Otvori galeriju lika",
     next: "04 / O UMBRI",
-    universe: "UMBRA UNIVERZUM",
     index: "INDEKS",
     registered: "REGISTROVANI LIKOVI",
     project: "PROJEKAT",
     role: "ULOGA",
     portrait: "PORTRET",
-    preview: "PREGLED",
-    viewCharacter: "Prikaži lika",
+    previous: "Prethodni lik",
+    nextCharacter: "Sledeći lik",
   },
   en: {
     eyebrow: "CHARACTERS",
@@ -64,23 +72,22 @@ const copyByLocale = {
       "Every story is carried by people. Their relationships, choices and silences shape the world of Umbra.",
     archive: "CHARACTER ARCHIVE",
     archiveDescription:
-      "The complete cast and character dossiers within the Umbra universe.",
+      "The cast and character dossiers within the Umbra universe.",
     openArchive: "OPEN ARCHIVE",
     cast: "CAST",
-    selected: "SELECTED",
+    selected: "CURRENT CHARACTER",
     select: "SELECT CHARACTER",
     dossier: "OPEN DOSSIER",
-    gallery: "OPEN GALLERY",
+    gallery: "GALLERY",
     galleryLabel: "Open character gallery",
     next: "04 / ABOUT UMBRA",
-    universe: "UMBRA UNIVERSE",
     index: "INDEX",
     registered: "REGISTERED CHARACTERS",
     project: "PROJECT",
     role: "ROLE",
     portrait: "PORTRAIT",
-    preview: "PREVIEW",
-    viewCharacter: "Show character",
+    previous: "Previous character",
+    nextCharacter: "Next character",
   },
 } as const;
 
@@ -89,7 +96,7 @@ function getLocalizedText(
   locale: Locale,
 ) {
   if (!text) return "";
-  return text[locale] ?? text.sr;
+  return text[locale] ?? text.sr ?? text.en ?? "";
 }
 
 function getCharacterName(
@@ -125,9 +132,7 @@ function getCharacterCategory(
 }
 
 function getProjectHref(slug: string, locale: Locale) {
-  return locale === "en"
-    ? `/en/projects/${slug}`
-    : `/serije/${slug}`;
+  return locale === "en" ? `/en/projects/${slug}` : `/serije/${slug}`;
 }
 
 function getCharacterHref(
@@ -175,164 +180,192 @@ export default function CharactersScene({
     firstCharacter?.id ?? null,
   );
 
-  const activeCharacter =
-    characters.find((character) => character.id === activeId) ?? null;
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const inView = useInView(sectionRef, {
+    once: true,
+    amount: 0.12,
+  });
 
-  const activeIndex = activeCharacter
-    ? characters.findIndex((character) => character.id === activeCharacter.id)
-    : -1;
+  const activeIndex = characters.findIndex(
+    (character) => character.id === activeId,
+  );
+
+  const activeCharacter =
+    activeIndex >= 0 ? characters[activeIndex] ?? null : null;
 
   const characterCount = characters.length;
+
   const activeProject = activeCharacter
     ? projectById.get(activeCharacter.projectId) ?? null
     : null;
 
-  const selectCharacter = (character: CharacterContent) => {
-    setActiveId(character.id);
-  };
+  const selectByIndex = useCallback(
+    (index: number) => {
+      if (!characterCount) return;
+      const nextIndex = (index + characterCount) % characterCount;
+      const character = characters[nextIndex];
+      if (character) {
+        setActiveId(character.id);
+      }
+    },
+    [characterCount, characters],
+  );
 
-  const handleRowKeyDown = (
-    event: React.KeyboardEvent<HTMLDivElement>,
-    character: CharacterContent,
-  ) => {
-    if (event.target !== event.currentTarget) return;
+  const handleRowKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+      if (
+        event.key === "ArrowDown" ||
+        event.key === "ArrowRight"
+      ) {
+        event.preventDefault();
+        selectByIndex(index + 1);
+        return;
+      }
 
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      selectCharacter(character);
-    }
-  };
+      if (
+        event.key === "ArrowUp" ||
+        event.key === "ArrowLeft"
+      ) {
+        event.preventDefault();
+        selectByIndex(index - 1);
+        return;
+      }
+
+      if (event.key === "Home") {
+        event.preventDefault();
+        selectByIndex(0);
+        return;
+      }
+
+      if (event.key === "End") {
+        event.preventDefault();
+        selectByIndex(characterCount - 1);
+      }
+    },
+    [characterCount, selectByIndex],
+  );
 
   return (
     <section
       id="likovi-scene"
+      ref={sectionRef}
       data-umbra-scene="characters"
       aria-labelledby="characters-title"
-      className="relative overflow-x-clip border-b border-white/[0.055] bg-[#050505]"
+      className="relative overflow-x-clip border-b border-white/[0.055] bg-[var(--umbra-bg)]"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
+        className="pointer-events-none absolute inset-0"
       >
-        <motion.div
-          animate={{
-            opacity: activeCharacter ? 0.3 : 0.2,
-            scale: activeCharacter ? 1.02 : 1,
-          }}
-          transition={{ duration: reducedMotion ? 0 : 0.8, ease: EASE }}
-          className="absolute -left-[20%] top-[5%] h-[680px] w-[680px] rounded-full"
-          style={{
-            background: `radial-gradient(circle, ${GOLD}07 0%, ${GOLD}018 35%, transparent 72%)`,
-            filter: "blur(92px)",
-          }}
-        />
-
-        <motion.div
-          animate={{ opacity: activeCharacter ? 0.08 : 0.045 }}
-          transition={{ duration: reducedMotion ? 0 : 0.8, ease: EASE }}
-          className="absolute -right-[18%] top-[42%] h-[760px] w-[760px] rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(255,255,255,.016), transparent 70%)",
-            filter: "blur(108px)",
-          }}
-        />
-
         <div
-          className="absolute inset-x-[5%] top-0 h-px"
+          className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(90deg, transparent, rgba(255,255,255,.035), transparent)",
+              "radial-gradient(circle at 72% 8%, rgba(223,200,143,.024), transparent 28%), linear-gradient(180deg, #060605 0%, #050504 52%, #030302 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(223,200,143,.14), transparent)",
           }}
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1480px] px-6 py-20 sm:px-9 sm:py-24 lg:px-12 lg:py-28 xl:px-16">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-20 xl:grid-cols-[minmax(0,1fr)_350px] xl:gap-24">
+      <div className="umbra-container relative py-16 sm:py-20 lg:py-24">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-18">
           <div>
             <motion.div
-              initial={{ opacity: 0, y: reducedMotion ? 0 : 7 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.14 }}
-              transition={{ duration: reducedMotion ? 0 : 0.5, ease: EASE }}
+              initial={{ opacity: 0, y: reducedMotion ? 0 : 8 }}
+              animate={inView ? { opacity: 1, y: 0 } : undefined}
+              transition={{
+                duration: reducedMotion ? 0 : 0.55,
+                ease: EASE,
+              }}
               className="flex items-center gap-3"
             >
               <span
                 aria-hidden="true"
-                className="h-px w-10"
+                className="h-px w-9"
                 style={{
-                  background: `linear-gradient(90deg, transparent, ${GOLD})`,
+                  background:
+                    `linear-gradient(90deg, transparent, ${GOLD_LIGHT}85)`,
                 }}
               />
-
               <span
-                className="font-mono text-[7px] tracking-[0.38em]"
-                style={{ color: `${GOLD_LIGHT}76` }}
+                className="umbra-code"
+                style={{ color: `${GOLD_LIGHT}78` }}
               >
                 03
               </span>
-
-              <span className="text-[8px] font-semibold uppercase tracking-[0.34em] text-white/[0.4]">
+              <span
+                className="umbra-label"
+                style={{ color: "rgba(238,233,222,.46)" }}
+              >
                 {copy.eyebrow}
               </span>
             </motion.div>
 
             <motion.h2
               id="characters-title"
-              initial={{ opacity: 0, y: reducedMotion ? 0 : 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.12 }}
+              initial={{ opacity: 0, y: reducedMotion ? 0 : 14 }}
+              animate={inView ? { opacity: 1, y: 0 } : undefined}
               transition={{
                 delay: reducedMotion ? 0 : 0.04,
-                duration: reducedMotion ? 0 : 0.7,
+                duration: reducedMotion ? 0 : 0.72,
                 ease: EASE,
               }}
-              className="mt-7 max-w-[820px] text-[clamp(3.4rem,6.2vw,7.4rem)] font-[420] uppercase leading-[0.81] tracking-[-0.082em] text-white"
+              className="mt-5 max-w-[760px] text-[clamp(2.8rem,7.7vw,6.2rem)] font-[430] uppercase leading-[0.88] tracking-[-0.06em] text-[var(--umbra-platinum)]"
             >
               <span className="block">{copy.titleA}</span>
-              <span className="mt-2 block font-serif font-normal italic text-white/[0.55]">
+              <span
+                className="mt-2 block font-[400] italic tracking-[-0.03em]"
+                style={{
+                  fontFamily:
+                    'var(--font-umbra-serif), "Iowan Old Style", "Palatino Linotype", Georgia, serif',
+                  color: "rgba(238,233,222,.58)",
+                }}
+              >
                 {copy.titleB}
               </span>
             </motion.h2>
 
             <motion.div
               initial={{ opacity: 0, scaleX: 0 }}
-              whileInView={{ opacity: 1, scaleX: 1 }}
-              viewport={{ once: true, amount: 0.1 }}
+              animate={inView ? { opacity: 1, scaleX: 1 } : undefined}
               transition={{
-                delay: reducedMotion ? 0 : 0.1,
-                duration: reducedMotion ? 0 : 0.62,
+                delay: reducedMotion ? 0 : 0.10,
+                duration: reducedMotion ? 0 : 0.68,
                 ease: EASE,
               }}
-              className="mt-8 h-px w-full max-w-[520px] origin-left"
+              className="mt-6 h-px max-w-[460px] origin-left"
               style={{
                 background:
-                  `linear-gradient(90deg, ${GOLD}52, rgba(255,255,255,.045), transparent)`,
+                  `linear-gradient(90deg, ${GOLD_LIGHT}48, rgba(255,255,255,.04), transparent)`,
               }}
             />
 
             <motion.p
               initial={{ opacity: 0, y: reducedMotion ? 0 : 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
+              animate={inView ? { opacity: 1, y: 0 } : undefined}
               transition={{
-                delay: reducedMotion ? 0 : 0.15,
-                duration: reducedMotion ? 0 : 0.5,
+                delay: reducedMotion ? 0 : 0.16,
+                duration: reducedMotion ? 0 : 0.52,
                 ease: EASE,
               }}
-              className="mt-7 max-w-[610px] text-[12px] leading-7 text-white/[0.34] sm:text-[13px] sm:leading-7"
+              className="mt-5 max-w-[570px] text-[12px] leading-6 text-[var(--umbra-ink-muted)] sm:text-[13px] sm:leading-7"
             >
               {copy.description}
             </motion.p>
           </div>
 
           <motion.aside
-            initial={{ opacity: 0, x: reducedMotion ? 0 : 12 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
+            initial={{ opacity: 0, x: reducedMotion ? 0 : 10 }}
+            animate={inView ? { opacity: 1, x: 0 } : undefined}
             transition={{
-              delay: reducedMotion ? 0 : 0.08,
-              duration: reducedMotion ? 0 : 0.58,
+              delay: reducedMotion ? 0 : 0.10,
+              duration: reducedMotion ? 0 : 0.60,
               ease: EASE,
             }}
             className="self-end lg:pb-1"
@@ -340,43 +373,46 @@ export default function CharactersScene({
             <Link
               href={archiveHref}
               aria-label={copy.openArchive}
-              className="group/archive relative block border-l border-white/[0.075] pl-6 outline-none transition-[border-color,transform] duration-[400ms] hover:-translate-y-0.5 hover:border-[#ead39a]/35 focus-visible:ring-1 focus-visible:ring-[#ead39a]/55 sm:pl-7"
+              className="group/archive block border-l border-white/[0.06] pl-5 outline-none transition-[border-color,transform] duration-400 hover:-translate-y-0.5 hover:border-[#dfc88f]/30 focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70 sm:pl-6"
             >
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
                   className="h-[4px] w-[4px] rounded-full"
                   style={{
-                    background: GOLD,
-                    boxShadow: `0 0 9px ${GOLD}28`,
+                    background: GOLD_LIGHT,
+                    boxShadow: `0 0 8px ${GOLD_LIGHT}26`,
                   }}
                 />
-                <span className="text-[7px] uppercase tracking-[0.3em] text-white/[0.22] transition-colors duration-300 group-hover/archive:text-white/[0.4]">
+                <span
+                  className="text-[7px] uppercase tracking-[0.28em] text-white/[0.26] transition-colors duration-300 group-hover/archive:text-white/[0.46]"
+                >
                   {copy.archive}
                 </span>
               </div>
 
               <div className="mt-4 flex items-end gap-4">
                 <span
-                  className="font-mono text-[46px] leading-none tracking-[-0.06em]"
-                  style={{ color: `${GOLD_LIGHT}58` }}
+                  className="font-mono text-[34px] leading-none tracking-[-0.05em]"
+                  style={{ color: `${GOLD_LIGHT}62` }}
                 >
                   {String(characterCount).padStart(2, "0")}
                 </span>
-                <span className="mb-1 max-w-[150px] text-[7px] uppercase leading-4 tracking-[0.24em] text-white/[0.17]">
+                <span className="mb-1 max-w-[150px] text-[7px] uppercase leading-4 tracking-[0.22em] text-white/[0.20]">
                   {copy.registered}
                 </span>
               </div>
 
-              <div className="mt-5 h-px w-full bg-white/[0.05]" />
-              <p className="mt-4 max-w-[280px] text-[10px] leading-5 text-white/[0.25]">
+              <div className="mt-4 h-px bg-white/[0.045]" />
+
+              <p className="mt-4 max-w-[280px] text-[10px] leading-5 text-white/[0.30]">
                 {copy.archiveDescription}
               </p>
 
-              <div className="mt-6 inline-flex items-center gap-3">
+              <div className="mt-4 inline-flex min-h-10 items-center gap-3">
                 <span
-                  className="text-[7px] uppercase tracking-[0.28em]"
-                  style={{ color: `${GOLD_LIGHT}72` }}
+                  className="text-[7px] uppercase tracking-[0.24em]"
+                  style={{ color: `${GOLD_LIGHT}7a` }}
                 >
                   {copy.openArchive}
                 </span>
@@ -385,185 +421,175 @@ export default function CharactersScene({
                   size={12}
                   strokeWidth={1.05}
                   className="transition-transform duration-300 group-hover/archive:-translate-y-0.5 group-hover/archive:translate-x-0.5"
+                  style={{ color: `${GOLD_LIGHT}70` }}
                 />
               </div>
-
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute bottom-0 left-0 h-px w-0 transition-[width] duration-500 group-hover/archive:w-20"
-                style={{
-                  background:
-                    `linear-gradient(90deg, ${GOLD_LIGHT}, transparent)`,
-                }}
-              />
             </Link>
           </motion.aside>
         </div>
 
         <motion.div
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.06 }}
-          transition={{ duration: reducedMotion ? 0 : 0.45 }}
-          className="mt-14 flex items-center justify-between border-y border-white/[0.055] py-3.5 xl:mt-16"
+          animate={inView ? { opacity: 1 } : undefined}
+          transition={{ duration: reducedMotion ? 0 : 0.5 }}
+          className="mt-10 flex items-center justify-between border-y border-white/[0.055] py-3.5 sm:mt-12"
         >
           <div className="flex items-center gap-3">
-            <motion.span
-              animate={{
-                scale: activeCharacter ? [1, 1.15, 1] : 1,
-              }}
-              transition={{ duration: reducedMotion ? 0 : 0.4, ease: EASE }}
-              className="h-[5px] w-[5px] rounded-full"
+            <span
+              aria-hidden="true"
+              className="h-[4px] w-[4px] rounded-full"
               style={{
                 background: GOLD,
-                boxShadow: `0 0 8px ${GOLD}30`,
+                boxShadow: `0 0 7px ${GOLD}28`,
               }}
             />
-            <span className="text-[7px] uppercase tracking-[0.3em] text-white/[0.22]">
+            <span className="text-[7px] uppercase tracking-[0.27em] text-white/[0.25]">
               {activeCharacter ? copy.selected : copy.cast}
             </span>
           </div>
 
-          <div className="flex items-center gap-5">
-            <span className="hidden max-w-[180px] truncate text-[6px] uppercase tracking-[0.24em] text-white/[0.15] sm:block">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <div className="hidden items-center gap-1 sm:flex">
+              <button
+                type="button"
+                onClick={() => selectByIndex(activeIndex - 1)}
+                aria-label={copy.previous}
+                disabled={characterCount < 2}
+                className="flex h-9 w-9 items-center justify-center border border-white/[0.06] text-white/[0.28] outline-none transition-[border-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#dfc88f]/30 hover:text-[#dfc88f] disabled:pointer-events-none disabled:opacity-30 focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
+              >
+                <ArrowLeft size={12} strokeWidth={1.05} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => selectByIndex(activeIndex + 1)}
+                aria-label={copy.nextCharacter}
+                disabled={characterCount < 2}
+                className="flex h-9 w-9 items-center justify-center border border-white/[0.06] text-white/[0.28] outline-none transition-[border-color,color,transform] duration-300 hover:-translate-y-px hover:border-[#dfc88f]/30 hover:text-[#dfc88f] disabled:pointer-events-none disabled:opacity-30 focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
+              >
+                <ArrowRight size={12} strokeWidth={1.05} />
+              </button>
+            </div>
+
+            <span className="hidden max-w-[180px] truncate text-[7px] uppercase tracking-[0.22em] text-white/[0.18] sm:block">
               {activeCharacter
                 ? getCharacterName(activeCharacter, locale)
                 : copy.select}
             </span>
-            <span className="font-mono text-[6px] tracking-[0.24em] text-white/[0.14]">
+
+            <span className="umbra-code">
               {activeIndex >= 0
                 ? String(activeIndex + 1).padStart(2, "0")
                 : "00"}
-              /
-              {String(characterCount).padStart(2, "0")}
+              /{String(characterCount).padStart(2, "0")}
             </span>
           </div>
         </motion.div>
 
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="lg:border-r lg:border-white/[0.055]">
+        <div className="mt-1 grid lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="order-2 lg:order-1 lg:border-r lg:border-white/[0.055]">
             {characters.map((character, index) => {
               const active = character.id === activeId;
-              const category = getCharacterCategory(character, locale);
-              const characterHref = getCharacterHref(character, locale);
 
               return (
-                <motion.div
+                <motion.button
                   key={character.id}
+                  type="button"
                   initial={false}
+                  whileHover={reducedMotion ? undefined : { x: 2 }}
+                  whileTap={reducedMotion ? undefined : { scale: 0.998 }}
                   animate={{
                     backgroundColor: active
-                      ? "rgba(255,255,255,.018)"
+                      ? "rgba(255,255,255,.016)"
                       : "rgba(0,0,0,0)",
                   }}
-                  transition={{ duration: reducedMotion ? 0 : 0.28, ease: EASE }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => selectCharacter(character)}
-                  onKeyDown={(event) => handleRowKeyDown(event, character)}
+                  transition={{
+                    duration: reducedMotion ? 0 : 0.28,
+                    ease: EASE,
+                  }}
+                  onClick={() => setActiveId(character.id)}
+                  onKeyDown={(event) =>
+                    handleRowKeyDown(event, index)
+                  }
                   aria-pressed={active}
-                  className="group/row relative flex w-full cursor-pointer items-center overflow-hidden border-b border-white/[0.055] py-5 text-left outline-none transition-colors duration-300 hover:bg-white/[0.012] focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#ead39a]/60 sm:py-6 lg:py-7"
+                  aria-label={`${copy.select}: ${getCharacterName(character, locale)}`}
+                  className="group/row relative flex w-full min-w-0 items-center overflow-hidden border-b border-white/[0.055] py-4 text-left outline-none transition-[background-color] duration-300 hover:bg-white/[0.012] focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#dfc88f]/70 sm:py-5 lg:py-6"
                 >
                   <motion.span
                     aria-hidden="true"
-                    className="pointer-events-none absolute left-0 top-0 h-full w-[2px] origin-center"
+                    className="pointer-events-none absolute left-0 top-0 h-full w-px origin-center"
                     animate={{
                       scaleY: active ? 1 : 0,
                       opacity: active ? 1 : 0,
                     }}
-                    transition={{ duration: reducedMotion ? 0 : 0.32, ease: EASE }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.30,
+                      ease: EASE,
+                    }}
                     style={{
-                      background: `linear-gradient(180deg, ${GOLD_LIGHT}, ${GOLD_DARK})`,
+                      background:
+                        `linear-gradient(180deg, ${GOLD_LIGHT}, ${GOLD_DARK})`,
                     }}
                   />
 
                   <span
-                    className="hidden w-[68px] shrink-0 pl-1 font-mono text-[7px] tracking-[0.22em] sm:block lg:w-[82px]"
+                    className="hidden w-[62px] shrink-0 pl-1 font-mono text-[7px] tracking-[0.20em] sm:block lg:w-[76px]"
                     style={{
                       color: active
-                        ? `${GOLD_LIGHT}70`
-                        : "rgba(255,255,255,.10)",
+                        ? `${GOLD_LIGHT}6c`
+                        : "rgba(255,255,255,.11)",
                     }}
                   >
                     {String(index + 1).padStart(2, "0")}
                   </span>
 
-                  <div className="relative z-10 min-w-0 flex-1 pr-4">
-                    <Link
-                      href={characterHref}
-                      aria-label={`${copy.dossier}: ${getCharacterName(character, locale)}`}
-                      onClick={(event) => event.stopPropagation()}
-                      onKeyDown={(event) => event.stopPropagation()}
-                      className="group/name inline-block max-w-full rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
+                  <span className="relative z-10 min-w-0 flex-1 pr-4">
+                    <motion.span
+                      animate={{
+                        x: active ? 3 : 0,
+                        color: active
+                          ? IVORY
+                          : "rgba(255,255,255,.68)",
+                      }}
+                      transition={{
+                        duration: reducedMotion ? 0 : 0.26,
+                        ease: EASE,
+                      }}
+                      className="block truncate text-[15px] font-[440] uppercase leading-none tracking-[-0.018em] sm:text-[18px] lg:text-[20px]"
                     >
-                      <motion.span
-                        animate={{
-                          x: active ? 4 : 0,
-                          color: active
-                            ? "rgba(255,255,255,.94)"
-                            : "rgba(255,255,255,.68)",
-                        }}
-                        transition={{ duration: reducedMotion ? 0 : 0.28, ease: EASE }}
-                        className="block truncate text-[17px] font-[440] uppercase leading-none tracking-[-0.024em] transition-colors duration-300 group-hover/name:text-white sm:text-[20px] lg:text-[23px]"
-                      >
-                        {getCharacterName(character, locale)}
-                      </motion.span>
+                      {getCharacterName(character, locale)}
+                    </motion.span>
 
-                      <motion.span
-                        animate={{
-                          x: active ? 4 : 0,
-                          opacity: active ? 0.75 : 0.28,
-                        }}
-                        transition={{ duration: reducedMotion ? 0 : 0.28, ease: EASE }}
-                        className="mt-2 block text-[6px] uppercase tracking-[0.28em]"
-                        style={{ color: GOLD_LIGHT }}
-                      >
-                        {category}
-                      </motion.span>
-                    </Link>
-                  </div>
+                    <motion.span
+                      animate={{
+                        x: active ? 3 : 0,
+                        opacity: active ? 0.78 : 0.28,
+                      }}
+                      transition={{
+                        duration: reducedMotion ? 0 : 0.26,
+                        ease: EASE,
+                      }}
+                      className="mt-2 block text-[6px] uppercase tracking-[0.25em]"
+                      style={{ color: GOLD_LIGHT }}
+                    >
+                      {getCharacterCategory(character, locale)}
+                    </motion.span>
+                  </span>
 
-                  <span className="hidden max-w-[240px] px-5 text-right text-[8px] leading-5 text-white/[0.20] md:block xl:max-w-[280px]">
+                  <span className="hidden max-w-[230px] px-5 text-right text-[8px] leading-5 text-white/[0.18] md:block">
                     {getCharacterDescription(character, locale)}
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      selectCharacter(character);
-                    }}
-                    aria-pressed={active}
-                    aria-label={`${copy.select}: ${getCharacterName(character, locale)}`}
-                    title={copy.preview}
-                    className={[
-                      "group/select relative z-20 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border outline-none",
-                      "transition-[border-color,background-color,color,transform] duration-300",
-                      active
-                        ? "border-[#ead39a]/35 bg-[#ead39a]/[0.035] text-[#ead39a]"
-                        : "border-white/[0.07] text-white/[0.22]",
-                      "hover:-translate-y-px hover:border-white/[0.18] hover:bg-white/[0.025] hover:text-white/[0.60]",
-                      "focus-visible:ring-1 focus-visible:ring-[#ead39a]/60",
-                    ].join(" ")}
+                  <span
+                    aria-hidden="true"
+                    className="relative z-10 mr-1 flex h-9 w-9 shrink-0 items-center justify-center border border-white/[0.065] text-white/[0.22] transition-[border-color,color,transform] duration-300 group-hover/row:-translate-y-px group-hover/row:border-[rgba(223,200,143,.22)] group-hover/row:text-white/[0.62] sm:mr-2"
                   >
                     <ArrowRight
-                      aria-hidden="true"
                       size={12}
                       strokeWidth={1.05}
-                      className="transition-transform duration-300 group-hover/select:translate-x-0.5"
+                      className="transition-transform duration-300 group-hover/row:translate-x-0.5"
                     />
-                  </button>
-
-                  <motion.span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 z-0"
-                    initial={false}
-                    animate={{ opacity: active ? 1 : 0 }}
-                    transition={{ duration: reducedMotion ? 0 : 0.26, ease: EASE }}
-                    style={{
-                      background: `linear-gradient(90deg, ${GOLD}05, transparent 62%)`,
-                    }}
-                  />
+                  </span>
 
                   <motion.span
                     aria-hidden="true"
@@ -573,144 +599,204 @@ export default function CharactersScene({
                       scaleX: active ? 1 : 0,
                       opacity: active ? 1 : 0,
                     }}
-                    transition={{ duration: reducedMotion ? 0 : 0.48, ease: EASE }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.44,
+                      ease: EASE,
+                    }}
                     style={{
                       background:
                         `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT}, transparent 72%)`,
                     }}
                   />
-                </motion.div>
+                </motion.button>
               );
             })}
           </div>
 
-          <aside className="border-t border-white/[0.055] lg:border-t-0">
+          <aside className="order-1 border-b border-white/[0.055] lg:order-2 lg:border-b-0">
             <div className="lg:sticky lg:top-24">
               <AnimatePresence mode="wait" initial={false}>
                 {activeCharacter ? (
                   <motion.div
                     key={activeCharacter.id}
-                    initial={{ opacity: 0, y: reducedMotion ? 0 : 8 }}
+                    initial={{
+                      opacity: 0,
+                      y: reducedMotion ? 0 : 7,
+                    }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
-                    transition={{ duration: reducedMotion ? 0 : 0.34, ease: EASE }}
-                    className="p-6 sm:p-7 lg:p-7"
+                    exit={{
+                      opacity: 0,
+                      y: reducedMotion ? 0 : -5,
+                    }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.34,
+                      ease: EASE,
+                    }}
+                    className="p-5 sm:p-6 lg:p-7"
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className="font-mono text-[6px] uppercase tracking-[0.30em]"
-                        style={{ color: `${GOLD_LIGHT}70` }}
+                        className="umbra-code"
+                        style={{ color: `${GOLD_LIGHT}72` }}
                       >
                         {copy.selected}
                       </span>
-                      <span className="font-mono text-[6px] tracking-[0.24em] text-white/[0.14]">
+
+                      <span className="umbra-code">
                         {String(activeIndex + 1).padStart(2, "0")}/
                         {String(characterCount).padStart(2, "0")}
                       </span>
                     </div>
 
                     <Link
-                      href={getCharacterGalleryHref(activeCharacter, locale)}
+                      href={getCharacterGalleryHref(
+                        activeCharacter,
+                        locale,
+                      )}
                       aria-label={`${copy.galleryLabel}: ${getCharacterName(activeCharacter, locale)}`}
-                      onClick={(event) => event.stopPropagation()}
-                      className="group/gallery relative mt-4 block overflow-hidden border border-white/[0.075] bg-[#070707] outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/65"
+                      className="group/gallery mt-4 block overflow-hidden border border-white/[0.075] bg-[var(--umbra-surface)] outline-none focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
                     >
-                      <div className="relative aspect-[4/3] overflow-hidden">
-                        <AnimatePresence mode="wait" initial={false}>
+                      <div className="relative aspect-[5/4] overflow-hidden">
+                        <AnimatePresence
+                          mode="wait"
+                          initial={false}
+                        >
                           <motion.div
                             key={activeCharacter.id}
-                            initial={{ opacity: 0, scale: reducedMotion ? 1 : 1.018 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: reducedMotion ? 1 : 0.988 }}
-                            transition={{ duration: reducedMotion ? 0 : 0.38, ease: EASE }}
+                            initial={{
+                              opacity: 0,
+                              scale: reducedMotion ? 1 : 1.014,
+                            }}
+                            animate={{
+                              opacity: 1,
+                              scale: 1,
+                            }}
+                            exit={{
+                              opacity: 0,
+                              scale: reducedMotion ? 1 : 0.992,
+                            }}
+                            transition={{
+                              duration: reducedMotion ? 0 : 0.40,
+                              ease: EASE,
+                            }}
                             className="absolute inset-0"
                           >
                             {characterImages[activeCharacter.id] ? (
                               <Image
-                                src={characterImages[activeCharacter.id]!}
-                                alt={getCharacterName(activeCharacter, locale)}
+                                src={
+                                  characterImages[
+                                    activeCharacter.id
+                                  ]!
+                                }
+                                alt={getCharacterName(
+                                  activeCharacter,
+                                  locale,
+                                )}
                                 fill
-                                sizes="(min-width: 1024px) 360px, 88vw"
-                                className="object-cover grayscale-[0.08] transition-transform duration-[900ms] group-hover/gallery:scale-[1.025]"
+                                sizes="(min-width: 1024px) 360px, 92vw"
+                                className="object-cover grayscale-[0.04] transition-transform duration-[1100ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/gallery:scale-[1.02]"
                               />
                             ) : (
                               <div
                                 aria-hidden="true"
-                                className="absolute inset-0 bg-[radial-gradient(circle_at_72%_38%,rgba(234,211,154,0.09),transparent_34%),linear-gradient(135deg,#090909_0%,#050505_55%,#0b0a08_100%)]"
+                                className="absolute inset-0 bg-[radial-gradient(circle_at_72%_38%,rgba(223,200,143,.08),transparent_34%),linear-gradient(135deg,#0a0908_0%,#050504_55%,#0d0c09_100%)]"
                               >
-                                <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,.07)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.045)_1px,transparent_1px)] [background-size:64px_64px]" />
-                                <div className="absolute left-[72%] top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.05]" />
-                                <div className="absolute left-[72%] top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c7a96b]/[0.12]" />
+                                <div className="absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(255,255,255,.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.035)_1px,transparent_1px)] [background-size:68px_68px]" />
+                                <div className="absolute left-[72%] top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.045]" />
+                                <div className="absolute left-[72%] top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#dfc88f]/[0.10]" />
                               </div>
                             )}
 
-                            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.015),transparent_44%,rgba(0,0,0,.70))]" />
+                            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.01),transparent_45%,rgba(0,0,0,.66))]" />
                           </motion.div>
                         </AnimatePresence>
 
-                        <div className="absolute inset-x-4 top-4 flex items-center justify-between">
+                        <div className="absolute inset-x-3.5 top-3.5 flex items-center justify-between gap-3 sm:inset-x-4 sm:top-4">
                           <span className="font-mono text-[5px] uppercase tracking-[0.26em] text-white/[0.28]">
                             {copy.portrait}
                           </span>
-                          <span className="flex items-center gap-2 text-[5px] uppercase tracking-[0.24em] text-white/[0.30] transition-colors duration-300 group-hover/gallery:text-[#ead39a]/85">
-                            <Images aria-hidden="true" size={10} strokeWidth={1} />
+
+                          <span className="flex items-center gap-2 text-[5px] uppercase tracking-[0.22em] text-white/[0.28] transition-colors duration-300 group-hover/gallery:text-[#dfc88f]/80">
+                            <Images
+                              aria-hidden="true"
+                              size={10}
+                              strokeWidth={1}
+                            />
                             {copy.gallery}
                           </span>
                         </div>
 
-                        <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-4">
+                        <div className="absolute inset-x-3.5 bottom-3.5 flex items-end justify-between gap-4 sm:inset-x-4 sm:bottom-4">
                           <span
-                            className="font-mono text-[5px] uppercase tracking-[0.26em]"
-                            style={{ color: `${GOLD_LIGHT}62` }}
+                            className="max-w-[72%] truncate font-mono text-[5px] uppercase tracking-[0.24em]"
+                            style={{ color: `${GOLD_LIGHT}60` }}
                           >
                             {activeProject
-                              ? getLocalizedText(activeProject.title, locale)
+                              ? getLocalizedText(
+                                  activeProject.title,
+                                  locale,
+                                )
                               : activeCharacter.projectId}
                           </span>
+
                           <span
                             aria-hidden="true"
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.10] bg-black/[0.30] text-white/[0.50] transition-all duration-300 group-hover/gallery:-translate-y-0.5 group-hover/gallery:border-[#ead39a]/40 group-hover/gallery:text-[#ead39a]"
+                            className="flex h-7 w-7 shrink-0 items-center justify-center border border-white/[0.09] bg-black/[0.28] text-white/[0.48] transition-all duration-300 group-hover/gallery:-translate-y-0.5 group-hover/gallery:border-[#dfc88f]/36 group-hover/gallery:text-[#dfc88f]"
                           >
-                            <ArrowUpRight size={11} strokeWidth={1} />
+                            <ArrowUpRight
+                              size={11}
+                              strokeWidth={1}
+                            />
                           </span>
                         </div>
                       </div>
                     </Link>
 
                     <div
-                      className="mt-5 h-px w-14"
+                      className="mt-5 h-px w-12"
                       style={{
-                        background: `linear-gradient(90deg, ${GOLD_LIGHT}, transparent)`,
+                        background:
+                          `linear-gradient(90deg, ${GOLD_LIGHT}, transparent)`,
                       }}
                     />
 
                     <div className="mt-5">
-                      <span className="font-mono text-[6px] tracking-[0.26em] text-white/[0.13]">
-                        {String(activeIndex + 1).padStart(2, "0")} / {String(characterCount).padStart(2, "0")}
+                      <span className="umbra-code">
+                        {String(activeIndex + 1).padStart(2, "0")} /{" "}
+                        {String(characterCount).padStart(2, "0")}
                       </span>
 
                       <Link
-                        href={getCharacterHref(activeCharacter, locale)}
+                        href={getCharacterHref(
+                          activeCharacter,
+                          locale,
+                        )}
                         aria-label={`${copy.dossier}: ${getCharacterName(activeCharacter, locale)}`}
-                        onClick={(event) => event.stopPropagation()}
-                        className="group/name mt-3 block max-w-[290px] rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
+                        className="group/name mt-3 block max-w-[320px] outline-none focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
                       >
-                        <h3 className="text-[clamp(2rem,3vw,3.15rem)] font-[430] uppercase leading-[0.86] tracking-[-0.06em] text-white transition-colors duration-300 group-hover/name:text-white/[0.86]">
-                          {getCharacterName(activeCharacter, locale)}
+                        <h3
+                          className="text-[clamp(1.8rem,5.7vw,2.8rem)] font-[430] uppercase leading-[0.90] tracking-[-0.048em] text-white transition-colors duration-300 group-hover/name:text-white/[0.86]"
+                        >
+                          {getCharacterName(
+                            activeCharacter,
+                            locale,
+                          )}
                         </h3>
-                        <span className="mt-3 inline-flex items-center gap-2 text-[6px] uppercase tracking-[0.25em] text-white/[0.17] transition-colors duration-300 group-hover/name:text-[#ead39a]/75">
+
+                        <span
+                          className="mt-3 inline-flex min-h-9 items-center gap-2 text-[6px] uppercase tracking-[0.24em] text-white/[0.20] transition-colors duration-300 group-hover/name:text-[#dfc88f]/78"
+                        >
                           {copy.dossier}
                           <ArrowUpRight
                             aria-hidden="true"
                             size={10}
                             strokeWidth={1}
-                            className="transition-transform duration-300 group-hover/name:-translate-y-0.5 group-hover/name:translate-x-0.5"
                           />
                         </span>
                       </Link>
                     </div>
 
-                    <div className="mt-6 flex items-center gap-3">
+                    <div className="mt-5 flex items-center gap-3">
                       <span
                         aria-hidden="true"
                         className="h-[4px] w-[4px] rounded-full"
@@ -719,28 +805,39 @@ export default function CharactersScene({
                           boxShadow: `0 0 7px ${GOLD}28`,
                         }}
                       />
-                      <span className="text-[6px] uppercase tracking-[0.28em] text-white/[0.29]">
-                        {getCharacterCategory(activeCharacter, locale)}
+                      <span className="text-[6px] uppercase tracking-[0.27em] text-white/[0.31]">
+                        {getCharacterCategory(
+                          activeCharacter,
+                          locale,
+                        )}
                       </span>
                     </div>
 
-                    <p className="mt-5 max-w-[290px] text-[10px] leading-5 text-white/[0.30]">
-                      {getCharacterDescription(activeCharacter, locale)}
+                    <p className="mt-5 max-w-[320px] text-[10px] leading-5 text-white/[0.32]">
+                      {getCharacterDescription(
+                        activeCharacter,
+                        locale,
+                      )}
                     </p>
 
                     <div className="mt-6 grid grid-cols-2 gap-4 border-y border-white/[0.055] py-4">
                       <div className="min-w-0">
-                        <span className="font-mono text-[5px] uppercase tracking-[0.26em] text-white/[0.12]">
+                        <span className="umbra-code">
                           {copy.project}
                         </span>
 
                         {activeProject ? (
                           <Link
-                            href={getProjectHref(activeProject.slug, locale)}
-                            onClick={(event) => event.stopPropagation()}
-                            className="mt-2 block truncate rounded-sm text-[8px] uppercase tracking-[0.07em] text-white/[0.47] outline-none transition-colors duration-300 hover:text-[#ead39a] focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+                            href={getProjectHref(
+                              activeProject.slug,
+                              locale,
+                            )}
+                            className="mt-2 block truncate text-[8px] uppercase tracking-[0.07em] text-white/[0.50] outline-none transition-colors duration-300 hover:text-[#dfc88f] focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
                           >
-                            {getLocalizedText(activeProject.title, locale)}
+                            {getLocalizedText(
+                              activeProject.title,
+                              locale,
+                            )}
                           </Link>
                         ) : (
                           <span className="mt-2 block truncate text-[8px] uppercase tracking-[0.07em] text-white/[0.27]">
@@ -750,22 +847,27 @@ export default function CharactersScene({
                       </div>
 
                       <div>
-                        <span className="font-mono text-[5px] uppercase tracking-[0.26em] text-white/[0.12]">
+                        <span className="umbra-code">
                           {copy.role}
                         </span>
                         <span className="mt-2 block text-[8px] uppercase tracking-[0.07em] text-white/[0.27]">
-                          {getCharacterCategory(activeCharacter, locale)}
+                          {getCharacterCategory(
+                            activeCharacter,
+                            locale,
+                          )}
                         </span>
                       </div>
                     </div>
 
                     <Link
-                      href={getCharacterHref(activeCharacter, locale)}
-                      onClick={(event) => event.stopPropagation()}
-                      className="group/dossier mt-6 flex min-h-[42px] items-center justify-between border border-[#c7a96b]/24 bg-[#0a0907] px-4 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[#ead39a]/55 hover:bg-[#c7a96b]/[0.035] focus-visible:ring-1 focus-visible:ring-[#ead39a]/60"
+                      href={getCharacterHref(
+                        activeCharacter,
+                        locale,
+                      )}
+                      className="group/dossier mt-5 flex min-h-[42px] items-center justify-between border border-[rgba(196,165,107,.20)] bg-[rgba(196,165,107,.022)] px-4 outline-none transition-[border-color,background-color,transform] duration-300 hover:-translate-y-px hover:border-[rgba(223,200,143,.46)] hover:bg-[rgba(196,165,107,.038)] focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
                     >
                       <span
-                        className="text-[7px] font-semibold uppercase tracking-[0.27em]"
+                        className="text-[7px] font-semibold uppercase tracking-[0.26em]"
                         style={{ color: `${GOLD_LIGHT}78` }}
                       >
                         {copy.dossier}
@@ -774,11 +876,17 @@ export default function CharactersScene({
                         aria-hidden="true"
                         size={12}
                         strokeWidth={1.05}
-                        className="text-white/[0.26] transition-transform duration-300 group-hover/dossier:-translate-y-0.5 group-hover/dossier:translate-x-0.5"
+                        className="text-white/[0.28] transition-transform duration-300 group-hover/dossier:-translate-y-0.5 group-hover/dossier:translate-x-0.5"
                       />
                     </Link>
                   </motion.div>
-                ) : null}
+                ) : (
+                  <div className="p-5 sm:p-6 lg:p-7">
+                    <span className="umbra-code">
+                      {copy.cast}
+                    </span>
+                  </div>
+                )}
               </AnimatePresence>
             </div>
           </aside>
@@ -786,30 +894,29 @@ export default function CharactersScene({
 
         <motion.div
           initial={{ opacity: 0, y: reducedMotion ? 0 : 6 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.06 }}
+          animate={inView ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: reducedMotion ? 0 : 0.45 }}
-          className="mt-14 flex items-center justify-between border-t border-white/[0.055] pt-5 sm:mt-16"
+          className="mt-10 flex items-center justify-between border-t border-white/[0.055] pt-5 sm:mt-12"
         >
           <Link
             href={archiveHref}
-            className="group/archive-footer flex items-center gap-3 rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+            className="group/archive-footer flex min-h-9 items-center gap-3 rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
           >
             <span
               aria-hidden="true"
-              className="h-px w-8 transition-[width] duration-300 group-hover/archive-footer:w-11"
+              className="h-px w-7 transition-[width] duration-300 group-hover/archive-footer:w-11"
               style={{ background: `${GOLD}3d` }}
             />
-            <span className="font-mono text-[6px] uppercase tracking-[0.28em] text-white/[0.14] transition-colors duration-300 group-hover/archive-footer:text-white/[0.34]">
+            <span className="umbra-code transition-colors duration-300 group-hover/archive-footer:text-white/[0.32]">
               {copy.archive}
             </span>
           </Link>
 
           <Link
             href={nextHref}
-            className="group/next flex items-center gap-3 rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+            className="group/next flex min-h-9 items-center gap-3 rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-[#dfc88f]/70"
           >
-            <span className="text-[7px] uppercase tracking-[0.26em] text-white/[0.19] transition-colors duration-300 group-hover/next:text-white/[0.42]">
+            <span className="text-[7px] uppercase tracking-[0.23em] text-white/[0.20] transition-colors duration-300 group-hover/next:text-white/[0.42]">
               {copy.next}
             </span>
             <ArrowDown

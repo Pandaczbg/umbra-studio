@@ -13,7 +13,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA PAGE TRANSITION — V6
+   UMBRA PAGE TRANSITION — V6 LUXURY SYSTEM
 
    Route-level transition only.
 
@@ -26,6 +26,12 @@ import {
    Design rule:
    A cinematic cut — fast, restrained and premium.
    It should never resemble a loading screen.
+
+   Material language:
+   - architectural dark glass
+   - restrained champagne signal
+   - soft internal reflection
+   - minimal center mark
    ========================================================================== */
 
 const EASE = [
@@ -142,7 +148,11 @@ export default function UmbraPageTransition() {
         <motion.div
           key={pathname}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-[180] overflow-hidden bg-[#030303]"
+          className="pointer-events-none fixed inset-0 z-[180] overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(3,3,3,.985), rgba(7,7,7,.985))",
+          }}
           initial={{
             opacity: 1,
           }}
@@ -160,9 +170,33 @@ export default function UmbraPageTransition() {
             ease: EASE,
           }}
         >
+          <span
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 50%, rgba(199,169,107,.035), transparent 34%)",
+            }}
+          />
+
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 opacity-30"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,.018) 50%, transparent 100%)",
+            }}
+          />
+
           <motion.div
             aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-1/2 origin-top bg-[#050505]"
+            className="absolute inset-x-0 top-0 h-1/2 origin-top"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(6,6,6,.99), rgba(8,8,8,.985))",
+              boxShadow:
+                "inset 0 -1px 0 rgba(255,255,255,.028), inset 0 1px 0 rgba(255,255,255,.018)",
+            }}
             initial={{
               scaleY: 0,
             }}
@@ -184,7 +218,13 @@ export default function UmbraPageTransition() {
 
           <motion.div
             aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-1/2 origin-bottom bg-[#050505]"
+            className="absolute inset-x-0 bottom-0 h-1/2 origin-bottom"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(8,8,8,.985), rgba(5,5,5,.99))",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,.025), inset 0 -1px 0 rgba(0,0,0,.45)",
+            }}
             initial={{
               scaleY: 0,
             }}
@@ -237,7 +277,13 @@ export default function UmbraPageTransition() {
 
             <motion.span
               aria-hidden="true"
-              className="absolute left-1/2 top-1/2 h-px w-[min(24vw,300px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/35 to-transparent"
+              className="absolute left-1/2 top-1/2 h-px w-[min(24vw,300px)] -translate-x-1/2 -translate-y-1/2"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(234,211,154,.34), rgba(234,211,154,.46), rgba(234,211,154,.34), transparent)",
+                boxShadow:
+                  "0 0 10px rgba(199,169,107,.06)",
+              }}
               initial={{
                 scaleX: 0.25,
                 opacity: 0,
@@ -247,7 +293,7 @@ export default function UmbraPageTransition() {
                 opacity: 1,
               }}
               exit={{
-                scaleX: 0.7,
+                scaleX: 0.70,
                 opacity: 0,
               }}
               transition={{
@@ -263,28 +309,100 @@ export default function UmbraPageTransition() {
               }}
             />
 
+            <motion.span
+              aria-hidden="true"
+              className="absolute left-1/2 top-1/2 h-px w-[min(14vw,170px)] -translate-x-1/2 -translate-y-1/2"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent)",
+              }}
+              initial={{
+                scaleX: 0,
+                opacity: 0,
+              }}
+              animate={{
+                scaleX: 1,
+                opacity: 1,
+              }}
+              exit={{
+                scaleX: 0.7,
+                opacity: 0,
+              }}
+              transition={{
+                duration:
+                  reducedMotion
+                    ? 0
+                    : 0.14,
+                delay:
+                  reducedMotion
+                    ? 0
+                    : 0.05,
+                ease: EASE,
+              }}
+            />
+
             {!reducedMotion && (
-              <motion.span
-                aria-hidden="true"
-                className="absolute left-1/2 top-1/2 h-5 w-[min(30vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c7a96b]/[0.05] blur-md"
-                initial={{
-                  opacity: 0,
-                  scaleX: 0.7,
-                }}
-                animate={{
-                  opacity: 1,
-                  scaleX: 1,
-                }}
-                exit={{
-                  opacity: 0,
-                  scaleX: 0.85,
-                }}
-                transition={{
-                  duration: 0.22,
-                  delay: 0.02,
-                  ease: EASE,
-                }}
-              />
+              <>
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-1/2 h-7 w-[min(34vw,420px)] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse, rgba(199,169,107,.055), rgba(199,169,107,.018) 38%, transparent 72%)",
+                    filter:
+                      "blur(7px)",
+                  }}
+                  initial={{
+                    opacity: 0,
+                    scaleX: 0.65,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scaleX: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scaleX: 0.84,
+                  }}
+                  transition={{
+                    duration:
+                      0.22,
+                    delay:
+                      0.02,
+                    ease: EASE,
+                  }}
+                />
+
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-1/2 h-[3px] w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                  style={{
+                    background:
+                      "#ead39a",
+                    boxShadow:
+                      "0 0 8px rgba(234,211,154,.28)",
+                  }}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.4,
+                  }}
+                  animate={{
+                    opacity: 0.72,
+                    scale: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.7,
+                  }}
+                  transition={{
+                    duration:
+                      0.16,
+                    delay:
+                      0.04,
+                    ease: EASE,
+                  }}
+                />
+              </>
             )}
           </div>
         </motion.div>

@@ -1,0 +1,23 @@
+Umbra Studio V7 package
+
+CHANGED
+- app/layout.tsx
+- app/page.tsx
+- app/en/page.tsx
+- components/HomeHero.tsx
+- components/LanguageSwitcher.tsx
+- lib/content/types.ts
+
+NEW
+- app/aktuelno/page.tsx
+- app/en/latest/page.tsx
+- app/manifest.ts
+- app/robots.ts
+- app/sitemap.ts
+- app/global-error.tsx
+- components/LatestContentWindow.tsx
+- lib/content/latest.ts
+- lib/seo/jsonLd.ts
+- README-V7.md
+- V7-DEEP-RESEARCH.md
+- V7-PACKAGE-MANIFEST.txt

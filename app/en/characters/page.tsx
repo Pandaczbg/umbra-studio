@@ -24,26 +24,19 @@ export const metadata: Metadata = {
 };
 
 export default function EnglishCharactersPage() {
-  const characters =
-    getCharacters();
+  const characters = getCharacters();
+  const projects = getProjects();
 
-  const projects =
-    getProjects();
+  const characterImages = Object.fromEntries(
+    characters.map((character) => {
+      const media = getCharacterMedia(character.id);
 
-  const characterImages =
-    Object.fromEntries(
-      characters.map((character) => {
-        const media =
-          getCharacterMedia(
-            character.id,
-          );
-
-        return [
-          character.id,
-          media[0]?.src ?? null,
-        ];
-      }),
-    );
+      return [
+        character.id,
+        media[0]?.src ?? null,
+      ];
+    }),
+  );
 
   return (
     <CharactersArchive

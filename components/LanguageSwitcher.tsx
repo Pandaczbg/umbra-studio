@@ -15,10 +15,7 @@ type LanguageOption = {
   ariaLabel: string;
 };
 
-const OPTIONS: Record<
-  Locale,
-  LanguageOption
-> = {
+const OPTIONS: Record<Locale, LanguageOption> = {
   sr: {
     locale: "sr",
     label: "SR",
@@ -31,105 +28,96 @@ const OPTIONS: Record<
   },
 };
 
-function getLocalePrefix(
-  locale: Locale,
-): string {
-  return locale === "en"
-    ? "/en"
-    : "/";
-}
-
-function detectLocale(
-  pathname: string,
-): Locale {
-  return pathname === "/en" ||
-    pathname.startsWith("/en/")
+function detectLocale(pathname: string): Locale {
+  return pathname === "/en" || pathname.startsWith("/en/")
     ? "en"
     : "sr";
 }
 
-function stripEnglishPrefix(
-  pathname: string,
-) {
-  const normalizedPath =
-    pathname || "/";
-
-  const withoutEnglishPrefix =
-    normalizedPath.replace(
-      /^\/en(?=\/|$)/,
-      "",
-    );
-
-  return (
-    withoutEnglishPrefix || "/"
+function stripEnglishPrefix(pathname: string) {
+  const normalizedPath = pathname || "/";
+  const withoutEnglishPrefix = normalizedPath.replace(
+    /^\/en(?=\/|$)/,
+    "",
   );
+
+  return withoutEnglishPrefix || "/";
 }
 
 function mapLocalizedRoute(
   pathname: string,
   targetLocale: Locale,
 ) {
-  const cleanPath =
-    stripEnglishPrefix(pathname);
+  const cleanPath = stripEnglishPrefix(pathname);
 
-  const dynamicSeriesMatch =
-    cleanPath.match(
-      /^\/serije(?:\/(.+))?\/?$/,
-    );
+  const seriesMatch = cleanPath.match(
+    /^\/serije(?:\/(.+))?\/?$/,
+  );
 
-  const dynamicProjectsMatch =
-    cleanPath.match(
-      /^\/projects(?:\/(.+))?\/?$/,
-    );
+  const englishProjectsMatch = cleanPath.match(
+    /^\/projects(?:\/(.+))?\/?$/,
+  );
 
-  const dynamicCharacterMatch =
-    cleanPath.match(
-      /^\/likovi(?:\/(.+))?\/?$/,
-    );
+  const characterMatch = cleanPath.match(
+    /^\/likovi(?:\/(.+))?\/?$/,
+  );
 
-  const dynamicCharactersMatch =
-    cleanPath.match(
-      /^\/characters(?:\/(.+))?\/?$/,
-    );
+  const englishCharactersMatch = cleanPath.match(
+    /^\/characters(?:\/(.+))?\/?$/,
+  );
+
+  const archiveMatch = cleanPath.match(
+    /^\/arhiva(?:\/(.+))?\/?$/,
+  );
+
+  const englishArchiveMatch = cleanPath.match(
+    /^\/archive(?:\/(.+))?\/?$/,
+  );
 
   if (targetLocale === "en") {
     if (cleanPath === "/") {
-      return getLocalePrefix("en");
+      return "/en";
     }
 
     if (cleanPath === "/serije") {
       return "/en/projects";
     }
 
+    if (seriesMatch) {
+      const slug = seriesMatch[1];
+      return slug ? `/en/projects/${slug}` : "/en/projects";
+    }
+
     if (cleanPath === "/likovi") {
       return "/en/characters";
     }
 
-    if (dynamicSeriesMatch) {
-      const slug =
-        dynamicSeriesMatch[1];
-
-      return slug
-        ? `/en/projects/${slug}`
-        : "/en/projects";
+    if (characterMatch) {
+      const slug = characterMatch[1];
+      return slug ? `/en/characters/${slug}` : "/en/characters";
     }
 
-    if (dynamicCharacterMatch) {
-      const slug =
-        dynamicCharacterMatch[1];
+    if (cleanPath === "/aktuelno") {
+      return "/en/latest";
+    }
 
-      return slug
-        ? `/en/characters/${slug}`
-        : "/en/characters";
+    if (cleanPath === "/arhiva") {
+      return "/en/archive";
+    }
+
+    if (archiveMatch) {
+      const slug = archiveMatch[1];
+      return slug ? `/en/archive/${slug}` : "/en/archive";
+    }
+
+    if (cleanPath === "/pretraga") {
+      return "/en";
     }
 
     return `/en${cleanPath}`;
   }
 
-  if (
-    cleanPath ===
-    getLocalePrefix("en")
-  ) {
+  if (cleanPath === "/en" || cleanPath === "") {
     return "/";
   }
 
@@ -137,26 +125,35 @@ function mapLocalizedRoute(
     return "/serije";
   }
 
+  if (englishProjectsMatch) {
+    const slug = englishProjectsMatch[1];
+    return slug ? `/serije/${slug}` : "/serije";
+  }
+
   if (cleanPath === "/characters") {
     return "/likovi";
   }
 
-  if (dynamicProjectsMatch) {
-    const slug =
-      dynamicProjectsMatch[1];
-
-    return slug
-      ? `/serije/${slug}`
-      : "/serije";
+  if (englishCharactersMatch) {
+    const slug = englishCharactersMatch[1];
+    return slug ? `/likovi/${slug}` : "/likovi";
   }
 
-  if (dynamicCharactersMatch) {
-    const slug =
-      dynamicCharactersMatch[1];
+  if (cleanPath === "/latest") {
+    return "/aktuelno";
+  }
 
-    return slug
-      ? `/likovi/${slug}`
-      : "/likovi";
+  if (cleanPath === "/archive") {
+    return "/arhiva";
+  }
+
+  if (englishArchiveMatch) {
+    const slug = englishArchiveMatch[1];
+    return slug ? `/arhiva/${slug}` : "/arhiva";
+  }
+
+  if (cleanPath === "/search") {
+    return "/pretraga";
   }
 
   return cleanPath;
@@ -168,120 +165,94 @@ function preserveUrlState(
   hash: string,
   search: string,
 ) {
-  const targetPath =
-    mapLocalizedRoute(
-      pathname,
-      targetLocale,
-    );
+  const cleanPath = stripEnglishPrefix(pathname);
+  const unsupportedSearchRoute =
+    cleanPath === "/pretraga" || cleanPath === "/search";
+  const targetPath = mapLocalizedRoute(pathname, targetLocale);
+  const shouldDropSearch =
+    unsupportedSearchRoute &&
+    (targetPath === "/en" || targetPath === "/");
 
-  return `${targetPath}${search}${hash}`;
+  return `${targetPath}${shouldDropSearch ? "" : search}${hash}`;
 }
 
 export default function LanguageSwitcher() {
-  const pathname =
-    usePathname();
+  const pathname = usePathname();
+  const locale = detectLocale(pathname || "/");
+  const target: Locale = locale === "sr" ? "en" : "sr";
 
-  const locale =
-    detectLocale(pathname || "/");
-
-  const target: Locale =
-    locale === "sr"
-      ? "en"
-      : "sr";
-
-  const [hash, setHash] =
-    useState("");
-  const [search, setSearch] =
-    useState("");
+  const [hash, setHash] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const syncUrlState = () => {
-      setHash(
-        window.location.hash,
-      );
-      setSearch(
-        window.location.search,
-      );
+      setHash(window.location.hash);
+      setSearch(window.location.search);
     };
 
     syncUrlState();
 
-    window.addEventListener(
-      "hashchange",
-      syncUrlState,
-    );
-
-    window.addEventListener(
-      "popstate",
-      syncUrlState,
-    );
+    window.addEventListener("hashchange", syncUrlState);
+    window.addEventListener("popstate", syncUrlState);
 
     return () => {
-      window.removeEventListener(
-        "hashchange",
-        syncUrlState,
-      );
-      window.removeEventListener(
-        "popstate",
-        syncUrlState,
-      );
+      window.removeEventListener("hashchange", syncUrlState);
+      window.removeEventListener("popstate", syncUrlState);
     };
   }, [pathname]);
 
-  const targetPath =
-    preserveUrlState(
-      pathname || "/",
-      target,
-      hash,
-      search,
-    );
+  const targetPath = preserveUrlState(
+    pathname || "/",
+    target,
+    hash,
+    search,
+  );
 
-  const activeOption =
-    OPTIONS[locale];
-
-  const targetOption =
-    OPTIONS[target];
+  const activeOption = OPTIONS[locale];
+  const targetOption = OPTIONS[target];
 
   return (
     <div
       role="group"
-      aria-label={
-        locale === "en"
-          ? "Language"
-          : "Jezik"
-      }
-      className="flex items-center gap-1 rounded-full border border-white/[0.10] bg-black/[0.20] p-1 shadow-[0_8px_28px_rgba(0,0,0,0.18)] backdrop-blur-md"
+      aria-label={locale === "en" ? "Language" : "Jezik"}
+      className="relative flex items-center gap-1 rounded-full border border-white/[0.10] bg-[var(--umbra-glass-fill-deep)] p-1 shadow-[var(--umbra-shadow-soft)] backdrop-blur-xl"
+      style={{
+        boxShadow:
+          "0 10px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.06)",
+      }}
     >
       <span
         aria-current="page"
-        className="relative inline-flex min-w-9 items-center justify-center rounded-full px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-[#ead39a]/88"
+        className="relative inline-flex min-w-9 items-center justify-center rounded-full border border-white/[0.06] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--umbra-champagne-soft)]"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(234,211,154,.09), rgba(255,255,255,.025))",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,.08), 0 0 12px rgba(199,169,107,.05)",
+        }}
       >
         <span
           aria-hidden="true"
-          className="absolute inset-x-2 bottom-1 h-px"
+          className="absolute inset-x-2 bottom-[3px] h-px"
           style={{
             background:
-              "linear-gradient(90deg, transparent, rgba(234,211,154,.72), transparent)",
+              "linear-gradient(90deg, transparent, rgba(234,211,154,.70), transparent)",
           }}
         />
 
-        <span className="relative">
-          {activeOption.label}
-        </span>
+        <span className="relative">{activeOption.label}</span>
       </span>
 
       <span
         aria-hidden="true"
-        className="h-3 w-px bg-white/[0.10]"
+        className="h-3 w-px bg-white/[0.09]"
       />
 
       <Link
         href={targetPath}
-        aria-label={
-          targetOption.ariaLabel
-        }
+        aria-label={targetOption.ariaLabel}
         data-cursor-interactive
-        className="inline-flex min-w-9 items-center justify-center rounded-full px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/[0.34] outline-none transition-[background-color,color,transform] duration-300 hover:bg-white/[0.055] hover:text-white/[0.88] focus-visible:bg-white/[0.055] focus-visible:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
+        className="inline-flex min-w-9 items-center justify-center rounded-full border border-transparent px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/[0.38] outline-none transition-[background-color,border-color,color,box-shadow,transform] duration-300 hover:border-white/[0.07] hover:bg-white/[0.045] hover:text-white/[0.86] focus-visible:border-[rgba(234,211,154,.28)] focus-visible:bg-white/[0.05] focus-visible:text-white focus-visible:ring-1 focus-visible:ring-[#ead39a]/55"
       >
         {targetOption.label}
       </Link>

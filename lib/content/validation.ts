@@ -51,49 +51,27 @@ type ContentWithProject = {
 
 type ValidationContext = {
   readonly allById: ReadonlyMap<ContentId, UmbraContent>;
-  readonly projectsById: ReadonlyMap<
-    ContentId,
-    ProjectContent
-  >;
-  readonly charactersById: ReadonlyMap<
-    ContentId,
-    CharacterContent
-  >;
-  readonly episodesById: ReadonlyMap<
-    ContentId,
-    EpisodeContent
-  >;
-  readonly storiesById: ReadonlyMap<
-    ContentId,
-    StoryContent
-  >;
-  readonly mediaById: ReadonlyMap<
-    ContentId,
-    MediaContent
-  >;
+  readonly projectsById: ReadonlyMap<ContentId, ProjectContent>;
+  readonly charactersById: ReadonlyMap<ContentId, CharacterContent>;
+  readonly episodesById: ReadonlyMap<ContentId, EpisodeContent>;
+  readonly storiesById: ReadonlyMap<ContentId, StoryContent>;
+  readonly mediaById: ReadonlyMap<ContentId, MediaContent>;
   readonly projectIds: ReadonlySet<ContentId>;
 };
 
 class UmbraContentValidationError extends Error {
   readonly issues: readonly string[];
 
-  constructor(
-    issues: readonly string[],
-  ) {
+  constructor(issues: readonly string[]) {
     super(
       [
         "Umbra V7 content validation failed:",
-        ...issues.map(
-          (issue) => `- ${issue}`,
-        ),
+        ...issues.map((issue) => `- ${issue}`),
       ].join("\n"),
     );
 
-    this.name =
-      "UmbraContentValidationError";
-    this.issues = Object.freeze([
-      ...issues,
-    ]);
+    this.name = "UmbraContentValidationError";
+    this.issues = Object.freeze([...issues]);
   }
 }
 
@@ -113,52 +91,16 @@ export function validateUmbraContent(
 
   const issues: string[] = [];
 
-  const context =
-    createValidationContext(
-      all,
-      input,
-    );
+  const context = createValidationContext(all, input);
 
-  validateIds(
-    all,
-    issues,
-  );
+  validateIds(all, issues);
 
-  validateSlugs(
-    input.projects,
-    "project",
-    issues,
-  );
-
-  validateSlugs(
-    input.characters,
-    "character",
-    issues,
-  );
-
-  validateSlugs(
-    input.episodes,
-    "episode",
-    issues,
-  );
-
-  validateSlugs(
-    input.stories,
-    "story",
-    issues,
-  );
-
-  validateSlugs(
-    input.media,
-    "media",
-    issues,
-  );
-
-  validateSlugs(
-    input.timelines,
-    "timeline-event",
-    issues,
-  );
+  validateSlugs(input.projects, "project", issues);
+  validateSlugs(input.characters, "character", issues);
+  validateSlugs(input.episodes, "episode", issues);
+  validateSlugs(input.stories, "story", issues);
+  validateSlugs(input.media, "media", issues);
+  validateSlugs(input.timelines, "timeline-event", issues);
 
   validateProjectOwnedContent(
     input.characters,
@@ -181,57 +123,17 @@ export function validateUmbraContent(
     issues,
   );
 
-  validateEpisodes(
-    input.episodes,
-    context,
-    issues,
-  );
-
-  validateStories(
-    input.stories,
-    context,
-    issues,
-  );
-
-  validateCharacters(
-    input.characters,
-    context,
-    issues,
-  );
-
-  validateMedia(
-    input.media,
-    context,
-    issues,
-  );
-
-  validateRelationships(
-    input.relationships,
-    context,
-    issues,
-  );
-
-  validateTimelines(
-    input.timelines,
-    context,
-    issues,
-  );
-
-  validateArchive(
-    input.archive,
-    context,
-    issues,
-  );
-
-  validateProjects(
-    input.projects,
-    issues,
-  );
+  validateEpisodes(input.episodes, context, issues);
+  validateStories(input.stories, context, issues);
+  validateCharacters(input.characters, context, issues);
+  validateMedia(input.media, context, issues);
+  validateRelationships(input.relationships, context, issues);
+  validateTimelines(input.timelines, context, issues);
+  validateArchive(input.archive, context, issues);
+  validateProjects(input.projects, issues);
 
   if (issues.length > 0) {
-    throw new UmbraContentValidationError(
-      issues,
-    );
+    throw new UmbraContentValidationError(issues);
   }
 }
 
@@ -245,24 +147,12 @@ function createValidationContext(
 ): ValidationContext {
   return {
     allById: createMap(all),
-    projectsById: createMap(
-      input.projects,
-    ),
-    charactersById: createMap(
-      input.characters,
-    ),
-    episodesById: createMap(
-      input.episodes,
-    ),
-    storiesById: createMap(
-      input.stories,
-    ),
-    mediaById: createMap(
-      input.media,
-    ),
-    projectIds: createIdSet(
-      input.projects,
-    ),
+    projectsById: createMap(input.projects),
+    charactersById: createMap(input.characters),
+    episodesById: createMap(input.episodes),
+    storiesById: createMap(input.stories),
+    mediaById: createMap(input.media),
+    projectIds: createIdSet(input.projects),
   };
 }
 
@@ -274,24 +164,18 @@ function validateIds(
   items: readonly UmbraContent[],
   issues: string[],
 ): void {
-  const seen =
-    new Set<ContentId>();
+  const seen = new Set<ContentId>();
 
   for (const item of items) {
-    const id =
-      item.id.trim();
+    const id = item.id.trim();
 
     if (!id) {
-      issues.push(
-        `${item.contentType} has an empty id`,
-      );
+      issues.push(`${item.contentType} has an empty id`);
       continue;
     }
 
     if (seen.has(item.id)) {
-      issues.push(
-        `duplicate content id "${item.id}"`,
-      );
+      issues.push(`duplicate content id "${item.id}"`);
       continue;
     }
 
@@ -301,24 +185,21 @@ function validateIds(
 
 function validateSlugs<
   T extends {
-    slug: string;
+    readonly id: ContentId;
+    readonly slug: string;
   },
 >(
   items: readonly T[],
   type: string,
   issues: string[],
 ): void {
-  const seen =
-    new Set<string>();
+  const seen = new Set<string>();
 
   for (const item of items) {
-    const slug =
-      item.slug.trim();
+    const slug = item.slug.trim();
 
     if (!slug) {
-      issues.push(
-        `${type} has an empty slug`,
-      );
+      issues.push(`${type} has an empty slug`);
       continue;
     }
 
@@ -329,9 +210,7 @@ function validateSlugs<
     }
 
     if (seen.has(item.slug)) {
-      issues.push(
-        `duplicate ${type} slug "${item.slug}"`,
-      );
+      issues.push(`duplicate ${type} slug "${item.slug}"`);
       continue;
     }
 
@@ -348,15 +227,9 @@ function validateProjects(
   issues: string[],
 ): void {
   for (const project of projects) {
-    validateLocalizedTitle(
-      project,
-      issues,
-    );
+    validateLocalizedTitle(project, issues);
 
-    if (
-      project.source &&
-      !project.source.title.trim()
-    ) {
+    if (project.source && !project.source.title.trim()) {
       issues.push(
         `project "${project.id}" has an empty source title`,
       );
@@ -382,17 +255,11 @@ function validateProjectOwnedContent(
 ): void {
   for (const item of items) {
     if (!item.projectId) {
-      issues.push(
-        `${type} "${item.id}" has no projectId`,
-      );
+      issues.push(`${type} "${item.id}" has no projectId`);
       continue;
     }
 
-    if (
-      !context.projectIds.has(
-        item.projectId,
-      )
-    ) {
+    if (!context.projectIds.has(item.projectId)) {
       issues.push(
         `${type} "${item.id}" references unknown project "${item.projectId}"`,
       );
@@ -409,64 +276,46 @@ function validateEpisodes(
   context: ValidationContext,
   issues: string[],
 ): void {
-  const episodeNumbersByProject =
-    new Map<
-      ContentId,
-      Set<number>
-    >();
+  const episodeNumbersByProject = new Map<
+    ContentId,
+    Set<number>
+  >();
 
   for (const episode of episodes) {
-    validateLocalizedTitle(
-      episode,
-      issues,
-    );
+    validateLocalizedTitle(episode, issues);
 
     if (
-      !Number.isInteger(
-        episode.episodeNumber,
-      ) ||
+      !Number.isInteger(episode.episodeNumber) ||
       episode.episodeNumber < 1
     ) {
       issues.push(
         `episode "${episode.id}" has invalid episodeNumber`,
       );
     } else {
-      const numbers =
-        episodeNumbersByProject.get(
-          episode.projectId,
-        );
+      const numbers = episodeNumbersByProject.get(
+        episode.projectId,
+      );
 
       if (numbers) {
-        if (
-          numbers.has(
-            episode.episodeNumber,
-          )
-        ) {
+        if (numbers.has(episode.episodeNumber)) {
           issues.push(
             `project "${episode.projectId}" has duplicate episodeNumber ${episode.episodeNumber}`,
           );
         }
 
-        numbers.add(
-          episode.episodeNumber,
-        );
+        numbers.add(episode.episodeNumber);
       } else {
         episodeNumbersByProject.set(
           episode.projectId,
-          new Set([
-            episode.episodeNumber,
-          ]),
+          new Set([episode.episodeNumber]),
         );
       }
     }
 
     if (
-      episode.runtimeSeconds !==
-        undefined &&
+      episode.runtimeSeconds !== undefined &&
       (
-        !Number.isInteger(
-          episode.runtimeSeconds,
-        ) ||
+        !Number.isInteger(episode.runtimeSeconds) ||
         episode.runtimeSeconds <= 0
       )
     ) {
@@ -476,12 +325,9 @@ function validateEpisodes(
     }
 
     if (
-      episode.chapterStart !==
-        undefined &&
+      episode.chapterStart !== undefined &&
       (
-        !Number.isInteger(
-          episode.chapterStart,
-        ) ||
+        !Number.isInteger(episode.chapterStart) ||
         episode.chapterStart < 1
       )
     ) {
@@ -491,12 +337,9 @@ function validateEpisodes(
     }
 
     if (
-      episode.chapterEnd !==
-        undefined &&
+      episode.chapterEnd !== undefined &&
       (
-        !Number.isInteger(
-          episode.chapterEnd,
-        ) ||
+        !Number.isInteger(episode.chapterEnd) ||
         episode.chapterEnd < 1
       )
     ) {
@@ -506,12 +349,9 @@ function validateEpisodes(
     }
 
     if (
-      episode.chapterStart !==
-        undefined &&
-      episode.chapterEnd !==
-        undefined &&
-      episode.chapterEnd <
-        episode.chapterStart
+      episode.chapterStart !== undefined &&
+      episode.chapterEnd !== undefined &&
+      episode.chapterEnd < episode.chapterStart
     ) {
       issues.push(
         `episode "${episode.id}" has chapterEnd before chapterStart`,
@@ -544,9 +384,7 @@ function validateEpisodes(
 
     if (
       episode.youtubeUrl &&
-      !isHttpUrl(
-        episode.youtubeUrl,
-      )
+      !isHttpUrl(episode.youtubeUrl)
     ) {
       issues.push(
         `episode "${episode.id}" has an invalid youtubeUrl`,
@@ -562,21 +400,17 @@ function validateEpisodes(
       );
     }
 
-    if (
-      episode.storyId
-    ) {
-      const story =
-        context.storiesById.get(
-          episode.storyId,
-        );
+    if (episode.storyId) {
+      const story = context.storiesById.get(
+        episode.storyId,
+      );
 
       if (!story) {
         issues.push(
           `episode "${episode.id}" references unknown story "${episode.storyId}"`,
         );
       } else if (
-        story.projectId !==
-        episode.projectId
+        story.projectId !== episode.projectId
       ) {
         issues.push(
           `episode "${episode.id}" and story "${story.id}" belong to different projects`,
@@ -584,12 +418,10 @@ function validateEpisodes(
       }
     }
 
-    for (const characterId of
-      episode.characterIds ?? []) {
-      const character =
-        context.charactersById.get(
-          characterId,
-        );
+    for (const characterId of episode.characterIds ?? []) {
+      const character = context.charactersById.get(
+        characterId,
+      );
 
       if (!character) {
         issues.push(
@@ -619,17 +451,12 @@ function validateStories(
   issues: string[],
 ): void {
   for (const story of stories) {
-    validateLocalizedTitle(
-      story,
-      issues,
-    );
+    validateLocalizedTitle(story, issues);
 
-    for (const characterId of
-      story.characterIds ?? []) {
-      const character =
-        context.charactersById.get(
-          characterId,
-        );
+    for (const characterId of story.characterIds ?? []) {
+      const character = context.charactersById.get(
+        characterId,
+      );
 
       if (!character) {
         issues.push(
@@ -647,12 +474,10 @@ function validateStories(
       );
     }
 
-    for (const episodeId of
-      story.episodeIds ?? []) {
-      const episode =
-        context.episodesById.get(
-          episodeId,
-        );
+    for (const episodeId of story.episodeIds ?? []) {
+      const episode = context.episodesById.get(
+        episodeId,
+      );
 
       if (!episode) {
         issues.push(
@@ -682,17 +507,12 @@ function validateCharacters(
   issues: string[],
 ): void {
   for (const character of characters) {
-    validateLocalizedTitle(
-      character,
-      issues,
-    );
+    validateLocalizedTitle(character, issues);
 
-    for (const episodeId of
-      character.episodeIds ?? []) {
-      const episode =
-        context.episodesById.get(
-          episodeId,
-        );
+    for (const episodeId of character.episodeIds ?? []) {
+      const episode = context.episodesById.get(
+        episodeId,
+      );
 
       if (!episode) {
         issues.push(
@@ -710,12 +530,10 @@ function validateCharacters(
       );
     }
 
-    for (const storyId of
-      character.storyIds ?? []) {
-      const story =
-        context.storiesById.get(
-          storyId,
-        );
+    for (const storyId of character.storyIds ?? []) {
+      const story = context.storiesById.get(
+        storyId,
+      );
 
       if (!story) {
         issues.push(
@@ -733,12 +551,8 @@ function validateCharacters(
       );
     }
 
-    for (const mediaId of
-      character.mediaIds ?? []) {
-      const media =
-        context.mediaById.get(
-          mediaId,
-        );
+    for (const mediaId of character.mediaIds ?? []) {
+      const media = context.mediaById.get(mediaId);
 
       if (!media) {
         issues.push(
@@ -756,8 +570,7 @@ function validateCharacters(
 
       if (
         media.characterId &&
-        media.characterId !==
-          character.id
+        media.characterId !== character.id
       ) {
         issues.push(
           `character "${character.id}" references media "${media.id}" owned by another character`,
@@ -777,10 +590,7 @@ function validateMedia(
   issues: string[],
 ): void {
   for (const item of media) {
-    validateLocalizedTitle(
-      item,
-      issues,
-    );
+    validateLocalizedTitle(item, issues);
 
     if (!item.src.trim()) {
       issues.push(
@@ -798,8 +608,7 @@ function validateMedia(
       );
     }
 
-    const referencedProjects =
-      new Set<ContentId>();
+    const referencedProjects = new Set<ContentId>();
 
     addMediaProject(
       item.projectId,
@@ -810,59 +619,48 @@ function validateMedia(
     );
 
     if (item.characterId) {
-      const character =
-        context.charactersById.get(
-          item.characterId,
-        );
+      const character = context.charactersById.get(
+        item.characterId,
+      );
 
       if (!character) {
         issues.push(
           `media "${item.id}" references unknown character "${item.characterId}"`,
         );
       } else {
-        referencedProjects.add(
-          character.projectId,
-        );
+        referencedProjects.add(character.projectId);
       }
     }
 
     if (item.episodeId) {
-      const episode =
-        context.episodesById.get(
-          item.episodeId,
-        );
+      const episode = context.episodesById.get(
+        item.episodeId,
+      );
 
       if (!episode) {
         issues.push(
           `media "${item.id}" references unknown episode "${item.episodeId}"`,
         );
       } else {
-        referencedProjects.add(
-          episode.projectId,
-        );
+        referencedProjects.add(episode.projectId);
       }
     }
 
     if (item.storyId) {
-      const story =
-        context.storiesById.get(
-          item.storyId,
-        );
+      const story = context.storiesById.get(
+        item.storyId,
+      );
 
       if (!story) {
         issues.push(
           `media "${item.id}" references unknown story "${item.storyId}"`,
         );
       } else {
-        referencedProjects.add(
-          story.projectId,
-        );
+        referencedProjects.add(story.projectId);
       }
     }
 
-    if (
-      referencedProjects.size > 1
-    ) {
+    if (referencedProjects.size > 1) {
       issues.push(
         `media "${item.id}" references content from multiple projects`,
       );
@@ -890,15 +688,13 @@ function validateRelationships(
       );
     }
 
-    const source =
-      context.allById.get(
-        relationship.sourceId,
-      );
+    const source = context.allById.get(
+      relationship.sourceId,
+    );
 
-    const target =
-      context.allById.get(
-        relationship.targetId,
-      );
+    const target = context.allById.get(
+      relationship.targetId,
+    );
 
     if (!source) {
       issues.push(
@@ -962,17 +758,12 @@ function validateTimelines(
       continue;
     }
 
-    validateLocalizedTitle(
-      timeline,
-      issues,
-    );
+    validateLocalizedTitle(timeline, issues);
 
-    for (const characterId of
-      timeline.characterIds ?? []) {
-      const character =
-        context.charactersById.get(
-          characterId,
-        );
+    for (const characterId of timeline.characterIds ?? []) {
+      const character = context.charactersById.get(
+        characterId,
+      );
 
       if (!character) {
         issues.push(
@@ -990,12 +781,8 @@ function validateTimelines(
       );
     }
 
-    for (const storyId of
-      timeline.storyIds ?? []) {
-      const story =
-        context.storiesById.get(
-          storyId,
-        );
+    for (const storyId of timeline.storyIds ?? []) {
+      const story = context.storiesById.get(storyId);
 
       if (!story) {
         issues.push(
@@ -1013,12 +800,10 @@ function validateTimelines(
       );
     }
 
-    for (const episodeId of
-      timeline.episodeIds ?? []) {
-      const episode =
-        context.episodesById.get(
-          episodeId,
-        );
+    for (const episodeId of timeline.episodeIds ?? []) {
+      const episode = context.episodesById.get(
+        episodeId,
+      );
 
       if (!episode) {
         issues.push(
@@ -1060,10 +845,9 @@ function validateArchive(
     }
 
     if (entry.characterId) {
-      const character =
-        context.charactersById.get(
-          entry.characterId,
-        );
+      const character = context.charactersById.get(
+        entry.characterId,
+      );
 
       if (!character) {
         issues.push(
@@ -1081,10 +865,9 @@ function validateArchive(
     }
 
     if (entry.episodeId) {
-      const episode =
-        context.episodesById.get(
-          entry.episodeId,
-        );
+      const episode = context.episodesById.get(
+        entry.episodeId,
+      );
 
       if (!episode) {
         issues.push(
@@ -1102,10 +885,9 @@ function validateArchive(
     }
 
     if (entry.storyId) {
-      const story =
-        context.storiesById.get(
-          entry.storyId,
-        );
+      const story = context.storiesById.get(
+        entry.storyId,
+      );
 
       if (!story) {
         issues.push(
@@ -1122,13 +904,8 @@ function validateArchive(
       }
     }
 
-    for (const mediaId of
-      entry.mediaIds ?? []) {
-      if (
-        !context.mediaById.has(
-          mediaId,
-        )
-      ) {
+    for (const mediaId of entry.mediaIds ?? []) {
+      if (!context.mediaById.has(mediaId)) {
         issues.push(
           `archive "${entry.id}" references unknown media "${mediaId}"`,
         );
@@ -1147,17 +924,9 @@ function createMap<
   },
 >(
   items: readonly T[],
-): ReadonlyMap<
-  ContentId,
-  T
-> {
+): ReadonlyMap<ContentId, T> {
   return new Map(
-    items.map(
-      (item) => [
-        item.id,
-        item,
-      ],
-    ),
+    items.map((item) => [item.id, item]),
   );
 }
 
@@ -1169,9 +938,7 @@ function createIdSet<
   items: readonly T[],
 ): ReadonlySet<ContentId> {
   return new Set(
-    items.map(
-      (item) => item.id,
-    ),
+    items.map((item) => item.id),
   );
 }
 
@@ -1217,34 +984,22 @@ function validatePublishedAt(
     return;
   }
 
-  const date =
-    new Date(
-      item.publishedAt,
-    );
+  const date = new Date(item.publishedAt);
 
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     issues.push(
       `${context} has an invalid publishedAt timestamp`,
     );
   }
 }
 
-function isHttpUrl(
-  value: string,
-): boolean {
+function isHttpUrl(value: string): boolean {
   try {
-    const url =
-      new URL(value);
+    const url = new URL(value);
 
     return (
-      url.protocol ===
-        "http:" ||
-      url.protocol ===
-        "https:"
+      url.protocol === "http:" ||
+      url.protocol === "https:"
     );
   } catch {
     return false;
@@ -1257,13 +1012,8 @@ function validateContentProject(
   context: string,
   issues: string[],
 ): void {
-  if (
-    item.contentType ===
-    "project"
-  ) {
-    if (
-      item.id !== projectId
-    ) {
+  if (item.contentType === "project") {
+    if (item.id !== projectId) {
       issues.push(
         `${context} crosses project boundary`,
       );
@@ -1273,12 +1023,9 @@ function validateContentProject(
   }
 
   if (
-    item.contentType ===
-      "character" ||
-    item.contentType ===
-      "episode" ||
-    item.contentType ===
-      "story"
+    item.contentType === "character" ||
+    item.contentType === "episode" ||
+    item.contentType === "story"
   ) {
     assertSameProject(
       projectId,
@@ -1291,10 +1038,7 @@ function validateContentProject(
     return;
   }
 
-  if (
-    "projectId" in item &&
-    item.projectId
-  ) {
+  if ("projectId" in item && item.projectId) {
     assertSameProject(
       projectId,
       item.projectId,
@@ -1313,8 +1057,7 @@ function validateMediaProject(
 ): void {
   if (
     media.projectId &&
-    media.projectId !==
-      projectId
+    media.projectId !== projectId
   ) {
     issues.push(
       `${context} references media "${media.id}" from another project`,
@@ -1333,11 +1076,7 @@ function addMediaProject(
     return;
   }
 
-  if (
-    !context.projectIds.has(
-      projectId,
-    )
-  ) {
+  if (!context.projectIds.has(projectId)) {
     issues.push(
       `media "${mediaId}" references unknown project "${projectId}"`,
     );
@@ -1354,10 +1093,7 @@ function assertSameProject(
   secondContext: string,
   issues: string[],
 ): void {
-  if (
-    firstProjectId !==
-    secondProjectId
-  ) {
+  if (firstProjectId !== secondProjectId) {
     issues.push(
       `${firstContext} and ${secondContext} belong to different projects`,
     );
@@ -1373,8 +1109,7 @@ function assertOptionalProject(
 ): void {
   if (
     explicitProjectId &&
-    explicitProjectId !==
-      referencedProjectId
+    explicitProjectId !== referencedProjectId
   ) {
     issues.push(
       `${ownerContext} and ${referencedContext} belong to different projects`,

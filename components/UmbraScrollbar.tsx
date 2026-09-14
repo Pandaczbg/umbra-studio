@@ -7,7 +7,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA SCROLLBAR — V6
+   UMBRA SCROLLBAR — V6 LUXURY SYSTEM
 
    Visual client of UmbraMotionSystem.
 
@@ -22,12 +22,14 @@ import {
    - keyboard navigation
    - hover / idle state
 
-   V6 visual direction:
-   - clearer right-edge presence
-   - slightly wider / brighter thumb
-   - restrained champagne-gold glass treatment
-   - visible but quiet track
-   - no neon, no oversized UI
+   V6 visual direction
+   --------------------------------------------------------------------------
+   - dark architectural rail
+   - restrained champagne-metal thumb
+   - controlled glass material
+   - minimal active glow
+   - same visual language as the Header
+   - visible enough to feel intentional, quiet enough to remain secondary
    ========================================================================== */
 
 type MotionDirection =
@@ -200,7 +202,7 @@ export default function UmbraScrollbar() {
         Math.min(
           trackHeight,
           Math.max(
-            48,
+            46,
             trackHeight *
               ratio,
           ),
@@ -371,9 +373,9 @@ export default function UmbraScrollbar() {
               `translate3d(0, ${y}px, 0) rotateZ(${tilt}deg)`;
 
             const glowOpacity =
-              0.24 +
+              0.10 +
               energy *
-                0.48;
+                0.34;
 
             glow.style.opacity =
               String(
@@ -381,13 +383,13 @@ export default function UmbraScrollbar() {
               );
 
             core.style.transform =
-              `scaleY(${0.72 + energy * 0.28})`;
+              `translateY(-50%) scaleY(${0.70 + energy * 0.30})`;
 
             core.style.opacity =
               String(
-                0.58 +
+                0.46 +
                   energy *
-                    0.34,
+                    0.38,
               );
 
             const progressDifference =
@@ -1064,13 +1066,13 @@ export default function UmbraScrollbar() {
               `linear-gradient(
                 180deg,
                 transparent,
-                rgba(255,255,255,.11) 16%,
-                rgba(255,255,255,.16) 50%,
-                rgba(255,255,255,.11) 84%,
+                rgba(255,255,255,.075) 14%,
+                rgba(255,255,255,.12) 50%,
+                rgba(255,255,255,.075) 86%,
                 transparent
               )`,
             boxShadow:
-              "0 0 5px rgba(255,255,255,.04)",
+              "0 0 5px rgba(255,255,255,.025)",
           }}
         />
 
@@ -1082,15 +1084,15 @@ export default function UmbraScrollbar() {
               `linear-gradient(
                 180deg,
                 transparent,
-                ${GOLD}38 20%,
-                ${GOLD_LIGHT}52 50%,
-                ${GOLD}38 80%,
+                rgba(199,169,107,.18) 18%,
+                rgba(216,192,138,.28) 50%,
+                rgba(199,169,107,.18) 82%,
                 transparent
               )`,
             opacity:
-              0.82,
+              0.70,
             boxShadow:
-              `0 0 6px ${GOLD}20`,
+              "0 0 5px rgba(199,169,107,.06)",
           }}
         />
       </div>
@@ -1098,19 +1100,19 @@ export default function UmbraScrollbar() {
       <span
         ref={glowRef}
         aria-hidden="true"
-        className="pointer-events-none absolute right-[4px] top-0 h-8 w-[17px] rounded-full"
+        className="pointer-events-none absolute right-[2px] top-0 h-9 w-[19px] rounded-full"
         style={{
           opacity:
-            0.26,
+            0.10,
           background:
             `radial-gradient(
               circle,
-              ${GOLD_LIGHT}42,
-              ${GOLD}18 42%,
+              ${GOLD_LIGHT}2c,
+              ${GOLD}10 40%,
               transparent 74%
             )`,
           filter:
-            "blur(2.5px)",
+            "blur(3px)",
         }}
       />
 
@@ -1120,25 +1122,30 @@ export default function UmbraScrollbar() {
         aria-label="Page scroll position"
         tabIndex={0}
         data-dragging="false"
-        className="pointer-events-auto absolute right-[8px] top-0 w-[9px] cursor-grab appearance-none overflow-visible rounded-full border p-0 outline-none transition-[background,border-color,box-shadow] duration-200 hover:cursor-grab active:cursor-grabbing focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
+        className="pointer-events-auto absolute right-[7px] top-0 w-[10px] cursor-grab appearance-none overflow-visible rounded-full border p-0 outline-none transition-[background,border-color,box-shadow,width] duration-250 hover:cursor-grab active:cursor-grabbing focus-visible:ring-1 focus-visible:ring-[#ead39a]/70"
         style={{
           height:
-            "48px",
+            "46px",
           borderColor:
-            `${GOLD_LIGHT}bb`,
+            "rgba(234,211,154,.62)",
           background:
             `linear-gradient(
               180deg,
-              rgba(234,211,154,.30),
-              rgba(199,169,107,.18) 48%,
-              rgba(199,169,107,.11)
+              rgba(234,211,154,.20),
+              rgba(216,192,138,.12) 42%,
+              rgba(7,7,7,.66) 100%
             )`,
           boxShadow:
-            `0 0 0 1px ${GOLD}18, 0 0 9px ${GOLD}20, inset 0 0 5px rgba(255,255,255,.08)`,
+            `0 0 0 1px rgba(199,169,107,.08),
+             0 6px 18px rgba(0,0,0,.34),
+             inset 0 1px 0 rgba(255,255,255,.12),
+             inset 0 -1px 0 rgba(0,0,0,.32)`,
           transform:
             "translate3d(0,0,0)",
           backdropFilter:
-            "blur(3px)",
+            "blur(5px)",
+          WebkitBackdropFilter:
+            "blur(5px)",
         }}
       >
         <span
@@ -1148,10 +1155,23 @@ export default function UmbraScrollbar() {
             background:
               `linear-gradient(
                 180deg,
-                rgba(255,255,255,.28),
-                rgba(255,255,255,.04) 34%,
-                rgba(0,0,0,.10) 82%,
-                rgba(255,255,255,.08)
+                rgba(255,255,255,.22),
+                rgba(255,255,255,.045) 28%,
+                rgba(0,0,0,.18) 76%,
+                rgba(255,255,255,.07)
+              )`,
+          }}
+        />
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-[2px] top-[2px] h-[20%] rounded-full"
+          style={{
+            background:
+              `linear-gradient(
+                180deg,
+                rgba(255,255,255,.18),
+                transparent
               )`,
           }}
         />
@@ -1159,23 +1179,32 @@ export default function UmbraScrollbar() {
         <span
           ref={coreRef}
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[62%] w-[2px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[58%] w-px -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             opacity:
-              0.58,
+              0.46,
             transformOrigin:
               "center center",
             background:
               `linear-gradient(
                 180deg,
                 transparent,
-                ${GOLD_LIGHT} 27%,
-                ${GOLD_LIGHT}ee 50%,
-                ${GOLD_LIGHT}c8 72%,
+                ${GOLD_LIGHT}c4 28%,
+                ${GOLD_LIGHT}e0 50%,
+                ${GOLD_LIGHT}b0 72%,
                 transparent
               )`,
             boxShadow:
-              `0 0 5px ${GOLD_LIGHT}55`,
+              "0 0 4px rgba(234,211,154,.24)",
+          }}
+        />
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 bottom-[3px] h-px w-[4px] -translate-x-1/2 rounded-full opacity-35"
+          style={{
+            background:
+              GOLD_LIGHT,
           }}
         />
       </button>

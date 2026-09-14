@@ -40,6 +40,7 @@ export async function generateMetadata({
   }
 
   const characterName = character.title.en;
+
   const characterDescription =
     character.shortDescription?.en ??
     character.description?.en ??

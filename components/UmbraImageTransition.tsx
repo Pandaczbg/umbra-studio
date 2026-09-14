@@ -14,7 +14,7 @@ import {
 } from "react";
 
 /* ==========================================================================
-   UMBRA IMAGE TRANSITION — V6
+   UMBRA IMAGE TRANSITION — V6 LUXURY SYSTEM
 
    Optional image carried across navigation.
 
@@ -32,6 +32,12 @@ import {
    Design rule:
    The image is the transition itself.
    UI remains secondary.
+
+   Material language:
+   - cinematic dark glass
+   - restrained champagne framing
+   - controlled edge vignette
+   - minimal central signal
    ========================================================================== */
 
 const STORAGE_KEY =
@@ -130,12 +136,15 @@ export default function UmbraImageTransition() {
 
     if (!storedImage) {
       timerRef.current =
-        window.setTimeout(() => {
-          timerRef.current =
-            null;
+        window.setTimeout(
+          () => {
+            timerRef.current =
+              null;
 
-          setImage(null);
-        }, 0);
+            setImage(null);
+          },
+          0,
+        );
 
       return () => {
         if (
@@ -153,17 +162,20 @@ export default function UmbraImageTransition() {
     }
 
     timerRef.current =
-      window.setTimeout(() => {
-        timerRef.current =
-          null;
+      window.setTimeout(
+        () => {
+          timerRef.current =
+            null;
 
-        setTransitionKey(
-          (value) =>
-            value + 1,
-        );
+          setTransitionKey(
+            (value) =>
+              value + 1,
+          );
 
-        setImage(storedImage);
-      }, 0);
+          setImage(storedImage);
+        },
+        0,
+      );
 
     return () => {
       if (
@@ -194,9 +206,12 @@ export default function UmbraImageTransition() {
         : DISPLAY_DURATION;
 
     const hideTimer =
-      window.setTimeout(() => {
-        setImage(null);
-      }, displayDuration);
+      window.setTimeout(
+        () => {
+          setImage(null);
+        },
+        displayDuration,
+      );
 
     return () => {
       window.clearTimeout(
@@ -233,7 +248,11 @@ export default function UmbraImageTransition() {
         <motion.div
           key={transitionKey}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-[190] overflow-hidden bg-[#030303]"
+          className="pointer-events-none fixed inset-0 z-[190] overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(2,2,2,.985), rgba(6,6,6,.985))",
+          }}
           initial={{
             opacity: 1,
           }}
@@ -297,12 +316,7 @@ export default function UmbraImageTransition() {
             className="absolute inset-0"
             style={{
               background:
-                `linear-gradient(
-                  90deg,
-                  rgba(2,2,2,.78),
-                  rgba(2,2,2,.08) 50%,
-                  rgba(2,2,2,.68)
-                )`,
+                "linear-gradient(90deg, rgba(2,2,2,.72), rgba(2,2,2,.08) 46%, rgba(2,2,2,.62))",
             }}
           />
 
@@ -311,37 +325,65 @@ export default function UmbraImageTransition() {
             className="absolute inset-0"
             style={{
               background:
-                `radial-gradient(
-                  circle at 50% 50%,
-                  transparent 30%,
-                  rgba(0,0,0,.50) 100%
-                )`,
+                "linear-gradient(180deg, rgba(0,0,0,.34), transparent 24%, transparent 74%, rgba(0,0,0,.52))",
             }}
           />
 
           <div
             aria-hidden="true"
-            className="absolute inset-4 border border-white/[0.075] sm:inset-6"
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 50%, transparent 27%, rgba(0,0,0,.54) 100%)",
+            }}
+          />
+
+          <div
+            aria-hidden="true"
+            className="absolute inset-4 border border-white/[0.065] sm:inset-6"
             style={{
               boxShadow:
-                `inset 0 0 0 1px ${GOLD}08`,
+                `inset 0 0 0 1px rgba(199,169,107,.045),
+                 0 0 0 1px rgba(0,0,0,.30)`,
             }}
           >
             <span
               aria-hidden="true"
-              className="absolute left-[-1px] top-[-1px] h-10 w-10 border-l border-t"
+              className="absolute left-[-1px] top-[-1px] h-11 w-11 border-l border-t"
               style={{
                 borderColor:
-                  `${GOLD}38`,
+                  `${GOLD}42`,
+                boxShadow:
+                  "0 0 8px rgba(199,169,107,.035)",
               }}
             />
 
             <span
               aria-hidden="true"
-              className="absolute bottom-[-1px] right-[-1px] h-10 w-10 border-b border-r"
+              className="absolute right-[-1px] top-[-1px] h-5 w-5 border-r border-t"
               style={{
                 borderColor:
-                  `${GOLD_LIGHT}28`,
+                  `${GOLD}18`,
+              }}
+            />
+
+            <span
+              aria-hidden="true"
+              className="absolute bottom-[-1px] left-[-1px] h-5 w-5 border-b border-l"
+              style={{
+                borderColor:
+                  `${GOLD_LIGHT}16`,
+              }}
+            />
+
+            <span
+              aria-hidden="true"
+              className="absolute bottom-[-1px] right-[-1px] h-11 w-11 border-b border-r"
+              style={{
+                borderColor:
+                  `${GOLD_LIGHT}30`,
+                boxShadow:
+                  "0 0 8px rgba(234,211,154,.025)",
               }}
             />
           </div>
@@ -350,9 +392,15 @@ export default function UmbraImageTransition() {
             <>
               <motion.span
                 aria-hidden="true"
-                className="absolute left-1/2 top-1/2 h-px w-[min(24vw,300px)] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#c7a96b]/30 to-transparent"
+                className="absolute left-1/2 top-1/2 h-px w-[min(24vw,300px)] -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(234,211,154,.36), rgba(234,211,154,.48), rgba(234,211,154,.36), transparent)",
+                  boxShadow:
+                    "0 0 10px rgba(199,169,107,.07)",
+                }}
                 initial={{
-                  scaleX: 0.3,
+                  scaleX: 0.30,
                   opacity: 0,
                 }}
                 animate={{
@@ -372,7 +420,13 @@ export default function UmbraImageTransition() {
 
               <motion.span
                 aria-hidden="true"
-                className="absolute left-1/2 top-1/2 h-8 w-[min(30vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c7a96b]/[0.035] blur-lg"
+                className="absolute left-1/2 top-1/2 h-7 w-[min(30vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(ellipse, rgba(199,169,107,.045), rgba(199,169,107,.014) 40%, transparent 72%)",
+                  filter:
+                    "blur(7px)",
+                }}
                 initial={{
                   opacity: 0,
                   scaleX: 0.72,
@@ -383,11 +437,39 @@ export default function UmbraImageTransition() {
                 }}
                 exit={{
                   opacity: 0,
-                  scaleX: 0.85,
+                  scaleX: 0.84,
                 }}
                 transition={{
                   duration: 0.24,
                   delay: 0.01,
+                  ease: EASE,
+                }}
+              />
+
+              <motion.span
+                aria-hidden="true"
+                className="absolute left-1/2 top-1/2 h-[3px] w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  background:
+                    GOLD_LIGHT,
+                  boxShadow:
+                    "0 0 8px rgba(234,211,154,.28)",
+                }}
+                initial={{
+                  opacity: 0,
+                  scale: 0.5,
+                }}
+                animate={{
+                  opacity: 0.68,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.7,
+                }}
+                transition={{
+                  duration: 0.16,
+                  delay: 0.04,
                   ease: EASE,
                 }}
               />

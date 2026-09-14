@@ -25,10 +25,12 @@ export const projects: ProjectContent[] = [
 
     shortDescription: localized(
       "Prva serija Umbra Studija, filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića",
+      "Umbra Studio's first series, a cinematic adaptation of Branislav Bojčić's novel „MRZIM SVOG BRATA“",
     ),
 
     description: localized(
       "Prva serija Umbra Studija je filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića, razvijena kao epizodna ekranizacija sa fokusom na likove, atmosferu i filmsko pripovedanje.",
+      "Umbra Studio's first series is a cinematic adaptation of Branislav Bojčić's novel „MRZIM SVOG BRATA“, developed as an episodic screen adaptation focused on characters, atmosphere and cinematic storytelling.",
     ),
 
     contentType: "project",
@@ -66,10 +68,12 @@ export const projects: ProjectContent[] = [
 
     shortDescription: localized(
       "Samostalan storytelling univerzum Umbra Studija, zasnovan na biblijskim pričama.",
+      "A standalone storytelling universe from Umbra Studio, built around biblical stories.",
     ),
 
     description: localized(
       "Umbra Studio razvija BIBLIJU kao zaseban storytelling univerzum zasnovan na biblijskim pričama.",
+      "Umbra Studio is developing BIBLIJA as a standalone storytelling universe based on biblical stories.",
     ),
 
     contentType: "project",
