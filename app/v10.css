@@ -1,4 +1,4 @@
-/* V10: one shared visual language; all effects are progressive decoration. */
+﻿/* V10: one shared visual language; all effects are progressive decoration. */
 :root {
   --v10-bg: #080909; --v10-surface: #111313; --v10-elevated: #191b1b;
   --v10-text: #f2eee5; --v10-muted: #b8b4ab; --v10-gold: #d5bd8d;
@@ -87,3 +87,43 @@
 @media(prefers-reduced-motion:reduce),(hover:none) { .v10-moon-disc, .v10-moon-scene[data-revealed] .v10-moon-disc { transform:translate(-57%,4%); transition:none; } .v10-moon-seal,.v10-moon-light,.v10-moon-scene[data-revealed] .v10-moon-seal { opacity:.82; transition:none; } }
 @media(forced-colors:active) { .v10-moon-scene { display:none; } .v10-inline-link { color:LinkText; } }
 @media print { .v10-moon-scene,.v10-socials { display:none; } }
+/* UMBRA_MOBILE_MOON_AUTOPLAY */
+@media (max-width: 700px) {
+  .v10-moon-disc {
+    animation: umbra-mobile-moon 8s cubic-bezier(.4, 0, .2, 1) 250ms infinite;
+  }
+
+  .v10-moon-light {
+    animation: umbra-mobile-light 8s ease-in-out 250ms infinite;
+  }
+
+  .v10-moon-seal {
+    animation: umbra-mobile-seal 8s ease-in-out 250ms infinite;
+  }
+}
+
+@keyframes umbra-mobile-moon {
+  0%, 12%, 100% { transform: translate(0, 0); }
+  28%, 55% { transform: translate(-57%, 4%); }
+  75% { transform: translate(0, 0); }
+}
+
+@keyframes umbra-mobile-light {
+  0%, 12%, 100% { opacity: .45; }
+  28%, 55% { opacity: .72; }
+  75% { opacity: .45; }
+}
+
+@keyframes umbra-mobile-seal {
+  0%, 14%, 100% { opacity: 0; }
+  32%, 55% { opacity: .82; }
+  75% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v10-moon-disc,
+  .v10-moon-light,
+  .v10-moon-seal {
+    animation: none;
+  }
+}
