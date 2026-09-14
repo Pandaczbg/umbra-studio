@@ -1,0 +1,89 @@
+/* V10: one shared visual language; all effects are progressive decoration. */
+:root {
+  --v10-bg: #080909; --v10-surface: #111313; --v10-elevated: #191b1b;
+  --v10-text: #f2eee5; --v10-muted: #b8b4ab; --v10-gold: #d5bd8d;
+  --v10-line: #393831; --v10-focus: #ffe1a0; --v10-radius: 4px;
+  --v10-space: clamp(24px,4vw,64px); --v10-content: 1440px;
+  --v10-fast: 180ms; --v10-ease: cubic-bezier(.22,.61,.36,1);
+  --v10-header-layer: 500; --v10-control-size: 44px;
+  --v9-black: var(--v10-bg); --v9-gold: var(--v10-gold); --v9-ivory: var(--v10-text);
+}
+.v8-header { z-index:var(--v10-header-layer); }
+.v8-footer-wordmark { color:#8d7958; opacity:1; }
+.v8-header-frame { gap:20px; border-color:#71604477; background:#090b0bf0; backdrop-filter:blur(16px); }
+.v8-desktop-nav { gap:22px; }
+.v8-header-actions { gap:3px; }
+.v8-icon-button { min-width:44px; min-height:44px; }
+.v8-language { min-width:36px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+.v10-socials { display:flex; align-items:center; gap:2px; }
+.v10-socials a:hover, .v10-socials a:focus-visible { color:var(--v10-gold); }
+.v10-social-unavailable { color:#aaa499; position:relative; cursor:default; display:flex; flex-direction:column; gap:2px; }
+.v10-social-unavailable small { font-size:8px; line-height:1; letter-spacing:.04em; }
+.v10-header-social { border-left:1px solid var(--v10-line); padding-left:12px; }
+.v10-inline-link { color:var(--v10-gold); text-decoration:underline; text-decoration-color:#a68c5d99; text-underline-offset:4px; text-decoration-thickness:1px; }
+.v10-inline-link:hover { color:#f0d8a9; text-decoration-color:currentColor; }
+/* Hero: the original V9 lunar artwork, layered over a quiet atmospheric field. */
+.v10-hero { min-height:780px; }
+.v10-hero .v9-hero-content { position:relative; z-index:2; pointer-events:none; padding-top:180px; padding-bottom:36px; }
+.v10-hero .v9-hero-content a { pointer-events:auto; }
+.v10-hero .v9-hero-image { opacity:.9; }
+.v10-hero .v9-hero-image img { object-position:center 45%; }
+.v10-hero .v9-hero-content h1 { font-size:clamp(64px,6.5vw,100px); letter-spacing:-.052em; line-height:1.025; }
+.v10-hero .v9-hero-kicker { font-size:11px; letter-spacing:.2em; margin-bottom:32px; }
+.v10-hero .v8-lead { max-width:38ch; font-size:clamp(16px,1.2vw,18px); line-height:1.7; }
+.v10-hero .v8-actions { margin-top:28px; }
+.v10-hero .v9-hero-foot { margin-top:65px; padding-top:24px; border-top:1px solid #d5bd8d24; }
+.v10-hero .v9-featured-link { border:0; padding:0; }
+.v10-hero::before { background:linear-gradient(90deg,#080909 0%,#080909cc 27%,#08090922 63%,#08090908),linear-gradient(0deg,#080909,transparent 45%); }
+.v10-moon-scene { position:absolute; width:clamp(500px,52vw,800px); aspect-ratio:1; top:116px; right:calc(max(0px,(100vw - 1600px)/2) - 4vw); isolation:auto; }
+.v10-moon-light { position:absolute; inset:2% -3% 3%; pointer-events:none; background:radial-gradient(ellipse at 62% 43%,#f3dfb02b 0%,#d7ad6817 20%,#bc955708 38%,transparent 65%); opacity:.45; transition:opacity 1400ms cubic-bezier(.22,.61,.36,1); }
+.v10-moon-seal { position:absolute; width:34%; aspect-ratio:1; left:45%; top:28%; opacity:0; mix-blend-mode:screen; -webkit-mask-image:radial-gradient(ellipse 48% 42% at 50% 48%,#000 20%,#000e 42%,#0008 66%,#0003 82%,transparent 100%); mask-image:radial-gradient(ellipse 48% 42% at 50% 48%,#000 20%,#000e 42%,#0008 66%,#0003 82%,transparent 100%); pointer-events:none; transition:opacity 650ms ease; }
+.v10-moon-seal img { display:block; width:100%; height:100%; object-fit:contain; filter:saturate(.72) contrast(1.14) brightness(.94); }
+.v10-moon-disc { position:absolute; width:60%; aspect-ratio:1; left:20%; top:15%; border-radius:50%; overflow:hidden; transform:translate(0,0); transition:transform 1500ms cubic-bezier(.4,0,.2,1); filter:drop-shadow(12px 5px 18px #0007); }
+/* Exact crop of the unchanged 1672x941 V9 artwork: x949 y111, diameter548. */
+.v10-moon-disc .v10-moon-texture { position:absolute; width:305.11%; max-width:none; height:auto; left:-173.18%; top:-20.26%; }
+.v10-moon-scene[data-revealed] .v10-moon-disc { transform:translate(-57%,4%); }
+.v10-moon-scene[data-revealed] .v10-moon-light { opacity:.72; }
+.v10-moon-scene[data-revealed] .v10-moon-seal { opacity:.82; transition:opacity 1100ms ease 180ms; }
+.v8-project-card .u10-save, .v8-character-card .u10-save { margin-top:16px; }
+.v8-card-title,.v8-character-name { text-wrap:balance; }
+.v8-muted,.v8-lead { text-wrap:pretty; }
+.v8-studio-editorial > h3 { margin-bottom:24px; }
+.v8-studio-editorial > .v8-text-link { margin-top:28px; }
+.v10-search-dialog { margin:auto; width:min(700px,calc(100% - 28px)); max-height:calc(100dvh - 32px); padding:0; color:var(--v10-text); background:#101212; border:1px solid #786849; border-radius:4px; box-shadow:0 30px 100px #000b; overflow:auto; }
+.v10-search-dialog::backdrop { background:#000c; backdrop-filter:blur(6px); }
+.v10-search-inner { padding:clamp(20px,4vw,36px); }
+.v10-panel-top { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:24px; }
+.v10-panel-top h2 { font-size:clamp(25px,4vw,34px); font-weight:400; }
+.v10-search-inner label { display:block; font-size:13px; color:var(--v10-muted); margin-bottom:10px; }
+.v10-search-input { display:flex; align-items:center; gap:12px; border:1px solid #84734e; padding:5px 8px 5px 14px; }
+.v10-search-input input { flex:1; width:0; min-width:0; background:transparent; color:var(--v10-text); border:0; font-size:18px; min-height:44px; }
+.v10-search-inner [role=status] { margin:20px 0; font-size:14px; }
+.v10-search-result { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:16px 4px; border-bottom:1px solid var(--v10-line); color:var(--v10-gold); }
+.v10-search-result small { display:block; color:var(--v10-muted); font-size:12px; line-height:1.6; margin-top:5px; }
+.v10-search-results section { margin-top:26px; }
+.v10-search-result svg { flex-shrink:0; }
+.v10-search-suggestions { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.v10-search-suggestions a { display:flex; gap:8px; align-items:center; justify-content:space-between; border:1px solid var(--v10-line); padding:18px 12px; font-size:13px; }
+.v10-search-suggestions a:hover { border-color:var(--v10-gold); }
+@media(min-width:1101px) and (max-width:1390px) { .v10-header-social { display:none; } }
+@media(max-width:1100px) { .v8-desktop-nav { display:none; } .v8-menu-trigger { display:inline-flex; } .v10-header-social { margin-left:auto; } .v10-hero { min-height:760px; } .v10-moon-scene { right:-16%; top:155px; } }
+@media(max-width:700px) {
+ .v10-header-social { display:none; } .v8-header-frame { gap:6px; padding-inline:12px; } .v8-header-actions { gap:0; margin-left:auto; } .v8-wordmark > span { font-size:21px; } .v8-wordmark small { font-size:8px; }
+ .v10-hero { min-height:0; } .v10-hero .v9-hero-content { padding-top:385px; }
+ .v10-hero .v9-hero-content h1 { font-size:clamp(52px,12.8vw,80px); line-height:1.04; }
+ .v10-hero .v9-hero-kicker { font-size:10px; margin-bottom:22px; }
+ .v10-moon-scene { width:360px; right:calc(50% - 180px); top:72px; }
+ .v10-moon-disc { transform:translate(-57%,4%); }
+ .v10-moon-seal { opacity:.82; }
+ .v10-hero .v9-hero-image { inset:0 0 auto; height:480px; }
+ .v10-hero .v9-hero-image img { object-position:72% center; }
+ .v10-hero::before { background:linear-gradient(0deg,#080909 5%,#08090999 70%,#08090955); }
+ .v10-hero .v9-hero-foot { margin-top:36px; }
+ .v10-search-suggestions { grid-template-columns:1fr; } .v8-menu nav a { font-size:clamp(22px,6vw,34px); min-height:52px; padding-block:10px; }
+ .v8-menu .v10-socials { margin-top:24px; } .v9-hero-foot { margin-top:32px; }
+}
+@media(max-width:360px) { .v8-header-frame { padding-inline:8px; } .v8-wordmark > span { font-size:18px; } .v8-header-actions .v8-icon-button { width:40px; min-width:40px; } .v8-language { min-width:30px; } }
+@media(prefers-reduced-motion:reduce),(hover:none) { .v10-moon-disc, .v10-moon-scene[data-revealed] .v10-moon-disc { transform:translate(-57%,4%); transition:none; } .v10-moon-seal,.v10-moon-light,.v10-moon-scene[data-revealed] .v10-moon-seal { opacity:.82; transition:none; } }
+@media(forced-colors:active) { .v10-moon-scene { display:none; } .v10-inline-link { color:LinkText; } }
+@media print { .v10-moon-scene,.v10-socials { display:none; } }

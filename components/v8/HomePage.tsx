@@ -21,6 +21,8 @@ import {
   SectionHeading,
 } from "./Primitives";
 import HeroExplorer from "./HeroExplorer";
+import HeroMoon from "@/components/v10/HeroMoon";
+import ContextDescription from "@/components/v10/ContextDescription";
 
 export default function HomePage({ locale }: { locale: Locale }) {
   const c = copy[locale];
@@ -81,14 +83,15 @@ export default function HomePage({ locale }: { locale: Locale }) {
   ];
   return (
     <PageFrame locale={locale} home>
-      <section className="v9-hero" data-umbra-scene="hero" id="hero">
+      <section className="v9-hero v10-hero" data-umbra-scene="hero" id="hero">
         <div className="v9-hero-image" aria-hidden="true">
-          <Image src="/images/v9/umbra-eclipse.webp" alt="" fill preload sizes="100vw" className="v8-cover" />
+          <Image src="/images/v10/hero-v9-landscape.webp" alt="" fill preload sizes="100vw" className="v8-cover" />
         </div>
+        <HeroMoon />
         <div className="v8-container v9-hero-content">
           <p className="v8-eyebrow v9-hero-kicker">{c.independent}</p>
           <h1>{locale === "sr" ? <>Priče koje<br />ostavljaju<br /><em>senku</em></> : <>Stories that<br />leave a<br /><em>shadow</em></>}</h1>
-          <p className="v8-lead">{c.description}</p>
+          <p className="v8-lead"><ContextDescription locale={locale} /></p>
           <div className="v8-actions">
             <ActionLink href={routes[locale].projects}>{c.allProjects}</ActionLink>
             <a className="v8-text-link" href="#o-studiju">{c.studio}<ArrowDown size={17} aria-hidden="true" /></a>
@@ -222,6 +225,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
             </p>
           </div>
           <div className="v8-studio-editorial">
+            <h3 className="v8-small-heading">{locale === "sr" ? "Kako nastaju naše priče" : "How our stories take shape"}</h3>
             <p>
               {locale === "sr"
                 ? "Polazimo od priče. Od lika koji ostaje u mislima, od sveta koji traži da bude viđen. Književnost, sliku i savremenu tehnologiju povezujemo u filmski izraz."
@@ -263,6 +267,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
                 </div>
               ))}
             </div>
+            <Link className="v8-text-link" href={routes[locale].blog}>{locale === "sr" ? "Istraži Umbra Blog" : "Explore the Umbra Blog"}<ArrowUpRight size={18} aria-hidden="true" /></Link>
           </div>
         </div>
       </section>
