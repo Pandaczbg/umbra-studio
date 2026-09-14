@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { headers } from "next/headers";
-import { Suspense } from "react";
 import "./globals.css";
 import "./v8.css";
 import "./v9.css";
+import "./v10.css";
+import "@/components/v10/content.css";
+import "@/components/v10/account.css";
+import QuickSearch from "@/components/v10/QuickSearch";
 import UmbraAssistant from "@/components/v9/UmbraAssistant";
 import SiteHeader from "@/components/v8/SiteHeader";
 import UmbraMotionSystem from "@/components/UmbraMotionSystem";
@@ -43,15 +46,7 @@ export default async function RootLayout({
       <body>
         <UmbraMotionSystem />
         <UmbraSceneDirector />
-        <Suspense
-          fallback={
-            <div className="v8-header" aria-hidden="true">
-              <div className="v8-header-frame">UMBRA STUDIO</div>
-            </div>
-          }
-        >
-          <SiteHeader />
-        </Suspense>
+        <SiteHeader />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -66,6 +61,7 @@ export default async function RootLayout({
         />
         {children}
         <UmbraAssistant />
+        <QuickSearch />
       </body>
     </html>
   );

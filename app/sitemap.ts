@@ -3,6 +3,7 @@ import { getProjects, getCharacters } from "@/lib/content/queries";
 import { getArchiveEntries } from "@/lib/archive";
 import { UMBRA_SITE_URL } from "@/lib/seo/jsonLd";
 import { localizedHref } from "@/lib/site/routes";
+import { getPublishedPosts } from "@/data/blog";
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     "/",
@@ -10,6 +11,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/serije",
     "/likovi",
     "/arhiva",
+    "/blog",
+    ...getPublishedPosts().map((post) => `/blog/${post.slug}`),
     ...getProjects().map((p) => `/serije/${p.slug}`),
     ...getCharacters()
       .filter((c) => c.profileAvailable)

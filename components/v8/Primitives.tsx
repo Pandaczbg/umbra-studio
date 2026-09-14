@@ -8,6 +8,8 @@ import { copy, statusLabel } from "@/lib/site/copy";
 import type { CharacterContent, ProjectContent } from "@/lib/content/types";
 import { projectArtwork } from "@/lib/media/presentation";
 import { UMBRA_YOUTUBE_URL } from "@/lib/seo/jsonLd";
+import ContextDescription from "@/components/v10/ContextDescription";
+import SaveButton from "@/components/v10/SaveButton";
 
 export function ActionLink({
   href,
@@ -146,7 +148,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             </p>
             <p className="v8-muted">
               {c.independent}.<br />
-              {c.description}
+              <ContextDescription locale={locale} />
             </p>
           </div>
           <nav
@@ -158,7 +160,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               {locale === "sr" ? "Istraži" : "Explore"}
             </p>
             {(
-              ["projects", "characters", "latest", "archive", "search"] as const
+              ["projects", "characters", "latest", "archive", "blog", "search", "account"] as const
             ).map((key) => (
               <Link key={key} href={routes[locale][key]}>
                 {c[key]}
@@ -186,6 +188,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               TikTok <ArrowUpRight size={16} aria-hidden="true" />
             </a>
             <p className="v8-credit">
+              <span>{locale === "sr" ? "Instagram · profil još nije dostupan" : "Instagram · profile not available yet"}</span><br /><br />
               {locale === "sr" ? "Dizajn i razvoj" : "Design & development"}
               <br />
               <a
@@ -281,6 +284,7 @@ export function ProjectCard({
         <h2 className="v8-card-title">{project.title[locale]}</h2>
         <p className="v8-muted">{project.shortDescription?.[locale]}</p>
       </Link>
+      <SaveButton locale={locale} item={{ id: `project:${project.slug}`, kind: "project", title: project.title[locale], href: `${routes[locale].projects}/${project.slug}` }} />
     </article>
   );
 }
@@ -341,6 +345,7 @@ export function CharacterCard({
       ) : (
         <div>{content}</div>
       )}
+      {character.profileAvailable && <SaveButton locale={locale} item={{ id: `character:${character.slug}`, kind: "character", title: character.title[locale], href: `${routes[locale].characters}/${character.slug}` }} />}
     </article>
   );
 }

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowUpRight, Compass, Menu, Search, X } from "lucide-react";
+import { ArrowUpRight, Compass, Menu, Search, X, UserRound } from "lucide-react";
 import { copy } from "@/lib/site/copy";
-import LocalTime from "./LocalTime";
+import SocialLinks from "@/components/v10/SocialLinks";
 import { localeFor, localizedHref, routes } from "@/lib/site/routes";
 
 function subscribeHash(callback: () => void) {
@@ -28,7 +28,7 @@ export default function SiteHeader() {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const navigation = ["latest", "projects", "characters", "archive"] as const;
+  const navigation = ["projects", "characters", "blog", "archive"] as const;
   const other = locale === "sr" ? "en" : "sr";
   const languageHref = localizedHref(
     pathname + (query ? `?${query}` : "") + hash,
@@ -96,7 +96,7 @@ export default function SiteHeader() {
             ))}
             <Link href={`${routes[locale].home}#o-studiju`}>{c.studio}</Link>
           </nav>
-          <LocalTime locale={locale} />
+          <div className="v10-header-social"><SocialLinks locale={locale} /></div>
           <div className="v8-header-actions">
             <button
               type="button"
@@ -108,13 +108,16 @@ export default function SiteHeader() {
             >
               <Compass size={19} strokeWidth={1.4} aria-hidden="true" />
             </button>
-            <Link
-              href={routes[locale].search}
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => window.dispatchEvent(new Event("umbra:open-search"))}
               className="v8-icon-button"
               aria-label={c.search}
             >
               <Search size={19} strokeWidth={1.4} />
-            </Link>
+            </button>
+            <Link href={routes[locale].account} className="v8-icon-button" aria-label={c.account}><UserRound size={19} aria-hidden="true" /></Link>
             <a
               href={languageHref}
               onClick={(event) => {
@@ -178,7 +181,7 @@ export default function SiteHeader() {
             </button>
           </div>
           <nav aria-label={c.menu}>
-            {(["home", ...navigation, "search"] as const).map((key, i) => (
+            {(["home", ...navigation, "latest", "search", "account"] as const).map((key, i) => (
               <Link key={key} href={routes[locale][key]} onClick={closeMenu}>
                 <span className="v8-menu-index">0{i + 1}</span>
                 {c[key]}
@@ -186,11 +189,12 @@ export default function SiteHeader() {
               </Link>
             ))}
             <Link href={`${routes[locale].home}#o-studiju`} onClick={closeMenu}>
-              <span className="v8-menu-index">07</span>
+              <span className="v8-menu-index">09</span>
               {c.studio}
               <ArrowUpRight aria-hidden="true" size={24} />
             </Link>
           </nav>
+          <SocialLinks locale={locale} />
           <p className="v8-menu-note">{c.tagline}</p>
         </div>
       </dialog>

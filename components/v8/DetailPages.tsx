@@ -1,4 +1,7 @@
 import Image from "next/image";
+import SaveButton from "@/components/v10/SaveButton";
+import { ShareButton } from "@/components/v10/ShareButton";
+import { Gallery, type GalleryImage } from "@/components/v10/Gallery";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, Download, Plus } from "lucide-react";
@@ -83,6 +86,10 @@ export function ProjectDetailPage({
   const c = copy[locale];
   const art = projectArtwork(project, locale);
   const source = project.source;
+  const hasSource = Boolean(source) || project.slug === "biblija";
+  const projectHref = `${routes[locale].projects}/${project.slug}`;
+  const gallery: GalleryImage[] = [{ src: art.src, alt: art.alt, caption: locale === "sr" ? `${project.title.sr} — naslovni vizual` : `${project.title.en} — cover artwork` }];
+  if (project.slug === "mrzim-svog-brata") gallery.push({ src: "/images/v9/bosnia-1980.webp", alt: locale === "sr" ? "Ilustracija seoskog ambijenta inspirisana početkom romana" : "Rural landscape illustration inspired by the opening of the novel", caption: locale === "sr" ? "Ambijentalna ilustracija inspirisana početkom romana" : "Atmospheric illustration inspired by the opening of the novel" });
   return (
     <PageFrame locale={locale}>
       <div className="v8-container v8-detail-top">
@@ -128,11 +135,15 @@ export function ProjectDetailPage({
             >
               {context.characters.length ? c.characters : c.explore}
             </ActionLink>
-            {source && (
+            {hasSource && (
               <ActionLink href="#source" secondary>
-                {c.read}
+                {c.source}
               </ActionLink>
             )}
+          </div>
+          <div className="v10-content-actions">
+            <SaveButton locale={locale} item={{ id: `project:${project.slug}`, kind: "project", title: project.title[locale], href: projectHref }} />
+            <ShareButton locale={locale} url={new URL(projectHref, UMBRA_SITE_URL).toString()} />
           </div>
         </div>
         <figure className={`v8-detail-art${art.isBook ? " v8-book-art" : ""}`}>
@@ -149,6 +160,13 @@ export function ProjectDetailPage({
           </figcaption>
         </figure>
       </section>
+      <nav className="v8-container v10-section-nav" aria-label={locale === "sr" ? "Na ovoj stranici" : "On this page"}>
+        <a href="#project-dossier">{locale === "sr" ? "O projektu" : "About the project"}</a>
+        {hasSource && <a href="#source">{c.source}</a>}
+        {context.characters.length > 0 && <a href="#project-characters">{c.characters}</a>}
+        <a href="#gallery">{locale === "sr" ? "Galerija" : "Gallery"}</a>
+        {context.episodes.length > 0 && <a href="#episodes">{c.episodes}</a>}
+      </nav>
       <section id="project-dossier" className="v8-container v8-facts">
         <dl>
           {[
@@ -173,26 +191,6 @@ export function ProjectDetailPage({
             ))}
         </dl>
       </section>
-      {project.slug === "mrzim-svog-brata" && (
-        <div className="v8-container">
-          <figure className="v9-story-landscape">
-            <Image
-              src="/images/v9/bosnia-1980.webp"
-              alt={locale === "sr"
-                ? "Ambijentalna ilustracija seoskog pejzaža inspirisana početkom romana"
-                : "Atmospheric rural landscape illustration inspired by the opening of the novel"}
-              fill
-              sizes="(min-width: 1440px) 1320px, 100vw"
-              className="v8-cover"
-            />
-            <figcaption>
-              {locale === "sr"
-                ? "Ambijentalna ilustracija inspirisana početkom romana"
-                : "Atmospheric illustration inspired by the opening of the novel"}
-            </figcaption>
-          </figure>
-        </div>
-      )}
       {source && (
         <section id="source" className="v8-section v8-source-section">
           <div className="v8-container v8-source-grid">
@@ -233,16 +231,15 @@ export function ProjectDetailPage({
             </div>
             <div>
               <p className="v8-eyebrow">{c.source}</p>
-              <h2 className="v8-heading">
-                {c.read}
-                  </h2>
+              <h2 className="v8-heading">{c.source}</h2>
               <p className="v8-lead">{source.title}</p>
-              {source.author && <p className="v8-muted">{source.author}</p>}
+              {source.author && <p className="v8-muted"><a className="v8-text-link" href="https://branislavbojcic.com/" target="_blank" rel="noopener noreferrer">{source.author} ↗</a></p>}
+              <div className="v10-content-actions"><SaveButton locale={locale} item={{ id: `source:${project.slug}`, kind: "source", title: source.title, href: `${projectHref}#source` }} /></div>
               {source.coverEn && !source.pdfEn && (
                 <p className="v8-muted">
                   {locale === "sr"
-                    ? "Engleska naslovnica je prikazana uz srpsko izdanje. Engleski tekst romana nije dostupan za preuzimanje."
-                    : "The English cover is shown alongside the Serbian edition. The English novel is not available to download."}
+                    ? "Prikazane su srpska i engleska naslovnica romana. Tekst romana nije dostupan za preuzimanje na sajtu."
+                    : "The Serbian and English covers of the novel are shown here. The novel text is not available to download on this site."}
                 </p>
               )}
               <div className="v8-actions">
@@ -278,6 +275,12 @@ export function ProjectDetailPage({
           </div>
         </section>
       )}
+      {!source && project.slug === "biblija" && <section id="source" className="v8-container v8-section v8-prose">
+        <p className="v8-eyebrow">{c.source}</p>
+        <h2>{locale === "sr" ? "Biblija — izvor priča" : "The Bible — source of the stories"}</h2>
+        <p>{locale === "sr" ? "Biblijske priče čine polazište ovog Umbra projekta. Predstavljeni Josif je Jakovljev sin; njegovu priču otvaraju porodični odnosi i snovi." : "Biblical stories are the starting point for this Umbra project. The featured Joseph is Jacob’s son; his story opens with family relationships and dreams."}</p>
+        <SaveButton locale={locale} item={{ id: "source:biblija", kind: "source", title: locale === "sr" ? "Biblija — izvor" : "Bible — source", href: `${projectHref}#source` }} />
+      </section>}
       {context.characters.length > 0 && (
         <section id="project-characters" className="v8-container v8-section">
           <SectionHeading
@@ -313,9 +316,13 @@ export function ProjectDetailPage({
           </div>
         </section>
       )}
+      <section id="gallery" className="v8-container v8-section">
+        <SectionHeading number="02" eyebrow={locale === "sr" ? "Vizuelni svet" : "Visual world"} title={locale === "sr" ? "Galerija" : "Gallery"} />
+        <Gallery locale={locale} images={gallery} />
+      </section>
       {context.episodes.length > 0 && (
         <section id="episodes" className="v8-container v8-section">
-          <SectionHeading number="02" eyebrow={c.episodes} title={c.episodes} />
+          <SectionHeading number="03" eyebrow={c.episodes} title={c.episodes} />
           {context.episodes.some((episode) => episode.status === "planned") && (
             <p className="v8-muted v8-section-note">
               {locale === "sr"
@@ -470,10 +477,11 @@ export function CharacterDetailPage({
             {character.description?.[locale] ??
               character.shortDescription?.[locale]}
           </p>
+          <div className="v10-content-actions"><SaveButton locale={locale} item={{ id: `character:${character.slug}`, kind: "character", title: character.title[locale], href: `${routes[locale].characters}/${character.slug}` }} /><ShareButton locale={locale} url={new URL(`${routes[locale].characters}/${character.slug}`, UMBRA_SITE_URL).toString()} /></div>
           <dl className="v8-dossier-facts">
             <div>
               <dt>{c.project}</dt>
-              <dd>{project.title[locale]}</dd>
+              <dd><Link href={`${routes[locale].projects}/${project.slug}`}>{project.title[locale]}</Link></dd>
             </div>
             <div>
               <dt>{locale === "sr" ? "Uloga" : "Role"}</dt>

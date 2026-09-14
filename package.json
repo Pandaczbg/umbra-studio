@@ -10,7 +10,11 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test lib/tests/*.test.mjs",
     "check": "npm run typecheck && npm run lint -- --max-warnings=0 && npm test && npm run build",
-    "test:http": "node --experimental-strip-types lib/tests/http-smoke.mjs"
+    "test:http": "node --experimental-strip-types lib/tests/http-smoke.mjs",
+    "prepare:v10": "node scripts/prepare-v10.mjs",
+    "prebuild": "npm run prepare:v10",
+    "predev": "npm run prepare:v10",
+    "prestart": "npm run prepare:v10"
   },
   "dependencies": {
     "framer-motion": "^13.2.0",

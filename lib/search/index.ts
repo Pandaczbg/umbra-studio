@@ -410,3 +410,29 @@ export function searchAll(
     limit,
   });
 }
+// V10 presentation adapter: reuse the existing scorer, add only public source/blog records.
+import { getProjects } from "@/lib/content/queries";
+import { contentHref } from "@/lib/site/content-links";
+import { routes, type Locale } from "@/lib/site/routes";
+import { getPublishedPosts } from "@/data/blog";
+export type PublicSearchKind = "project" | "character" | "source" | "blog" | "episode";
+export type PublicPageResult = { id: string; title: string; description: string; href: string; kind: PublicSearchKind; score: number };
+export function searchPublicPages(query: string, locale: Locale, kind?: string): PublicPageResult[] {
+  const key = normalizeSearch(query.slice(0, 160));
+  if (!key) return [];
+  const results: PublicPageResult[] = searchContent({ query: key, types: ["project", "character", "episode"], limit: 100 }).flatMap(({ item, score }) => {
+    if (item.contentType !== "project" && item.contentType !== "character" && item.contentType !== "episode") return [];
+    const href = contentHref(item, locale);
+    return href ? [{ id: item.id, title: item.title[locale], description: item.shortDescription?.[locale] ?? "", href, kind: item.contentType, score }] : [];
+  });
+  for (const project of getProjects()) {
+    const title = project.source?.title ?? (project.slug === "biblija" ? (locale === "sr" ? "Biblija — književni izvor" : "The Bible — literary source") : "");
+    if (!title) continue;
+    const description = project.source?.author ?? (locale === "sr" ? "Izvor biblijskih priča predstavljenih u projektu" : "The source of the biblical stories featured in the project");
+    if (normalizeSearch(`${title} ${description}`).includes(key)) results.push({ id: `source:${project.slug}`, title, description, href: `${routes[locale].projects}/${project.slug}#source`, kind: "source", score: 85 });
+  }
+  for (const post of getPublishedPosts()) {
+    if (normalizeSearch(`${post.title[locale]} ${post.summary[locale]}`).includes(key)) results.push({ id: `blog:${post.slug}`, title: post.title[locale], description: post.summary[locale], href: `${routes[locale].blog}/${post.slug}`, kind: "blog", score: 80 });
+  }
+  return results.filter((r) => !kind || kind === "all" || r.kind === kind).sort((a,b) => b.score-a.score || a.title.localeCompare(b.title,locale)).slice(0, 60);
+}

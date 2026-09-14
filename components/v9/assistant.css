@@ -40,3 +40,10 @@
 @media(max-width:600px){.umbra-guide{width:calc(100vw - 16px);height:calc(var(--guide-height) - 16px);max-height:calc(var(--guide-height) - 16px);margin:8px auto;border-radius:var(--v9-radius, 3px)}.umbra-guide-header{padding:18px 18px 14px}.umbra-guide-scroll{padding:16px 18px}.umbra-guide-form{padding:12px 18px max(12px,env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.umbra-guide[open]{animation:none}}
 @media(forced-colors:active){.umbra-guide,.umbra-guide button,.umbra-guide input{border:1px solid ButtonText}.umbra-guide::backdrop{background:Canvas;opacity:.85}}
+
+.umbra-guide-history{display:grid;gap:8px;margin:20px 0;border-top:1px solid #484034;padding-top:12px}
+.umbra-guide-history details{border-bottom:1px solid #484034;padding:4px 0 10px}
+.umbra-guide-history summary{cursor:pointer;min-height:44px;padding:12px 0;color:#d3bb8c;font-size:13px;overflow-wrap:anywhere}
+.umbra-guide-history p{white-space:pre-line;overflow-wrap:anywhere}
+.umbra-guide-history nav{display:flex;flex-wrap:wrap;gap:10px}
+.umbra-guide-history a{display:inline-flex;align-items:center;min-height:44px;color:#ead1a2;font-size:12px;text-underline-offset:4px}

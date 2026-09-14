@@ -5,6 +5,8 @@ export type Section =
   | "characters"
   | "latest"
   | "archive"
+  | "blog"
+  | "account"
   | "search";
 
 export const routes: Record<Locale, Record<Section, string>> = {
@@ -15,6 +17,8 @@ export const routes: Record<Locale, Record<Section, string>> = {
     latest: "/aktuelno",
     archive: "/arhiva",
     search: "/pretraga",
+    blog: "/blog",
+    account: "/moja-umbra",
   },
   en: {
     home: "/en",
@@ -23,6 +27,8 @@ export const routes: Record<Locale, Record<Section, string>> = {
     latest: "/en/latest",
     archive: "/en/archive",
     search: "/en/search",
+    blog: "/en/blog",
+    account: "/en/my-umbra",
   },
 };
 

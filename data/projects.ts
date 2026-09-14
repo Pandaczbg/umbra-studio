@@ -48,10 +48,6 @@ export const projects: ProjectContent[] = [
         "/books/Mrzim-svog-brata/cover-sr.png",
       coverEn:
         "/books/Mrzim-svog-brata/cover-en.jpg",
-      pdfSr:
-        "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",
-      publicUrl:
-        "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
     },
   },
 

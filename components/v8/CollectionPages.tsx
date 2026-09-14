@@ -7,10 +7,10 @@ import {
   getCharacterMedia,
 } from "@/lib/content/queries";
 import { getArchiveEntries } from "@/lib/archive";
-import { searchContent } from "@/lib/search";
+import { searchPublicPages } from "@/lib/search";
 import { getLatestPublishedContent } from "@/lib/content/latest";
 import { contentHref } from "@/lib/site/content-links";
-import { copy, statusLabel } from "@/lib/site/copy";
+import { copy } from "@/lib/site/copy";
 import { routes, type Locale } from "@/lib/site/routes";
 import {
   ActionLink,
@@ -357,15 +357,10 @@ export function SearchPage({
   const c = copy[locale];
   const q = queryValue(query, "q");
   const type = queryValue(query, "type");
-  const types = ["project", "character", "episode", "story"] as const;
+  const types = ["project", "character", "source", "blog", "episode"] as const;
   const selected = types.find((t) => t === type);
-  const results = q
-    ? searchContent({
-        query: q,
-        types: selected ? [selected] : types,
-        limit: 100,
-      }).filter(({ item }) => contentHref(item, locale))
-    : [];
+  const results = q ? searchPublicPages(q, locale, selected) : [];
+  const labels = { project: c.projects, character: c.characters, source: c.source, blog: "Blog", episode: c.episodes };
   return (
     <PageFrame locale={locale}>
       <PageIntro
@@ -399,7 +394,7 @@ export function SearchPage({
             <option value="">{c.all}</option>
             {types.map((t) => (
               <option key={t} value={t}>
-                {c[t]}
+                {labels[t]}
               </option>
             ))}
           </select>
@@ -428,36 +423,17 @@ export function SearchPage({
             <p className="v8-result-count">
               {c.resultCount}: {results.length} · {locale === "sr" ? `„${q}“` : `“${q}”`}
             </p>
-            {results.map(({ item }) => (
-              <Link
-                className="v8-result"
-                key={item.id}
-                href={contentHref(item, locale)!}
-              >
-                <span className="v8-meta">
-                  {item.contentType === "project" ||
-                  item.contentType === "character" ||
-                  item.contentType === "episode" ||
-                  item.contentType === "story"
-                    ? c[item.contentType]
-                    : c.archive}
-                </span>
-                <div>
-                  <h2>{"title" in item ? item.title[locale] : ""}</h2>
-                  <p>
-                    {"shortDescription" in item
-                      ? item.shortDescription?.[locale]
-                      : ""}
-                  </p>
-                  {"status" in item && (
-                    <span className="v8-status">
-                      {statusLabel(item.status, locale)}
-                    </span>
-                  )}
-                </div>
-                <ArrowUpRight aria-hidden="true" />
-              </Link>
-            ))}
+            {types.map((kind) => {
+              const group = results.filter((item) => item.kind === kind);
+              return group.length > 0 ? <section className="v10-search-group" key={kind} aria-labelledby={`results-${kind}`}>
+                <h2 id={`results-${kind}`} className="v8-eyebrow">{labels[kind]} · {group.length}</h2>
+                {group.map((item) => <Link className="v8-result" key={item.id} href={item.href}>
+                  <span className="v8-meta">{labels[kind]}</span>
+                  <div><h3>{item.title}</h3><p>{item.description}</p></div>
+                  <ArrowUpRight aria-hidden="true" />
+                </Link>)}
+              </section> : null;
+            })}
             {!results.length && (
               <EmptyState
                 title={c.noResults}

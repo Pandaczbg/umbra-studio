@@ -13,6 +13,7 @@ export function pageMetadata(
     description?: string;
     slug?: string;
     noIndex?: boolean;
+    image?: string;
   } = {},
 ): Metadata {
   const c = copy[locale];
@@ -26,6 +27,7 @@ export function pageMetadata(
     routes[locale][section] +
     (options.slug ? `/${encodeURIComponent(options.slug)}` : "");
   const canonical = new URL(path, UMBRA_SITE_URL).toString();
+  const socialImage = options.image ?? `/images/v10/social/${section === "blog" ? "blog" : "studio"}${locale === "en" ? "-en" : ""}.jpg`;
   return {
     title: { absolute: title },
     description,
@@ -47,9 +49,9 @@ export function pageMetadata(
       alternateLocale: locale === "sr" ? "en_GB" : "sr_RS",
       images: [
         {
-          url: "/images/umbra-world.webp",
-          width: 1671,
-          height: 941,
+          url: socialImage,
+          width: 1200,
+          height: 630,
           alt: "Umbra Studio",
         },
       ],
@@ -58,7 +60,7 @@ export function pageMetadata(
       card: "summary_large_image",
       title,
       description,
-      images: ["/images/umbra-world.webp"],
+      images: [socialImage],
     },
     ...(options.noIndex ? { robots: { index: false, follow: true } } : {}),
   };
@@ -83,6 +85,7 @@ export function detailMetadata(
   return pageMetadata(locale, section, {
     slug,
     title: `${item.title[locale]} — Umbra Studio`,
+    image: section === "projects" || section === "characters" ? `/images/v10/social/${section === "projects" ? "project" : "character"}-${slug}${locale === "en" ? "-en" : ""}.jpg` : undefined,
     description: item.description?.[locale] ??
       ("shortDescription" in item ? item.shortDescription?.[locale] : undefined),
   });
