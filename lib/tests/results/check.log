@@ -1,0 +1,88 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> umbra-studio@0.8.0 check
+> npm run typecheck && npm run lint -- --max-warnings=0 && npm test && npm run build
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> umbra-studio@0.8.0 typecheck
+> tsc --noEmit
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> umbra-studio@0.8.0 lint
+> eslint --max-warnings=0
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> umbra-studio@0.8.0 test
+> node --experimental-strip-types --test lib/tests/*.test.mjs
+
+✔ all section routes have a reversible SR/EN mapping (1.094733ms)
+✔ language switch preserves slug, query, fragment and query encoding (0.165419ms)
+✔ public helpers link to implemented section and episode anchors (0.135284ms)
+✔ latest feed excludes undated, invalid, future, nonpublic and planned records (0.779758ms)
+✔ latest sorting is chronological, deterministic and does not mutate its input (0.453415ms)
+✔ source content passes the existing complete graph validator (0.956295ms)
+✔ project artwork chooses explicit art before book covers; books retain identity (0.164709ms)
+✔ all project artwork and supplied downloads resolve to real local files (0.394907ms)
+✔ search treats Serbian diacritics and dj consistently (0.325191ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 168.307043
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> umbra-studio@0.8.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+✓ Running next.config.ts took 19ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 355ms
+  Running TypeScript ...
+  Finished TypeScript in 1325ms ...
+  Collecting page data using 8 workers ...
+  Generating static pages using 8 workers (0/38) ...
+  Generating static pages using 8 workers (9/38) 
+  Generating static pages using 8 workers (18/38) 
+  Generating static pages using 8 workers (28/38) 
+✓ Generating static pages using 8 workers (38/38) in 230ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /aktuelno
+├ ƒ /arhiva
+├ ● /arhiva/[slug]
+├ ƒ /en
+├ ƒ /en/archive
+├ ● /en/archive/[slug]
+├ ƒ /en/characters
+├ ƒ /en/characters/[slug]
+├ ƒ /en/latest
+├ ƒ /en/projects
+├ ƒ /en/projects/[slug]
+├ ƒ /en/search
+├ ƒ /likovi
+├ ƒ /likovi/[slug]
+├ ○ /manifest.webmanifest
+├ ƒ /pretraga
+├ ○ /robots.txt
+├ ƒ /serije
+├ ƒ /serije/[slug]
+└ ○ /sitemap.xml
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

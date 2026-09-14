@@ -1,110 +1,67 @@
 import type { Metadata, Viewport } from "next";
-
+import localFont from "next/font/local";
+import { headers } from "next/headers";
+import { Suspense } from "react";
 import "./globals.css";
-
-import UmbraAtmosphere from "@/components/UmbraAtmosphere";
-import UmbraDocumentLanguage from "@/components/UmbraDocumentLanguage";
+import "./v8.css";
+import SiteHeader from "@/components/v8/SiteHeader";
 import UmbraMotionSystem from "@/components/UmbraMotionSystem";
 import UmbraSceneDirector from "@/components/UmbraSceneDirector";
-import Header from "@/components/Header";
-import UmbraScrollbar from "@/components/UmbraScrollbar";
-import UmbraPageTransition from "@/components/UmbraPageTransition";
-import UmbraImageTransition from "@/components/UmbraImageTransition";
 import {
   createUmbraOrganizationJsonLd,
   createUmbraWebsiteJsonLd,
   serializeJsonLd,
   UMBRA_SITE_URL,
 } from "@/lib/seo/jsonLd";
-
-/* ==========================================================================
-   UMBRA STUDIO
-   ROOT LAYOUT
-   V7 SYSTEM FOUNDATION
-
-   V7 additions
-   --------------------------------------------------------------------------
-   - WebSite + Organization JSON-LD
-   - manifest discovery
-   - stable global metadata source
-   - unchanged V6 motion / scene architecture
-   ========================================================================== */
-
-const SITE_TITLE =
-  "Umbra Studio — Priče koje ostavljaju senku";
-
-const SITE_DESCRIPTION =
-  "Umbra Studio — digitalni studio posvećen originalnim filmskim pričama, mini-serijama i ekranizacijama.";
-
-const organizationJsonLd = createUmbraOrganizationJsonLd();
-const websiteJsonLd = createUmbraWebsiteJsonLd();
-
+const geist = localFont({
+  src: "../public/fonts/Geist.woff2",
+  display: "swap",
+  variable: "--font-geist-sans",
+  weight: "100 900",
+});
 export const metadata: Metadata = {
   metadataBase: new URL(UMBRA_SITE_URL),
-  title: {
-    default: SITE_TITLE,
-    template: "%s — Umbra Studio",
-  },
-  description: SITE_DESCRIPTION,
+  title: { default: "Umbra Studio", template: "%s — Umbra Studio" },
   applicationName: "Umbra Studio",
   creator: "Umbra Studio",
   publisher: "Umbra Studio",
-  category: "entertainment",
   manifest: "/manifest.webmanifest",
-  robots: {
-    index: true,
-    follow: true,
-  },
-  openGraph: {
-    type: "website",
-    siteName: "Umbra Studio",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    url: UMBRA_SITE_URL,
-    locale: "sr_RS",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-  },
+  robots: { index: true, follow: true },
 };
-
 export const viewport: Viewport = {
   colorScheme: "dark",
-  themeColor: "#030303",
+  themeColor: "#080908",
 };
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
+  const locale = (await headers()).get("x-umbra-locale") === "en" ? "en" : "sr";
   return (
-    <html lang="sr" suppressHydrationWarning>
+    <html lang={locale} className={geist.variable} suppressHydrationWarning>
       <body>
-        <UmbraDocumentLanguage />
         <UmbraMotionSystem />
         <UmbraSceneDirector />
-        <UmbraAtmosphere />
-        <Header />
-        <UmbraScrollbar />
-        <UmbraPageTransition />
-        <UmbraImageTransition />
-
+        <Suspense
+          fallback={
+            <div className="v8-header" aria-hidden="true">
+              <div className="v8-header-frame">UMBRA STUDIO</div>
+            </div>
+          }
+        >
+          <SiteHeader />
+        </Suspense>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(organizationJsonLd),
+            __html: serializeJsonLd(createUmbraOrganizationJsonLd()),
           }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(websiteJsonLd),
+            __html: serializeJsonLd(createUmbraWebsiteJsonLd()),
           }}
         />
-
         {children}
       </body>
     </html>

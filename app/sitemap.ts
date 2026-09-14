@@ -1,43 +1,30 @@
 import type { MetadataRoute } from "next";
-
-import { characters } from "@/data/characters";
-import { projects } from "@/data/projects";
+import { getProjects, getCharacters } from "@/lib/content/queries";
+import { getArchiveEntries } from "@/lib/archive";
 import { UMBRA_SITE_URL } from "@/lib/seo/jsonLd";
-
+import { localizedHref } from "@/lib/site/routes";
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = [
+  const paths = [
     "/",
-    "/en",
     "/aktuelno",
-    "/en/latest",
     "/serije",
-    "/en/projects",
     "/likovi",
-    "/en/characters",
     "/arhiva",
-    "/en/archive",
+    ...getProjects().map((p) => `/serije/${p.slug}`),
+    ...getCharacters()
+      .filter((c) => c.profileAvailable)
+      .map((c) => `/likovi/${c.slug}`),
+    ...getArchiveEntries().map((a) => `/arhiva/${encodeURIComponent(a.id)}`),
   ];
-
-  const projectRoutes = projects.flatMap((project) => [
-    `/serije/${project.slug}`,
-    `/en/projects/${project.slug}`,
-  ]);
-
-  const characterRoutes = characters.flatMap((character) => [
-    `/likovi/${character.slug}`,
-    `/en/characters/${character.slug}`,
-  ]);
-
-  return [...staticRoutes, ...projectRoutes, ...characterRoutes].map(
-    (path) => ({
-      url: `${UMBRA_SITE_URL}${path}`,
-      changeFrequency: "monthly" as const,
-      priority:
-        path === "/" || path === "/en"
-          ? 1
-          : path === "/aktuelno" || path === "/en/latest"
-            ? 0.9
-            : 0.7,
-    }),
+  return paths.flatMap((path) =>
+    ["sr", "en"].map((locale) => ({
+      url: UMBRA_SITE_URL + localizedHref(path, locale as "sr" | "en"),
+      alternates: {
+        languages: {
+          sr: UMBRA_SITE_URL + localizedHref(path, "sr"),
+          en: UMBRA_SITE_URL + localizedHref(path, "en"),
+        },
+      },
+    })),
   );
 }

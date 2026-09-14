@@ -3,7 +3,7 @@ export function serializeJsonLd(value: unknown): string {
 }
 
 export const UMBRA_SITE_URL =
-  "https://umbra-studio.aleksandarbojcic94.workers.dev";
+  (process.env.NEXT_PUBLIC_SITE_URL ?? "https://umbra-studio.aleksandarbojcic94.workers.dev").replace(/\/$/, "");
 
 export const UMBRA_YOUTUBE_URL =
   "https://www.youtube.com/@umbrastud";

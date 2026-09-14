@@ -1,3 +1,4 @@
+import { normalizeSearch } from "./normalize";
 /**
  * UMBRA STUDIO — V6
  * Search foundation
@@ -43,18 +44,7 @@ export type SearchResult = {
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
-function normalize(
-  value: string,
-): string {
-  return value
-    .normalize("NFD")
-    .replace(
-      /[\u0300-\u036f]/g,
-      "",
-    )
-    .toLowerCase()
-    .trim();
-}
+const normalize = normalizeSearch;
 
 function getTitleValues(
   item: UmbraContent,

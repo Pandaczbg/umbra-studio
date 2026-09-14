@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "./";
+@source "../components/v8";
+/* V8 only: retained V7 components are not rendered by current routes. */
 
 /* ==========================================================================
    UMBRA STUDIO — V7 ULTRA GLOBAL DESIGN SYSTEM

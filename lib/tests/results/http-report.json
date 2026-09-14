@@ -1,0 +1,278 @@
+{
+  "node": "v24.19.0",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 65703
+    },
+    {
+      "path": "/en",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 67192
+    },
+    {
+      "path": "/serije",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 38010
+    },
+    {
+      "path": "/en/projects",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 38802
+    },
+    {
+      "path": "/likovi",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 49983
+    },
+    {
+      "path": "/en/characters",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 51016
+    },
+    {
+      "path": "/aktuelno",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 32319
+    },
+    {
+      "path": "/en/latest",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 33097
+    },
+    {
+      "path": "/arhiva",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 32286
+    },
+    {
+      "path": "/en/archive",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 33077
+    },
+    {
+      "path": "/pretraga",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 34139
+    },
+    {
+      "path": "/en/search",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 34811
+    },
+    {
+      "path": "/serije/mrzim-svog-brata",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 81204
+    },
+    {
+      "path": "/en/projects/mrzim-svog-brata",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 82575
+    },
+    {
+      "path": "/serije/biblija",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 40859
+    },
+    {
+      "path": "/en/projects/biblija",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 42882
+    },
+    {
+      "path": "/likovi/gvozden",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48723
+    },
+    {
+      "path": "/en/characters/gvozden",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49853
+    },
+    {
+      "path": "/likovi/jadranka",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48569
+    },
+    {
+      "path": "/en/characters/jadranka",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49665
+    },
+    {
+      "path": "/likovi/ana",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48473
+    },
+    {
+      "path": "/en/characters/ana",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49546
+    },
+    {
+      "path": "/likovi/senad",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48567
+    },
+    {
+      "path": "/en/characters/senad",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49656
+    },
+    {
+      "path": "/likovi/rade",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48501
+    },
+    {
+      "path": "/en/characters/rade",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49611
+    },
+    {
+      "path": "/likovi/azra",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48493
+    },
+    {
+      "path": "/en/characters/azra",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49571
+    },
+    {
+      "path": "/likovi/mehmed",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 48547
+    },
+    {
+      "path": "/en/characters/mehmed",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 49646
+    },
+    {
+      "path": "/likovi/josif",
+      "status": 200,
+      "language": "sr",
+      "htmlBytes": 36365
+    },
+    {
+      "path": "/en/characters/josif",
+      "status": 200,
+      "language": "en",
+      "htmlBytes": 37247
+    },
+    {
+      "path": "/pretraga?q=Gvozden",
+      "status": 200
+    },
+    {
+      "path": "/en/search?q=Gvozden",
+      "status": 200
+    },
+    {
+      "path": "/pretraga?q=epizoda",
+      "status": 200
+    },
+    {
+      "path": "/en/search?q=episode",
+      "status": 200
+    },
+    {
+      "path": "/likovi?project=project-02",
+      "status": 200
+    },
+    {
+      "path": "/en/characters?role=SUPPORTING",
+      "status": 200
+    },
+    {
+      "path": "/serije?type=adaptation",
+      "status": 200
+    },
+    {
+      "path": "/en/projects?type=original",
+      "status": 200
+    },
+    {
+      "path": "/pretraga?q=zzzz-no-match",
+      "status": 200
+    },
+    {
+      "path": "/en/search?q=zzzz-no-match",
+      "status": 200
+    },
+    {
+      "path": "/nepostoji-v8",
+      "status": 404,
+      "noindex": true
+    },
+    {
+      "path": "/en/not-a-page-v8",
+      "status": 404,
+      "noindex": true
+    },
+    {
+      "path": "/likovi/nepostoji-v8",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/projects/not-a-project-v8",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/arhiva/nepostoji-v8",
+      "status": 404,
+      "noindex": true
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "status": 200
+    }
+  ],
+  "issues": [],
+  "browser": "NOT RUN: local browser access unavailable; HTTP checks do not execute JavaScript or measure layout.",
+  "internalReferences": 138,
+  "sourcePackage": "0.8.0"
+}

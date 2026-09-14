@@ -1,0 +1,45 @@
+{
+  "assets": [
+    {
+      "source": "umbra-background.png",
+      "optimized": "umbra-world.webp",
+      "sourceBytes": 2084529,
+      "optimizedBytes": 224522,
+      "reductionPercent": 89.2
+    },
+    {
+      "source": "Biblija Cover.png",
+      "optimized": "biblija.webp",
+      "sourceBytes": 2418794,
+      "optimizedBytes": 263820,
+      "reductionPercent": 89.1
+    },
+    {
+      "source": "books/Mrzim-svog-brata/cover-sr.png",
+      "optimized": "novel-sr.webp",
+      "sourceBytes": 2495856,
+      "optimizedBytes": 250598,
+      "reductionPercent": 90.0
+    },
+    {
+      "source": "books/Mrzim-svog-brata/cover-en.jpg",
+      "optimized": "novel-en.webp",
+      "sourceBytes": 155674,
+      "optimizedBytes": 137882,
+      "reductionPercent": 11.4
+    }
+  ],
+  "css": [
+    {
+      "file": "3ax6hsfmf1pjs.css",
+      "bytes": 44087,
+      "gzipBytes": 10411
+    }
+  ],
+  "baseTokenContrast": {
+    "primary": 17.19,
+    "muted": 8.0,
+    "accent": 9.7
+  },
+  "browserMetrics": null
+}

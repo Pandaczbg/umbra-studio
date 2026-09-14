@@ -21,6 +21,7 @@
  */
 
 import type { Metadata } from "next";
+import { UMBRA_SITE_URL } from "./jsonLd";
 
 export type SeoLocale =
   | "sr"
@@ -30,8 +31,7 @@ const SITE_NAME =
   "Umbra Studio";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  "http://localhost:3000";
+  UMBRA_SITE_URL;
 
 const DEFAULT_IMAGE =
   "/umbra-background.png";

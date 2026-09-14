@@ -33,13 +33,13 @@ export function getNavigationPrefix(
 export function getProjectsHref(
   locale: NavigationLocale,
 ): string {
-  return `${getNavigationPrefix(locale)}/projects`;
+  return locale === "en" ? "/en/projects" : "/serije";
 }
 
 export function getCharactersHref(
   locale: NavigationLocale,
 ): string {
-  return `${getNavigationPrefix(locale)}/characters`;
+  return locale === "en" ? "/en/characters" : "/likovi";
 }
 
 export function getProjectHref(
@@ -66,8 +66,8 @@ export function getEpisodeHref(
   locale: NavigationLocale,
 ): string {
   return locale === "en"
-    ? `/en/projects/${projectSlug}/episodes/${episodeSlug}`
-    : `/serije/${projectSlug}/epizode/${episodeSlug}`;
+    ? `/en/projects/${projectSlug}#episode-${episodeSlug}`
+    : `/serije/${projectSlug}#episode-${episodeSlug}`;
 }
 
 export function getStoryHref(
@@ -76,8 +76,8 @@ export function getStoryHref(
   locale: NavigationLocale,
 ): string {
   return locale === "en"
-    ? `/en/projects/${projectSlug}/stories/${storySlug}`
-    : `/serije/${projectSlug}/price/${storySlug}`;
+    ? `/en/projects/${projectSlug}#story-${storySlug}`
+    : `/serije/${projectSlug}#story-${storySlug}`;
 }
 
 export function getWatchHref(
