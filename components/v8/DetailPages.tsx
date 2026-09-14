@@ -104,7 +104,6 @@ export function ProjectDetailPage({
           </p>
           <h1 className="v8-title">
             {project.title[locale]}
-            <span className="v8-period">.</span>
           </h1>
           <p className="v8-lead">{project.description?.[locale]}</p>
           {source?.author && (
@@ -174,6 +173,26 @@ export function ProjectDetailPage({
             ))}
         </dl>
       </section>
+      {project.slug === "mrzim-svog-brata" && (
+        <div className="v8-container">
+          <figure className="v9-story-landscape">
+            <Image
+              src="/images/v9/bosnia-1980.webp"
+              alt={locale === "sr"
+                ? "Ambijentalna ilustracija seoskog pejzaža inspirisana početkom romana"
+                : "Atmospheric rural landscape illustration inspired by the opening of the novel"}
+              fill
+              sizes="(min-width: 1440px) 1320px, 100vw"
+              className="v8-cover"
+            />
+            <figcaption>
+              {locale === "sr"
+                ? "Ambijentalna ilustracija inspirisana početkom romana"
+                : "Atmospheric illustration inspired by the opening of the novel"}
+            </figcaption>
+          </figure>
+        </div>
+      )}
       {source && (
         <section id="source" className="v8-section v8-source-section">
           <div className="v8-container v8-source-grid">
@@ -187,17 +206,24 @@ export function ProjectDetailPage({
                     <div className="v8-edition-cover">
                       <Image
                         src={optimizedImage(cover)}
-                        alt={`${source.title} · ${language.toUpperCase()}`}
+                        alt={locale === "sr"
+                          ? `Naslovnica knjige ${source.title} na ${language === "sr" ? "srpskom" : "engleskom"} jeziku`
+                          : `${language === "sr" ? "Serbian" : "English"} cover of ${project.title.en}`}
                         fill
                         sizes="(min-width: 1024px) 220px, 40vw"
                         className="v8-contain"
                       />
                     </div>
                     <figcaption>
-                      {language.toUpperCase()} / {c.source}
+                      {language.toUpperCase()} / {locale === "sr" ? "Naslovnica" : "Cover"}
                     </figcaption>
                     {pdf && (
-                      <a className="v8-text-link" download href={pdf}>
+                      <a
+                        className="v8-text-link"
+                        download
+                        href={pdf}
+                        aria-label={language === "sr" ? c.downloadSr : c.downloadEn}
+                      >
                         PDF <Download size={16} aria-hidden="true" />
                       </a>
                     )}
@@ -209,10 +235,16 @@ export function ProjectDetailPage({
               <p className="v8-eyebrow">{c.source}</p>
               <h2 className="v8-heading">
                 {c.read}
-                <span className="v8-period">.</span>
-              </h2>
+                  </h2>
               <p className="v8-lead">{source.title}</p>
               {source.author && <p className="v8-muted">{source.author}</p>}
+              {source.coverEn && !source.pdfEn && (
+                <p className="v8-muted">
+                  {locale === "sr"
+                    ? "Engleska naslovnica je prikazana uz srpsko izdanje. Engleski tekst romana nije dostupan za preuzimanje."
+                    : "The English cover is shown alongside the Serbian edition. The English novel is not available to download."}
+                </p>
+              )}
               <div className="v8-actions">
                 {source.pdfSr && (
                   <a className="v8-action" href={source.pdfSr} download>
@@ -254,11 +286,11 @@ export function ProjectDetailPage({
             title={
               locale === "sr" ? (
                 <>
-                  Lica <em>ovog sveta.</em>
+                  Lica <em>ovog sveta</em>
                 </>
               ) : (
                 <>
-                  Faces of <em>this world.</em>
+                  Faces of <em>this world</em>
                 </>
               )
             }
@@ -284,7 +316,13 @@ export function ProjectDetailPage({
       {context.episodes.length > 0 && (
         <section id="episodes" className="v8-container v8-section">
           <SectionHeading number="02" eyebrow={c.episodes} title={c.episodes} />
-          <p className="v8-muted v8-section-note">{c.plannedNote}</p>
+          {context.episodes.some((episode) => episode.status === "planned") && (
+            <p className="v8-muted v8-section-note">
+              {locale === "sr"
+                ? "Planirane epizode predstavljaju privremeni okvir adaptacije. Naslovi i raspored mogu se menjati; datumi objavljivanja nisu potvrđeni."
+                : "Planned episodes form a provisional adaptation outline. Titles and order may change; release dates are not confirmed."}
+            </p>
+          )}
           <div className="v8-episodes">
             {context.episodes.map((episode) => (
               <details
@@ -420,7 +458,6 @@ export function CharacterDetailPage({
           </p>
           <h1 className="v8-title">
             {character.title[locale]}
-            <span className="v8-period">.</span>
           </h1>
           <Link
             href={`${routes[locale].projects}/${project.slug}`}

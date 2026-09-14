@@ -10,12 +10,12 @@ export default async function NotFound() {
       <section className="v8-container v8-error">
         <p className="v8-eyebrow">404 / UMBRA STUDIO</p>
         <h1 className="v8-title">
-          {locale === "sr" ? "Izvan kadra." : "Out of frame."}
+          {locale === "sr" ? "Izvan kadra" : "Out of frame"}
         </h1>
         <p className="v8-lead">
           {locale === "sr"
-            ? "Ova stranica ne postoji. Vrati se u svet Umbra priča."
-            : "This page does not exist. Return to the world of Umbra stories."}
+            ? "Ova stranica ne postoji. Otvori početnu stranicu ili pretraži Umbra projekte."
+            : "This page does not exist. Open the home page or search Umbra projects."}
         </p>
         <div className="v8-actions">
           <ActionLink href={routes[locale].home}>{c.home}</ActionLink>

@@ -105,7 +105,12 @@ export function ProjectsPage({
           ))}
         </div>
         {!visible.length && (
-          <EmptyState title={c.noResults} description={c.description}>
+          <EmptyState
+            title={c.noResults}
+            description={locale === "sr"
+              ? "U ovoj kategoriji trenutno nema projekata. Pogledaj sve projekte."
+              : "There are currently no projects in this category. Browse all projects."}
+          >
             <ActionLink href={routes[locale].projects}>{c.reset}</ActionLink>
           </EmptyState>
         )}
@@ -124,8 +129,14 @@ export function CharactersPage({
   const c = copy[locale];
   const projects = getProjects();
   const q = queryValue(query, "q");
-  const project = queryValue(query, "project");
-  const role = queryValue(query, "role");
+  const requestedProject = queryValue(query, "project");
+  const project = projects.find(
+    (item) => item.id === requestedProject || item.slug === requestedProject,
+  )?.id ?? "";
+  const requestedRole = queryValue(query, "role");
+  const role = ["MAIN", "SUPPORTING"].includes(requestedRole)
+    ? requestedRole
+    : "";
   const characters = getCharacters().filter(
     (item) =>
       (!q ||
@@ -143,8 +154,8 @@ export function CharactersPage({
         title={c.characters}
         description={
           locale === "sr"
-            ? "Upoznaj likove naših projekata. Svaki dosje otvara još jedan pogled na priču."
-            : "Meet the characters of our projects. Each dossier offers another way into the story."
+            ? "Upoznaj likove Umbra serija i njihove veze sa pričama. Pretraži ih po imenu, projektu ili ulozi."
+            : "Explore the characters of Umbra series and their place in each story. Search by name, project or role."
         }
       />
       <section
@@ -251,8 +262,8 @@ export function LatestPage({ locale }: { locale: Locale }) {
         title={c.latest}
         description={
           locale === "sr"
-            ? "Nove priče, objave i premijere iz Umbra Studija."
-            : "New stories, announcements and premieres from Umbra Studio."
+            ? "Objave Umbra Studija, od najnovije ka starijim."
+            : "Umbra Studio updates, with the newest first."
         }
       />
       <section className="v8-container v8-collection">
@@ -304,8 +315,8 @@ export function ArchivePage({ locale }: { locale: Locale }) {
         title={c.archive}
         description={
           locale === "sr"
-            ? "Tragovi nastanka naših priča. Materijali, dokumenti i pogledi iza kadra."
-            : "Traces of our stories in the making. Materials, documents and a look behind the frame."
+            ? "Pregled objavljenih materijala povezanih sa Umbra projektima."
+            : "Browse published materials connected to Umbra projects."
         }
       />
       <section className="v8-container v8-collection">
@@ -415,7 +426,7 @@ export function SearchPage({
         ) : (
           <>
             <p className="v8-result-count">
-              {c.resultCount}: {results.length} · “{q}”
+              {c.resultCount}: {results.length} · {locale === "sr" ? `„${q}“` : `“${q}”`}
             </p>
             {results.map(({ item }) => (
               <Link

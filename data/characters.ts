@@ -22,8 +22,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Centralni lik priče: vredan čovek iz Bosne, odan porodici i ideji Jugoslavije, čiji se svet pod pritiskom rata i gubitka duboko menja.",
-      "The central character of the story: a hardworking man from Bosnia, devoted to his family and the idea of Yugoslavia, whose world is profoundly changed by war and loss.",
+      "Gvozden je zemljoradnik iz Bosne i Hercegovine, odan porodici i ideji zajedništva. Njegova čvrsta uverenja dolaze na iskušenje kada se svet oko njega promeni.",
+      "Gvozden is a farmer from Bosnia and Herzegovina, devoted to his family and the idea of a shared country. His firm convictions are tested as the world around him changes.",
     ),
 
     contentType: "character",
@@ -46,8 +46,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Gvozdenova supruga i njegova prva ljubav, majka Ane i važan oslonac njihove porodice; među prvima primećuje promene u svetu oko njih.",
-      "Gvozden's wife and first love, Ana's mother, and an important pillar of their family; she is among the first to notice the changes in the world around them.",
+      "Jadranka je Gvozdenova supruga, njegova ljubav iz srednjoškolskih dana i Anina majka. Primećuje promene u odnosima sa susedima i brine za sigurnost porodice.",
+      "Jadranka is Gvozden's wife, his high-school sweetheart and Ana's mother. She notices changes in the neighborhood and worries about her family's safety.",
     ),
 
     contentType: "character",
@@ -70,8 +70,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Gvozdenova i Jadrankina ćerka, odlična učenica i očev najveći ponos; želi da postane lekarka i da jednog dana brine o svojim roditeljima.",
-      "The daughter of Gvozden and Jadranka, an excellent student and her father's greatest pride; she wants to become a doctor and care for her parents one day.",
+      "Ana je ćerka Gvozdena i Jadranke. Radoznala i posvećena učenju, želi da postane lekarka i pomaže ljudima.",
+      "Ana is Gvozden and Jadranka's daughter. Curious and dedicated to her studies, she hopes to become a doctor and help others.",
     ),
 
     contentType: "character",
@@ -94,8 +94,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Gvozdenov prijatelj još od detinjstva, Senad je poput brata njegovoj porodici; suprug je Azre i otac Mehmeda, a njegov ratni put postaje jedna od ključnih niti priče.",
-      "Gvozden's friend since childhood, Senad is like a brother to his family; he is Azra's husband and Mehmed's father, and his wartime path becomes one of the story's key threads.",
+      "Senad je Gvozdenov prijatelj iz detinjstva, blizak poput brata. Sa suprugom Azrom i sinom Mehmedom deo je njihovog susedskog i porodičnog sveta.",
+      "Senad is Gvozden's childhood friend, as close to him as a brother. With his wife Azra and son Mehmed, he is part of the family's close-knit neighborhood.",
     ),
 
     contentType: "character",
@@ -118,8 +118,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Narednik Erceg i Gvozdenov ratni saborac i prijatelj, važna figura u ratnom delu priče čiji odnos prema ratu i ljudima postaje sve složeniji.",
-      "Sergeant Erceg, Gvozden's wartime companion and friend, an important figure in the war narrative whose relationship with war and people becomes increasingly complex.",
+      "Rade, narednik Radoje Erceg, upoznaje Gvozdena u kasarni. Njihov odnos razvija se kroz ratne okolnosti i teška pitanja odgovornosti.",
+      "Rade, Sergeant Radoje Erceg, meets Gvozden at the barracks. Their relationship develops amid war and difficult questions of responsibility.",
     ),
 
     contentType: "character",
@@ -142,8 +142,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Senadova supruga i Mehmedova majka, bliska Gvozdenu, Jadranki i Ani; pripada malom krugu komšija sa kojima porodica zadržava blizak odnos.",
-      "Senad's wife and Mehmed's mother, close to Gvozden, Jadranka, and Ana; she belongs to the small circle of neighbors who remain close to the family.",
+      "Azra je Senadova supruga i Mehmedova majka. Njena porodica je bliska sa Gvozdenom, Jadrankom i Anom.",
+      "Azra is Senad's wife and Mehmed's mother. Her family is close to Gvozden, Jadranka and Ana.",
     ),
 
     contentType: "character",
@@ -166,8 +166,8 @@ export const characters: CharacterContent[] = [
     ),
 
     shortDescription: localized(
-      "Sin Senada i Azre, čije postojanje povezuje njihove porodice sa Gvozdenom, Jadrankom i Anom i dobija posebno značenje u kasnijem razvoju priče.",
-      "The son of Senad and Azra, whose place in the story connects their family with Gvozden, Jadranka, and Ana and gains particular significance later in the narrative.",
+      "Mehmed je sin Senada i Azre. Njegovo rođenje predstavlja radost koju dve prijateljske porodice dele.",
+      "Mehmed is Senad and Azra's son. His birth is a moment of joy shared by the two families.",
     ),
 
     contentType: "character",
@@ -187,11 +187,12 @@ export const characters: CharacterContent[] = [
 
     title: localized(
       "Josif",
+      "Joseph",
     ),
 
     shortDescription: localized(
-      "Prvi lik projekta BIBLIJA. Sin Jakova čija priča prati snove, izdaju braće, odlazak u Misir, uspon do velike vlasti i ponovno okupljanje porodice.",
-      "The first character of the BIBLIJA project. Jacob's son whose story follows dreams, betrayal by his brothers, his journey to Egypt, his rise to great power, and the reunion of his family.",
+      "Josif je Jakovljev sin iz Prve knjige Mojsijeve. Njegovi snovi i odnos sa braćom otvaraju priču predstavljenu u projektu BIBLIJA.",
+      "Joseph is Jacob's son in the Book of Genesis. His dreams and his relationship with his brothers begin the story explored in BIBLIJA.",
     ),
 
     contentType: "character",

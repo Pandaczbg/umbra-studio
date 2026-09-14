@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { Suspense } from "react";
 import "./globals.css";
 import "./v8.css";
+import "./v9.css";
+import UmbraAssistant from "@/components/v9/UmbraAssistant";
 import SiteHeader from "@/components/v8/SiteHeader";
 import UmbraMotionSystem from "@/components/UmbraMotionSystem";
 import UmbraSceneDirector from "@/components/UmbraSceneDirector";
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = {
   colorScheme: "dark",
-  themeColor: "#080908",
+  themeColor: "#080808",
 };
 export default async function RootLayout({
   children,
@@ -63,6 +65,7 @@ export default async function RootLayout({
           }}
         />
         {children}
+        <UmbraAssistant />
       </body>
     </html>
   );

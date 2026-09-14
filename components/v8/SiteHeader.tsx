@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowUpRight, Menu, Search, X } from "lucide-react";
+import { ArrowUpRight, Compass, Menu, Search, X } from "lucide-react";
 import { copy } from "@/lib/site/copy";
 import LocalTime from "./LocalTime";
 import { localeFor, localizedHref, routes } from "@/lib/site/routes";
@@ -98,6 +98,16 @@ export default function SiteHeader() {
           </nav>
           <LocalTime locale={locale} />
           <div className="v8-header-actions">
+            <button
+              type="button"
+              className="v8-icon-button"
+              aria-label={locale === "sr" ? "Umbra vodič" : "Umbra guide"}
+              aria-haspopup="dialog"
+              aria-controls="umbra-guide"
+              onClick={() => window.dispatchEvent(new Event("umbra:open-guide"))}
+            >
+              <Compass size={19} strokeWidth={1.4} aria-hidden="true" />
+            </button>
             <Link
               href={routes[locale].search}
               className="v8-icon-button"

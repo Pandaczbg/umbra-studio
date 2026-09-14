@@ -4,7 +4,7 @@ import { localeFor } from "@/lib/site/routes";
 export default function Loading() {
   const locale = localeFor(usePathname());
   return (
-    <div className="v8-main">
+    <div className="v8-main" aria-busy="true">
       <div className="v8-container v8-loading" role="status" aria-live="polite">
         <p className="v8-eyebrow">UMBRA STUDIO</p>
         <p className="v8-lead">

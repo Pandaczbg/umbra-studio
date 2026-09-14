@@ -83,7 +83,6 @@ export function PageIntro({
       <div className="v8-intro-grid">
         <h1 className="v8-title">
           {title}
-          <span className="v8-period">.</span>
         </h1>
         {description && <p className="v8-lead">{description}</p>}
       </div>
@@ -135,13 +134,13 @@ export function SiteFooter({ locale }: { locale: Locale }) {
                 <>
                   Sve počinje
                   <br />
-                  jednom <em>pričom.</em>
+                  jednom <em>pričom</em>
                 </>
               ) : (
                 <>
                   It all begins
                   <br />
-                  with a <em>story.</em>
+                  with a <em>story</em>
                 </>
               )}
             </p>
@@ -187,7 +186,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               TikTok <ArrowUpRight size={16} aria-hidden="true" />
             </a>
             <p className="v8-credit">
-              Design & development
+              {locale === "sr" ? "Dizajn i razvoj" : "Design & development"}
               <br />
               <a
                 href="https://www.upwork.com/freelancers/~01add8bee84754c9ea?mp_source=share"
@@ -249,7 +248,7 @@ export function ProjectCard({
   const art = projectArtwork(project, locale);
   const c = copy[locale];
   return (
-    <article className="v8-project-card">
+    <article className="v8-project-card" data-project={project.slug}>
       <Link
         href={`${routes[locale].projects}/${project.slug}`}
         className="v8-project-link"
@@ -322,9 +321,9 @@ export function CharacterCard({
             <small>{c.noPortrait}</small>
           </>
         )}
-        <span className="v8-card-arrow">
+        {character.profileAvailable && <span className="v8-card-arrow">
           <ArrowUpRight size={20} aria-hidden="true" />
-        </span>
+        </span>}
       </div>
       <p className="v8-eyebrow">
         {character.category === "MAIN" ? c.main : c.supporting}
@@ -334,7 +333,7 @@ export function CharacterCard({
     </>
   );
   return (
-    <article className="v8-character-card">
+    <article className="v8-character-card" data-project={project?.slug}>
       {character.profileAvailable ? (
         <Link href={`${routes[locale].characters}/${character.slug}`}>
           {content}

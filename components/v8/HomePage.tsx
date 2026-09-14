@@ -54,8 +54,8 @@ export default function HomePage({ locale }: { locale: Locale }) {
       label: c.characters,
       title:
         locale === "sr"
-          ? "Upoznaj svet kroz njegove likove."
-          : "Meet the world through its characters.",
+          ? "Upoznaj svet kroz njegove likove"
+          : "Meet the world through its characters",
       text:
         locale === "sr"
           ? "Istraži likove i njihove dosjee, od prvog projekta do svetova koji tek nastaju."
@@ -73,71 +73,35 @@ export default function HomePage({ locale }: { locale: Locale }) {
     {
       label: c.watch,
       title:
-        locale === "sr" ? "Priča dobija pokret." : "The story comes to life.",
-      text: c.plannedNote,
+        locale === "sr" ? "Priča dobija pokret" : "The story comes to life",
+      text: locale === "sr" ? "Objavljene video-priče prati na Umbra YouTube kanalu." : "Follow Umbra’s video stories on our YouTube channel.",
       href: `${routes[locale].home}#watch`,
       action: c.watch,
     },
   ];
   return (
     <PageFrame locale={locale} home>
-      <section className="v8-hero" data-umbra-scene="hero" id="hero">
-        <div className="v8-container">
-          <div className="v8-hero-topline">
-            <p className="v8-eyebrow">{c.independent}</p>
-            <span className="v8-meta">STORY / FILM / MOTION</span>
-          </div>
-          <div className="v8-hero-heading">
-            <h1>
-              {locale === "sr" ? (
-                <>
-                  Priče koje
-                  <br />
-                  ostavljaju <em>senku.</em>
-                </>
-              ) : (
-                <>
-                  Stories that
-                  <br />
-                  leave a <em>shadow.</em>
-                </>
-              )}
-            </h1>
-            <div>
-              <p className="v8-lead">{c.description}</p>
-              <ActionLink href={routes[locale].projects}>
-                {c.allProjects}
-              </ActionLink>
-            </div>
-          </div>
+      <section className="v9-hero" data-umbra-scene="hero" id="hero">
+        <div className="v9-hero-image" aria-hidden="true">
+          <Image src="/images/v9/umbra-eclipse.webp" alt="" fill preload sizes="100vw" className="v8-cover" />
         </div>
-        <figure className="v8-hero-world">
-          <Image
-            src="/images/umbra-world.webp"
-            alt={
-              locale === "sr"
-                ? "Umbra Studio — filmski svet u svetlosti i senci"
-                : "Umbra Studio — a cinematic world of light and shadow"
-            }
-            fill
-            preload
-            sizes="100vw"
-            className="v8-cover"
-          />
-          <figcaption>
-            <span>UMBRA STUDIO</span>
-            <a href="#projekti">
-              {locale === "sr"
-                ? "Uđi u svet priče"
-                : "Enter the world of story"}
-              <ArrowDown size={18} aria-hidden="true" />
-            </a>
-          </figcaption>
-        </figure>
-        <div className="v8-container">
-          <HeroExplorer panels={panels} locale={locale} />
+        <div className="v8-container v9-hero-content">
+          <p className="v8-eyebrow v9-hero-kicker">{c.independent}</p>
+          <h1>{locale === "sr" ? <>Priče koje<br />ostavljaju<br /><em>senku</em></> : <>Stories that<br />leave a<br /><em>shadow</em></>}</h1>
+          <p className="v8-lead">{c.description}</p>
+          <div className="v8-actions">
+            <ActionLink href={routes[locale].projects}>{c.allProjects}</ActionLink>
+            <a className="v8-text-link" href="#o-studiju">{c.studio}<ArrowDown size={17} aria-hidden="true" /></a>
+          </div>
+          <div className="v9-hero-foot">
+            <a className="v9-scroll-cue" href="#projekti"><ArrowDown size={18} aria-hidden="true" />{locale === "sr" ? "Otkrij svetove Umbre" : "Discover Umbra’s worlds"}</a>
+            {featured && <Link className="v9-featured-link" href={`${routes[locale].projects}/${featured.slug}`}><span className="v8-meta">{locale === "sr" ? "Prva serija" : "Our first series"}</span><span>{featured.title[locale]}<ArrowUpRight size={19} aria-hidden="true" /></span></Link>}
+          </div>
         </div>
       </section>
+      <div className="v8-container v9-explorer-wrap">
+        <HeroExplorer panels={[panels[1], panels[2], panels[0], panels[3], panels[4]]} locale={locale} />
+      </div>
 
       <section
         className="v8-section v8-container"
@@ -150,11 +114,11 @@ export default function HomePage({ locale }: { locale: Locale }) {
           title={
             locale === "sr" ? (
               <>
-                Svetovi <em>u nastajanju.</em>
+                Svetovi <em>u nastajanju</em>
               </>
             ) : (
               <>
-                Worlds <em>in the making.</em>
+                Worlds <em>in the making</em>
               </>
             )
           }
@@ -188,11 +152,11 @@ export default function HomePage({ locale }: { locale: Locale }) {
             title={
               locale === "sr" ? (
                 <>
-                  Likovi nose <em>priču.</em>
+                  Likovi nose <em>priču</em>
                 </>
               ) : (
                 <>
-                  Characters carry <em>the story.</em>
+                  Characters carry <em>the story</em>
                 </>
               )
             }
@@ -229,6 +193,9 @@ export default function HomePage({ locale }: { locale: Locale }) {
         id="o-studiju"
         data-umbra-scene="studio"
       >
+        <figure className="v9-studio-art">
+          <Image src="/images/umbra-world.webp" alt={locale === "sr" ? "Simbolični filmski pejzaž Umbra Studija" : "Umbra Studio’s symbolic cinematic landscape"} fill sizes="(min-width: 1600px) 1400px, 91vw" className="v8-cover" />
+        </figure>
         <div className="v8-studio-grid">
           <div>
             <p className="v8-eyebrow">
@@ -238,20 +205,20 @@ export default function HomePage({ locale }: { locale: Locale }) {
               {locale === "sr" ? (
                 <>
                   Između svetla
-                  <br />i <em>senke.</em>
+                  <br />i <em>senke</em>
                 </>
               ) : (
                 <>
                   Between light
                   <br />
-                  and <em>shadow.</em>
+                  and <em>shadow</em>
                 </>
               )}
             </h2>
             <p className="v8-lead">
               {locale === "sr"
-                ? "Nezavisan kreativni studio za priče, vizuelne svetove i digitalni film."
-                : "An independent creative studio for stories, visual worlds and digital filmmaking."}
+                ? "Umbra Studio razvija serijalizovane priče uz književne izvore i AI alate za filmsko stvaralaštvo."
+                : "Umbra Studio develops serialized stories using literary sources and AI filmmaking tools."}
             </p>
           </div>
           <div className="v8-studio-editorial">
@@ -312,11 +279,11 @@ export default function HomePage({ locale }: { locale: Locale }) {
             title={
               locale === "sr" ? (
                 <>
-                  Priča dobija <em>pokret.</em>
+                  Priča dobija <em>pokret</em>
                 </>
               ) : (
                 <>
-                  Stories come <em>to life.</em>
+                  Stories come <em>to life</em>
                 </>
               )
             }
@@ -342,7 +309,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
                 {locale === "sr" ? "Umbra na YouTube-u" : "Umbra on YouTube"}
               </h3>
               <p className="v8-muted">
-                {videos.length ? c.description : c.plannedNote}
+                {videos.length ? c.description : locale === "sr" ? "Na sajtu još nema objavljenih video-epizoda. Poseti kanal i prati nove objave Umbra Studija." : "No video episodes are published on this site yet. Visit the channel for updates from Umbra Studio."}
               </p>
               <div className="v8-actions">
                 <ActionLink href={UMBRA_YOUTUBE_URL} external>
@@ -375,11 +342,11 @@ export default function HomePage({ locale }: { locale: Locale }) {
           title={
             locale === "sr" ? (
               <>
-                Iz <em>studija.</em>
+                Iz <em>studija</em>
               </>
             ) : (
               <>
-                From <em>the studio.</em>
+                From <em>the studio</em>
               </>
             )
           }

@@ -83,6 +83,7 @@ export function detailMetadata(
   return pageMetadata(locale, section, {
     slug,
     title: `${item.title[locale]} — Umbra Studio`,
-    description: item.description?.[locale],
+    description: item.description?.[locale] ??
+      ("shortDescription" in item ? item.shortDescription?.[locale] : undefined),
   });
 }

@@ -25,12 +25,12 @@ export const projects: ProjectContent[] = [
 
     shortDescription: localized(
       "Prva serija Umbra Studija, filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića",
-      "Umbra Studio's first series, a cinematic adaptation of Branislav Bojčić's novel „MRZIM SVOG BRATA“",
+      "Umbra Studio's first series, a screen adaptation of Branislav Bojčić's novel MRZIM SVOG BRATA",
     ),
 
     description: localized(
-      "Prva serija Umbra Studija je filmska adaptacija romana „MRZIM SVOG BRATA“ Branislava Bojčića, razvijena kao epizodna ekranizacija sa fokusom na likove, atmosferu i filmsko pripovedanje.",
-      "Umbra Studio's first series is a cinematic adaptation of Branislav Bojčić's novel „MRZIM SVOG BRATA“, developed as an episodic screen adaptation focused on characters, atmosphere and cinematic storytelling.",
+      "Ekranizacija romana Branislava Bojčića o Gvozdenu, njegovoj porodici i prijateljstvima u Bosni i Hercegovini. Priča počinje životom na selu i prati iskušenja kojima raspad zajedničkog sveta izlaže njegova uverenja.",
+      "An adaptation of Branislav Bojčić's novel about Gvozden, his family and his friendships in Bosnia and Herzegovina. Beginning with rural family life, the story follows the challenges to his convictions as the world he knows begins to fracture.",
     ),
 
     contentType: "project",
@@ -50,8 +50,6 @@ export const projects: ProjectContent[] = [
         "/books/Mrzim-svog-brata/cover-en.jpg",
       pdfSr:
         "/books/Mrzim-svog-brata/mrzim-svog-brata-sr.pdf",
-      pdfEn:
-        "/books/Mrzim-svog-brata/mrzim-svog-brata-en.pdf",
       publicUrl:
         "https://drive.google.com/file/d/0ByismsjbT993SUQtbjVwOUZrc2s/view?resourcekey=0-KVM6XhPzmZXtDIVKBYQOcQ",
     },
@@ -67,13 +65,13 @@ export const projects: ProjectContent[] = [
     ),
 
     shortDescription: localized(
-      "Samostalan storytelling univerzum Umbra Studija, zasnovan na biblijskim pričama.",
-      "A standalone storytelling universe from Umbra Studio, built around biblical stories.",
+      "Biblijske priče u filmskom izrazu Umbra Studija",
+      "Biblical stories explored through Umbra Studio's cinematic approach",
     ),
 
     description: localized(
-      "Umbra Studio razvija BIBLIJU kao zaseban storytelling univerzum zasnovan na biblijskim pričama.",
-      "Umbra Studio is developing BIBLIJA as a standalone storytelling universe based on biblical stories.",
+      "BIBLIJA je zaseban projekat Umbra Studija zasnovan na biblijskim pričama. Među predstavljenim likovima je Josif, Jakovljev sin, čija priča počinje porodičnim odnosima i snovima.",
+      "BIBLIJA is a separate Umbra Studio project based on biblical stories. Its featured characters include Joseph, Jacob's son, whose story begins with family relationships and dreams.",
     ),
 
     contentType: "project",

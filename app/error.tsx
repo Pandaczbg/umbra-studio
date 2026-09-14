@@ -14,7 +14,7 @@ export default function ErrorPage({
       <section className="v8-container v8-error">
         <p className="v8-eyebrow">UMBRA STUDIO</p>
         <h1 className="v8-title">
-          {locale === "sr" ? "Kratak prekid." : "A brief intermission."}
+          {locale === "sr" ? "Stranica nije učitana" : "Page could not load"}
         </h1>
         <p className="v8-lead">
           {locale === "sr"
@@ -22,7 +22,7 @@ export default function ErrorPage({
             : "The page could not load. Please try again."}
         </p>
         <div className="v8-actions">
-          <button className="v8-action" onClick={reset}>
+          <button type="button" className="v8-action" onClick={reset}>
             {locale === "sr" ? "Pokušaj ponovo" : "Try again"}
           </button>
           <Link

@@ -18,11 +18,12 @@ export default function GlobalError({
         <main style={{ maxWidth: 700, margin: "auto", padding: "15vh 24px" }}>
           <p style={{ color: "#cfb784" }}>UMBRA STUDIO</p>
           <h1 style={{ fontSize: "clamp(36px, 6vw, 60px)", fontWeight: 400 }}>
-            Kratak prekid.
+            Stranica nije učitana
           </h1>
           <p>Stranica nije mogla da se učita.</p>
           <p lang="en">The page could not load. Please try again.</p>
           <button
+            type="button"
             onClick={reset}
             style={{
               minHeight: 48,
@@ -35,7 +36,7 @@ export default function GlobalError({
               cursor: "pointer",
             }}
           >
-            Pokušaj ponovo / Retry
+            Pokušaj ponovo / <span lang="en">Retry</span>
           </button>
         </main>
       </body>
