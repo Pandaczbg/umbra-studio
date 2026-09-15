@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight, Play } from "lucide-react";
+import { ArrowUpRight, Play } from "lucide-react";
 import {
   getCharacters,
   getCharacterMedia,
@@ -21,8 +21,7 @@ import {
   SectionHeading,
 } from "./Primitives";
 import HeroExplorer from "./HeroExplorer";
-import HeroMoon from "@/components/v10/HeroMoon";
-import ContextDescription from "@/components/v10/ContextDescription";
+import StoryHero from "@/components/v10/StoryHero";
 
 export default function HomePage({ locale }: { locale: Locale }) {
   const c = copy[locale];
@@ -83,25 +82,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
   ];
   return (
     <PageFrame locale={locale} home>
-      <section className="v9-hero v10-hero" data-umbra-scene="hero" id="hero">
-        <div className="v9-hero-image" aria-hidden="true">
-          <Image src="/images/v10/hero-v9-landscape.webp" alt="" fill preload sizes="100vw" className="v8-cover" />
-        </div>
-        <HeroMoon />
-        <div className="v8-container v9-hero-content">
-          <p className="v8-eyebrow v9-hero-kicker">{c.independent}</p>
-          <h1>{locale === "sr" ? <>Priče koje<br />ostavljaju<br /><em>senku</em></> : <>Stories that<br />leave a<br /><em>shadow</em></>}</h1>
-          <p className="v8-lead"><ContextDescription locale={locale} /></p>
-          <div className="v8-actions">
-            <ActionLink href={routes[locale].projects}>{c.allProjects}</ActionLink>
-            <a className="v8-text-link" href="#o-studiju">{c.studio}<ArrowDown size={17} aria-hidden="true" /></a>
-          </div>
-          <div className="v9-hero-foot">
-            <a className="v9-scroll-cue" href="#projekti"><ArrowDown size={18} aria-hidden="true" />{locale === "sr" ? "Otkrij svetove Umbre" : "Discover Umbra’s worlds"}</a>
-            {featured && <Link className="v9-featured-link" href={`${routes[locale].projects}/${featured.slug}`}><span className="v8-meta">{locale === "sr" ? "Prva serija" : "Our first series"}</span><span>{featured.title[locale]}<ArrowUpRight size={19} aria-hidden="true" /></span></Link>}
-          </div>
-        </div>
-      </section>
+      <StoryHero locale={locale} projects={projects.map((project) => ({ id: project.id, title: project.title[locale], description: project.shortDescription?.[locale] ?? "", href: `${routes[locale].projects}/${project.slug}` }))} />
       <div className="v8-container v9-explorer-wrap">
         <HeroExplorer panels={[panels[1], panels[2], panels[0], panels[3], panels[4]]} locale={locale} />
       </div>
@@ -384,3 +365,4 @@ export default function HomePage({ locale }: { locale: Locale }) {
     </PageFrame>
   );
 }
+
