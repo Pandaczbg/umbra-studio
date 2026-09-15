@@ -1,4 +1,4 @@
-﻿/* V10: one shared visual language; all effects are progressive decoration. */
+/* V10: one shared visual language; all effects are progressive decoration. */
 :root {
   --v10-bg: #080909; --v10-surface: #111313; --v10-elevated: #191b1b;
   --v10-text: #f2eee5; --v10-muted: #b8b4ab; --v10-gold: #d5bd8d;
@@ -8,7 +8,7 @@
   --v10-header-layer: 500; --v10-control-size: 44px;
   --v9-black: var(--v10-bg); --v9-gold: var(--v10-gold); --v9-ivory: var(--v10-text);
 }
-.v8-header { z-index:var(--v10-header-layer); }
+.v8-header { z-index:var(--v10-header-layer,500); }
 .v8-footer-wordmark { color:#8d7958; opacity:1; }
 .v8-header-frame { gap:20px; border-color:#71604477; background:#090b0bf0; backdrop-filter:blur(16px); }
 .v8-desktop-nav { gap:22px; }
@@ -126,4 +126,12 @@
   .v10-moon-seal {
     animation: none;
   }
+}
+
+
+/* Keep every header action reachable at narrow widths and high browser zoom. */
+@media screen and (max-width:400px) {
+ .v8-header-frame { flex-wrap: wrap; gap: 4px; padding: 10px 12px; }
+ .v8-header-actions { flex: 1 1 100%; justify-content: space-between; margin-left: 0; }
+ .v8-header .v8-icon-button { width: 44px; min-width: 44px; }
 }

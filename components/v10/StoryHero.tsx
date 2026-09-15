@@ -55,11 +55,11 @@ export default function StoryHero({ locale, projects }: { locale: Locale; projec
 
   return (
     <section ref={frame} className={styles.hero} id="hero" data-umbra-scene="hero" aria-labelledby="umbra-hero-title">
-      <div className={styles.art} aria-hidden="true">
-        <Image src="/images/v10/umbra-story-light.webp" alt="" fill preload sizes="100vw" />
-      </div>
-      <div className={styles.light} aria-hidden="true" />
       <div className={styles.inner}>
+        <div className={styles.art} aria-hidden="true">
+          <Image src="/images/v10/umbra-story-light.webp" alt="" fill preload sizes="(min-width: 1536px) 1440px, 100vw" />
+          <div className={styles.light} />
+        </div>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>{c.independent}</p>
           <h1 id="umbra-hero-title" className={styles.title}>
